@@ -7,6 +7,7 @@ stages:
 install:
   stage: setup
   script:
+    - npm install -g @angular/cli
     - npm ci
 
 unit test:
@@ -18,4 +19,4 @@ unit test:
     - export CHROME_BIN=/usr/bin/google-chrome
   script:
     - npm ci
-    - ng test -- --no-watch --browsers=ChromeHeadlessCI
+    - npm run test -- --no-watch --browsers=ChromeHeadlessCI
