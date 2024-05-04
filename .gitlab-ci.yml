@@ -18,4 +18,4 @@ unit test:
     - export CHROME_BIN=/usr/bin/google-chrome
   script:
     - npm ci
-    - npm run test -- --no-watch --browsers=ChromeHeadlessCI
+    - npm ng test -- --no-watch --browsers=ChromeHeadlessCI
