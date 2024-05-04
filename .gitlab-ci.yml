@@ -17,6 +17,7 @@ before_script:
 build:
   stage: build
   script:
+    - cd project-portfolio-framework-frontend
     - npm ci # Install dependencies
     - npm run build -- --prod # Build the Angular app for production
 
