@@ -49,6 +49,7 @@ test:
     - export DISPLAY=:99
     - Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
   script:
+    - npm install --prefer-offline
     - npm run test -- --browsers=Headless_Chrome --no-watch
   cache:
     key:
