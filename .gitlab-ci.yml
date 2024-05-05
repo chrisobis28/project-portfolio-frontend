@@ -7,7 +7,7 @@ build:
   image: node:latest
   script:
     - npm install
-    - npm run build -- --prod
+    - npm run build
   artifacts:
     paths:
       - dist/
