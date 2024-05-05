@@ -1,60 +1,24 @@
-default:
-  interruptible: true
-  image: node:lts-alpine
+image: node:latest
 
 stages:
-  - dependencies
-  - quality
-  - assemble
-  - deploy
+  - build
+  - test
 
-install:
-  stage: dependencies
-  script:
-    - npm install --prefer-offline
-  cache:
-    key:
-      files:
-        - package.json
-    paths:
-      - node_modules
+cache:
+  paths:
+    - node_modules/
 
-lint:
-  stage: quality
-  needs: ["install"]
+build:
+  stage: build
   script:
-    - npm run lint
-  cache:
-    key:
-      files:
-        - package.json
+    - npm ci
+    - npm run build
+  artifacts:
     paths:
-      - node_modules
-    policy: pull
+      - dist/
 
 test:
-  stage: quality
-  needs: ["install"]
-  before_script:
-    # Download Chrome
-    - apk add chromium
-    - export CHROME_BIN=/usr/bin/chromium-browser
-    - export CHROME_PATH=/usr/lib/chromium/
-    # Download Firefox
-    - apk add firefox-esr
-    - export FIREFOX_BIN=/usr/bin/firefox
-    - export FIREFOX_PATH=/usr/lib/firefox/
-    # X Server
-    - apk add xvfb
-    - export DISPLAY=:99
-    - Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+  stage: test
   script:
-    - npm install --prefer-offline
-    - npm run test -- --browsers=Headless_Chrome --no-watch
-  cache:
-    key:
-      files:
-        - package.json
-    paths:
-      - node_modules
-    policy: pull
+    - npm ci
+    - npm run test
