@@ -1,5 +1,8 @@
 image: node:22.1.0
 
+variables:
+  CHROME_BIN: ""C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe""
+
 stages:
   - build
   - test
@@ -16,5 +19,7 @@ build:
 test:
   stage: test
   script:
-    - npm install
     - npm run test
+  artifacts:
+    paths:
+      - test-results.xml
