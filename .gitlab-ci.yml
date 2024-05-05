@@ -1,17 +1,13 @@
-image: node:latest
+image: node:22.1.0
 
 stages:
   - build
   - test
 
-cache:
-  paths:
-    - node_modules/
-
 build:
   stage: build
   script:
-    - npm ci
+    - npm install
     - npm run build
   artifacts:
     paths:
@@ -20,5 +16,8 @@ build:
 test:
   stage: test
   script:
-    - npm ci
+    - npm install
     - npm run test
+  artifacts:
+    paths:
+      - test-results.xml
