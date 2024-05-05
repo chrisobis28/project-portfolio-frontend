@@ -17,7 +17,7 @@ test:
   stage: test
   script:
     - npm ci
-    - npm run test
+    - docker run -it --rm node:22.1.0-chrome /bin/bash -c "npm install && ng test"
   artifacts:
     paths:
       - test-results.xml
