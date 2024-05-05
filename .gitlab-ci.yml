@@ -1,8 +1,5 @@
 image: node:22.1.0
 
-variables:
-  CHROME_BIN: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-
 stages:
   - build
   - test
@@ -18,11 +15,9 @@ build:
 
 test:
   stage: test
-  before_script:
-    - apt-get update
-    - wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-    - apt install -y ./google-chrome*.deb;
-    - export CHROME_BIN=/usr/bin/google-chrome
   script:
-    - npm ci
-    - npm run test -- --no-watch --browsers=ChromeHeadlessCI
+    - npm install
+    - npm run test --watch-false
+  artifacts:
+    paths:
+      - test-results.xml
