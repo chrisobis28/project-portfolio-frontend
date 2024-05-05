@@ -18,9 +18,11 @@ build:
 
 test:
   stage: test
+  before_script:
+    - apt-get update
+    - wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+    - apt install -y ./google-chrome*.deb;
+    - export CHROME_BIN=/usr/bin/google-chrome
   script:
-    - npm install
-    - npm run test
-  artifacts:
-    paths:
-      - test-results.xml
+    - npm ci
+    - npm run test -- --no-watch --browsers=ChromeHeadlessCI
