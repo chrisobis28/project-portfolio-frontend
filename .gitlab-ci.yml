@@ -1,16 +1,25 @@
-image: node:22.1.0
+stages:
+  - build
+  - test
 
 build:
   stage: build
-  cache:
-    paths:
-      - node_modules/
+  image: node:22.1.0
   script:
-    - npm install --quiet
-    - npx nx run skooltrak-app:build:production
+    - npm install -g @angular/cli
+    - npm install
+    - ng build --prod
   artifacts:
     paths:
       - dist/
-  except:
-    variables:
-      - $CI_COMMIT_MESSAGE =~ /skip-ci/
+
+unit_tests:
+  stage: test
+  image: node:22.1.0
+  script:
+    - npm install -g @angular/cli
+    - npm install
+    - ng test --watch=false --code-coverage
+  artifacts:
+    paths:
+      - coverage/
