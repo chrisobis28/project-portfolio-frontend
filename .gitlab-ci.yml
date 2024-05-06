@@ -13,13 +13,23 @@ build:
     paths:
       - dist/
 
-unit_tests:
+test:
   stage: test
   image: node:22.1.0
-  script:
+  before_script:
+    - if [ "$CI_RUNNER_TAGS" = *linux* ]; then
+        sudo apt-get update;
+        sudo apt-get install -y google-chrome-stable;
+      fi
+    - if [ "$CI_RUNNER_TAGS" = *macos* ]; then
+        brew cask install google-chrome;
+      fi
+    - if [ "$CI_RUNNER_TAGS" = *windows* ]; then
+        choco install googlechrome --yes;
+      fi
     - npm install -g @angular/cli
     - npm install
+  script:
     - ng test --watch=false --code-coverage
-  artifacts:
-    paths:
-      - coverage/
+  variables:
+    CHROME_BIN: /usr/bin/google-chrome
