@@ -8,7 +8,7 @@ build:
   script:
     - npm install -g @angular/cli
     - npm install
-    - ng build --prod
+    - ng build
   artifacts:
     paths:
       - dist/
