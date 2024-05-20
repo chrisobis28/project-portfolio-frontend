@@ -1,11 +1,11 @@
+import { Observable, of } from 'rxjs';
 import { Project } from '../../classes';
 
 export class Model {
    
-    projectList: Project[] = []
-    initialize(projects: Project[]): void {
+    projectList: Observable<Project[]> = of([])
+    initialize(projects: Observable<Project[]>): void {
     
-    this.projectList = []
     this.projectList = projects  
 
     }
