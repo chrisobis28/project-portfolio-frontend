@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ProjectsComponent } from './todolist/projects.component';
+import { ProjectsComponent } from './projects/projects.component';
 
 
 

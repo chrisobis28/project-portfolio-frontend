@@ -1,7 +1,7 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { Todolist } from '../interface/Classes';
-import { TodolistService } from '../service/project.service';
+import { Project } from '../../interface/Classes';
+import { ProjectService } from '../service/project.service';
 
 @Component({
   selector: 'app-projects',
@@ -9,11 +9,11 @@ import { TodolistService } from '../service/project.service';
   styleUrls: ['./projects.component.css']
 })
 export class ProjectsComponent implements OnInit {
-  data: Todolist[] = [];
-  constructor(private readonly todolistService: TodolistService) {}
+  data: Project[] = [];
+  constructor(private readonly projectService: ProjectService) {}
 
   ngOnInit(): void {
-      this.todolistService.getAllTodolist().subscribe((response: Todolist[]) => {
+      this.projectService.getAllTodolist().subscribe((response: Project[]) => {
         this.data = response;
         console.log(response, 'res');
       })

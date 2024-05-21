@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { ProjectsComponent } from './todolist/todolist/projects.component';
+import { ProjectsComponent } from './todolist/projects/projects.component';
 
 const routes: Routes = [
   {
