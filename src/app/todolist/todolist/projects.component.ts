@@ -1,14 +1,14 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { Todolist } from '../interface/todolist';
-import { TodolistService } from '../service/todolist.service';
+import { Todolist } from '../interface/Classes';
+import { TodolistService } from '../service/project.service';
 
 @Component({
-  selector: 'app-todolist',
-  templateUrl: './todolist.component.html',
-  styleUrls: ['./todolist.component.css']
+  selector: 'app-projects',
+  templateUrl: './projects.component.html',
+  styleUrls: ['./projects.component.css']
 })
-export class TodolistComponent implements OnInit {
+export class ProjectsComponent implements OnInit {
   data: Todolist[] = [];
   constructor(private readonly todolistService: TodolistService) {}
 
