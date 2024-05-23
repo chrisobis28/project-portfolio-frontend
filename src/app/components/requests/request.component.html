@@ -1,0 +1,13 @@
+<p-dropdown 
+  [options]="userRequests" 
+  [(ngModel)]="selectedRequest" 
+  placeholder="Requests">
+</p-dropdown>
+
+<div *ngIf="selectedRequest">
+  <h3>Selected Request Details</h3>
+  <p>ID: {{ selectedRequest.value.requestId }}</p>
+  <p>Title: {{ selectedRequest.value.newTitle }}</p>
+  <p>Description: {{ selectedRequest.value.newDescription }}</p>
+  <p>Bibtex: {{ selectedRequest.value.newBibtex }}</p>
+</div>

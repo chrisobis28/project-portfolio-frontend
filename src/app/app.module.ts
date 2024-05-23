@@ -5,9 +5,14 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { TodolistModule } from './todolist/projects.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { DropdownModule } from 'primeng/dropdown';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { RequestComponent } from './components/requests/request.component';
+import { RequestService } from './services/request.service';
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    RequestComponent
   ],
   imports: [
     BrowserModule,
@@ -15,9 +20,11 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     HttpClientModule,
     ReactiveFormsModule,
     FormsModule,
-    TodolistModule
+    TodolistModule,
+    DropdownModule,
+    BrowserAnimationsModule
   ],
-  providers: [],
+  providers: [RequestService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
