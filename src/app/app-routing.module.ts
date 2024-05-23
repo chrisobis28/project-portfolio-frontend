@@ -1,12 +1,13 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { ProjectsComponent } from './todolist/projects/projects.component';
+import { RequestComponent } from './todolist/requests/request.component';
 
 const routes: Routes = [
   {
    title: 'Home',
    path: '',
-   component: ProjectsComponent
+   component: RequestComponent
   }
 ];
 

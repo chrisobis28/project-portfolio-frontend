@@ -1,0 +1,28 @@
+/* request.component.css */
+
+h1 {
+    color: #2c3e50;
+  }
+  
+  p {
+    font-size: 16px;
+    color: #34495e;
+  }
+  
+  h3 {
+    margin-top: 20px;
+    color: #16a085;
+  }
+  
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  li {
+    background: #ecf0f1;
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 4px;
+  }
+  
