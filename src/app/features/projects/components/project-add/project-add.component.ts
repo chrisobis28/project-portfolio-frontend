@@ -5,7 +5,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 @Component({
   selector: 'app-project-add',
   templateUrl: './project-add.component.html',
-  styleUrl: './project-add.component.css'
+  styleUrls: ['./project-add.component.css']
 })
 export class ProjectAddComponent {
 
