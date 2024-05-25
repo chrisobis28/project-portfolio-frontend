@@ -14,14 +14,17 @@ export class ProjectsComponent implements OnInit {
   constructor(private readonly projectService: ProjectService, private router: Router) {}
 
   ngOnInit(): void {
-      this.projectService.getAllProjects().subscribe((response: Project[]) => {
-        this.data = response;
-        console.log(response, 'res');
-      })
+      //this.projectService.getAllProjects().subscribe((response: Project[]) => {
+       // this.data = response;
+        //console.log(response, 'res');
+      //})
     }
 
   navigateToAddProjects(): void {
     this.router.navigate(['/add-project']);
+  }
+  navigateTorojectDetail(): void {
+    this.router.navigate(['/project-detail']);
   }
 
  }

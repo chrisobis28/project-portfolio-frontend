@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Accordion Cards</title>
+  <!-- Add any additional stylesheets or scripts here -->
+  <style>
+    /* Add your custom styles here */
+  </style>
+</head>
+<body>
+<div class="grid">
+  <div class="col-2">
+  </div>
+  <div class="col-8">
+<div class="card-container">
+  <p-card [header]="displayProject.title" [subheader]="getCollaboratorNames()">
+    <section class="card-section">
+      <h2>Description</h2>
+      <p>{{ displayProject.description }}</p>
+    </section>
+    <section class="card-section">
+      <h2>Images</h2>
+      <div class="card">
+        <p-carousel
+          [circular]="false"
+          [numScroll]="3"
+          [numVisible]="3"
+          [responsiveOptions]="responsiveOptions"
+          [value]="displayMedia">
+          <ng-template let-doc pTemplate="item">
+            <div class="border-1 surface-border border-round m-2 p-3">
+              <div class="mb-3">
+                <div class="relative mx-auto">
+                  <img
+                    [alt]="doc.name"
+                    class="w-full border-round"
+                    src="https://graphics.tudelft.nl/Publications-new/2024/MHCOLHHASD24/teaser.png"/>
+                </div>
+              </div>
+              <div class="mb-3 font-medium">
+                {{ doc.name }}
+              </div>
+            </div>
+          </ng-template>
+        </p-carousel>
+      </div>
+    </section>
+    <section class="card-section">
+      <h2>Further Information</h2>
+      <div class="grid">
+        <div class="col">
+          <div class="flex justify-content-center align-items-center">
+            <h4>Project Links</h4>
+          </div>
+          <div class="card flex align-items-center gap-2 flex-wrap">
+            <ng-container *ngFor="let link of displayLinks">
+              <a href="https://www.example.com">
+                <p-chip icon="pi pi-link" label="{{link.name}}"/>
+              </a>
+            </ng-container>
+          </div>
+        </div>
+        <div class="col">
+          <div class="flex justify-content-center align-items-center">
+            <h4>Project files</h4>
+          </div>
+          <div class="card flex align-items-center gap-2 flex-wrap">
+            <ng-container *ngFor="let media of displayMedia">
+              <a href="https://www.example.com">
+                <p-chip icon="pi pi-file-pdf" label="{{media.name}}"/>
+              </a>
+            </ng-container>
+          </div>
+        </div>
+        <div class="col">
+          <div class="flex justify-content-center align-items-center">
+            <h4>Project Tags</h4>
+          </div>
+          <div class="card flex align-items-center gap-2 flex-wrap">
+            <ng-container *ngFor="let media of displayMedia">
+              <a href="https://www.example.com">
+                <p-chip icon="pi pi-tags" label="{{media.name}}"/>
+              </a>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="card-section">
+      <h2>BibTex References</h2>
+      <pre style="font-size: smaller; max-width: 100%; width: auto;">{{ getBibTex() }}</pre>
+    </section>
+    <footer>
+      <img alt="icon" src="https://media.geeksforgeeks.org/wp-content/assets/Group 210.svg"
+           style="max-width: 100px; max-height: 100px;">
+    </footer>
+  </p-card>
+</div>
+  </div>
+</div>
+<div class="col-2">
+</div>
+</body>
+
+</html>

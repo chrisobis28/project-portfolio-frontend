@@ -1,0 +1,12 @@
+@import "primeng/resources/themes/lara-light-blue/theme.css";
+@import "primeng/resources/primeng.css";
+pre {
+  tab-size: 2;
+  text-align : left;
+  height: auto;
+  max-height: 240px;
+  overflow: auto;
+  word-break: normal !important;
+  word-wrap: normal !important;
+  white-space: pre !important;
+}
