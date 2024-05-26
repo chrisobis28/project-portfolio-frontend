@@ -24,7 +24,11 @@ export interface ProjectsToAccounts {
     ptaId: string
     role: string
 }
-
+export interface MediaFile {
+  a: string;
+  b: string;
+  c: string;
+}
 export interface Account {
     username: string
     name: string
