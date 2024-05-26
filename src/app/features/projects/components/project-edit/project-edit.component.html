@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div class="introduction">
+        <h2>
+            Edit project page:
+        </h2>
+        <p>
+            Edit your project with respect to the template*.
+        </p>
+    </div>
+    <div class="card flex justify-content-center">
+        <p-floatLabel>
+            <input pInputText id="projecttitle" [(ngModel)]="title" />
+            <label for="username">Project Title</label>
+        </p-floatLabel>
+    </div>
+    <div class="card flex justify-content-center">
+        <p-floatLabel>
+            <textarea 
+                id="float-input" 
+                rows="5"
+                cols="80" 
+                pInputTextarea
+                [(ngModel)]="description"
+                [autoResize]="true">
+            </textarea>
+            <label for="float-input">Description</label>
+        </p-floatLabel>
+    </div>
+    <div class="card p-fluid">
+        <p-floatLabel>
+            <p-chips id="chips" [(ngModel)]="tags">
+                <ng-template let-item pTemplate="item">
+                    {{ item }} - (Tag) <i class="pi pi-user ml-2"></i> 
+                 </ng-template>
+            </p-chips>
+            <label for="chips">Tags</label>
+        </p-floatLabel>
+    </div>
+    <div class="card p-fluid">
+        <p-floatLabel>
+            <p-chips id="chips" [(ngModel)]="colaborators" separator=",">
+                <ng-template let-item pTemplate="item">
+                    {{ item }} - (User) <i class="pi pi-user ml-2"></i> 
+                 </ng-template>
+            </p-chips>
+            <label for="chips">Colaborators</label>
+        </p-floatLabel>
+    </div>
+    <div class="card">
+        <p-table id="mediatable" [value]="media" [tableStyle]="{'min-width': '50rem'}">
+            <ng-template pTemplate="caption">
+                <div class="flex align-items-center justify-content-between">
+                    Media
+                </div>
+            </ng-template>
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Name</th>
+                    <th>Preview</th>
+                    <th>Upload new File</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-product>
+                <tr>
+                    <td>{{media[0].name}}</td>
+                    <td><img [src]="'https://primefaces.org/cdn/primeng/images/demo/product/' + product.image" [alt]="media[0].name" width="100" class="shadow-4" /></td>
+                    <td><p-button label="Edit File" icon="pi pi-trash" /></td>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="summary">
+                <div class="flex align-items-center justify-content-between">
+                    In total there are {{media ? media.length : 0 }} media.
+                </div>
+            </ng-template>
+        </p-table>
+    </div>
+</body>
+</html>
