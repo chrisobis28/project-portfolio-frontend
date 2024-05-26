@@ -1,16 +1,21 @@
 import { Component , OnInit } from '@angular/core';
 import { InputTextModule } from 'primeng/inputtext';
-import { MediaService } from '../../services/media.service';
 import { FormsModule } from '@angular/forms';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ChipsModule } from 'primeng/chips';
-import { Media } from '../../models/project-models';
+import { Collaborator, Link, Media, Project, Tag } from '../../models/project-models';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { RatingModule } from 'primeng/rating';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
+import { ProjectService } from '../../services/project.service';
+import { ActivatedRoute } from '@angular/router';
+import { FileUploadModule, UploadEvent } from 'primeng/fileupload';
+import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
+
 
 @Component({
   selector: 'app-project-edit',
@@ -19,54 +24,53 @@ import { ButtonModule } from 'primeng/button';
   standalone: true,
   imports: [FormsModule, InputTextModule, FloatLabelModule,
      InputTextareaModule, ChipsModule, TableModule, TagModule,
-      RatingModule, ButtonModule, CommonModule],
-  providers: [MediaService]
+      RatingModule, ButtonModule, CommonModule, FileUploadModule, ToastModule],
+  providers: [ProjectService, MessageService]
 })
 
 export class ProjectEditComponent implements OnInit {
-  media: Media[] = [
-    {
-      mediaId: '1',
-      name: 'Media 1',
-      path: '/path/to/media1',
-      requestMediaProjects: []
-    },
-    {
-      mediaId: '2',
-      name: 'Media 2',
-      path: '/path/to/media2',
-      requestMediaProjects: []
-    },
-    {
-      mediaId: '3',
-      name: 'Media 3',
-      path: '/path/to/media2',
-      requestMediaProjects: []
-    },
-    {
-      mediaId: '4',
-      name: 'Media 4',
-      path: '/path/to/media2',
-      requestMediaProjects: []
-    },
-    {
-      mediaId: '4',
-      name: 'Media 5',
-      path: '/path/to/media2',
-      requestMediaProjects: []
-    },
-  ];
+  media!: Media[];
+  projectId: string | null = null;
+  project!: Project;
+  title: string | undefined;
+  description: string | undefined;
+  tags: Tag[] | undefined;
+  colaborators: Collaborator[] | undefined;
+  tagnames: string[] | undefined;
+  collaboratornames: string[] | undefined;
+  links!: Link[];
   
-  constructor(private mediaService: MediaService) {}
+  constructor(private route: ActivatedRoute,
+     private projectService: ProjectService, private messageService: MessageService) {}
 
   ngOnInit() {
-      this.mediaService.getMediaByProjectId(1).subscribe((response: Media[]) => {
-        //this.media = Media();//response
-      })
+    this.projectId = this.route.snapshot.paramMap.get('id');
+    if (this.projectId) {
+      this.projectService.getLinksByProjectId(this.projectId).subscribe((response: Link[]) => {
+        this.links = response
+      });
+      this.projectService.getProjectMedia(this.projectId).subscribe((response: Media[]) => {
+        this.media = response;
+      });
+      this.projectService.getProjectById(this.projectId).subscribe((response: Project) => {
+        this.project = response;
+        this.title = this.project.title;
+        this.description = this.project.description;
+      });
+      this.projectService.getTagsByProjectId(this.projectId).subscribe((response: Tag[]) => {
+        this.tags = response;
+        this.tagnames = this.tags.map(x => x.name);
+      });
+      this.projectService.getCollaboratorsByProjectId(this.projectId).subscribe((response: Collaborator[]) => {
+        this.colaborators = response;
+        this.collaboratornames = this.colaborators.map(x => x.name)
+      });
+    } else {
+      console.error('Project ID is null');
+    }
   }
 
-  title: string | undefined;
-  tags: string[] | undefined;
-  colaborators: string[] | undefined;
-  description: string | undefined;
+  onUpload(event: UploadEvent) {
+    this.messageService.add({ severity: 'info', summary: 'Success', detail: 'File Uploaded with Basic Mode' });
+  }
 }

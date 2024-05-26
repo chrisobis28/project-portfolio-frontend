@@ -1,85 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-</head>
-<body>
-    <div class="introduction">
-        <h2>
-            Edit project page:
-        </h2>
-        <p>
-            Edit your project with respect to the template*.
-        </p>
-    </div>
-    <div class="card flex justify-content-center">
-        <p-floatLabel>
-            <input pInputText id="projecttitle" [(ngModel)]="title" />
+  </head>
+  <body>
+    <div class="grid">
+      <div class="col-1"></div>
+      <div class="col-10">
+        <div class="introduction">
+          <h1 id="title">Edit project page:</h1>
+          <p id="subtitle">Edit your project with respect to the template*.</p>
+        </div>
+        <div class="card flex justify-content-start">
+          <p-floatLabel>
+            <input
+              pInputText
+              id="projecttitle"
+              [(ngModel)]="title"
+              style="width: 81vw"
+            />
             <label for="username">Project Title</label>
-        </p-floatLabel>
-    </div>
-    <div class="card flex justify-content-center">
-        <p-floatLabel>
-            <textarea 
-                id="float-input" 
-                rows="5"
-                cols="80" 
-                pInputTextarea
-                [(ngModel)]="description"
-                [autoResize]="true">
+          </p-floatLabel>
+        </div>
+        <div class="card flex justify-content-start min-w-full">
+          <p-floatLabel>
+            <textarea
+              id="float-input"
+              rows="5"
+              pInputTextarea
+              style="width: 81vw"
+              [(ngModel)]="description"
+              [autoResize]="true"
+            >
             </textarea>
             <label for="float-input">Description</label>
-        </p-floatLabel>
-    </div>
-    <div class="card p-fluid">
-        <p-floatLabel>
-            <p-chips id="chips" [(ngModel)]="tags">
-                <ng-template let-item pTemplate="item">
-                    {{ item }} - (Tag) <i class="pi pi-user ml-2"></i> 
-                 </ng-template>
+          </p-floatLabel>
+        </div>
+        <div class="card p-fluid">
+          <p-floatLabel>
+            <p-chips id="chips" [(ngModel)]="tagnames">
+              <ng-template let-item pTemplate="item">
+                {{ item }} - (Tag) <i class="pi pi-user ml-2"></i>
+              </ng-template>
             </p-chips>
             <label for="chips">Tags</label>
-        </p-floatLabel>
-    </div>
-    <div class="card p-fluid">
-        <p-floatLabel>
-            <p-chips id="chips" [(ngModel)]="colaborators" separator=",">
-                <ng-template let-item pTemplate="item">
-                    {{ item }} - (User) <i class="pi pi-user ml-2"></i> 
-                 </ng-template>
+          </p-floatLabel>
+        </div>
+        <div class="card p-fluid">
+          <p-floatLabel>
+            <p-chips id="chips" [(ngModel)]="collaboratornames" separator=",">
+              <ng-template let-item pTemplate="item">
+                {{ item }} - (User) <i class="pi pi-user ml-2"></i>
+              </ng-template>
             </p-chips>
             <label for="chips">Colaborators</label>
-        </p-floatLabel>
-    </div>
-    <div class="card">
-        <p-table id="mediatable" [value]="media" [tableStyle]="{'min-width': '50rem'}">
-            <ng-template pTemplate="caption">
-                <div class="flex align-items-center justify-content-between">
-                    Media
-                </div>
-            </ng-template>
+          </p-floatLabel>
+        </div>
+        <div class="card">
+          <h3>Links</h3>
+          <p-table
+            id="linktable"
+            [value]="links"
+            [tableStyle]="{ 'min-width': '50rem' }"
+          >
             <ng-template pTemplate="header">
-                <tr>
-                    <th>Name</th>
-                    <th>Preview</th>
-                    <th>Upload new File</th>
-                </tr>
+              <tr>
+                <th>Name</th>
+                <th>Url</th>
+                <th></th>
+              </tr>
             </ng-template>
-            <ng-template pTemplate="body" let-product>
-                <tr>
-                    <td>{{media[0].name}}</td>
-                    <td><img [src]="'https://primefaces.org/cdn/primeng/images/demo/product/' + product.image" [alt]="media[0].name" width="100" class="shadow-4" /></td>
-                    <td><p-button label="Edit File" icon="pi pi-trash" /></td>
-                </tr>
+            <ng-template pTemplate="body" let-links>
+              <tr>
+                <td><input pInputText [(ngModel)]="links.name" /></td>
+                <td><input pInputText [(ngModel)]="links.url" /></td>
+                <td><p-button label="Submit" /></td>
+              </tr>
             </ng-template>
-            <ng-template pTemplate="summary">
-                <div class="flex align-items-center justify-content-between">
-                    In total there are {{media ? media.length : 0 }} media.
-                </div>
+          </p-table>
+        </div>
+        <div class="card">
+          <h3>Media</h3>
+          <p-table
+            id="mediatable"
+            [value]="media"
+            [tableStyle]="{ 'min-width': '50rem' }"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Name</th>
+                <th>Preview</th>
+                <th>Upload new File</th>
+                <th>Delete File</th>
+              </tr>
             </ng-template>
-        </p-table>
+            <ng-template pTemplate="body" let-item>
+              <tr>
+                <td><input pInputText [(ngModel)]="item.name" /></td>
+                <td>
+                  <img
+                    [src]="item.path + item.name"
+                    [alt]="item.name"
+                    width="100"
+                    class="shadow-4"
+                  />
+                </td>
+                <td>
+                  <p-fileUpload
+                    mode="basic"
+                    chooseLabel="Upload"
+                    chooseIcon="pi pi-upload"
+                    name="demo[]"
+                    url="https://www.primefaces.org/cdn/api/upload.php"
+                    accept="image/*"
+                    maxFileSize="1000000"
+                    (onUpload)="onUpload($event)"
+                  />
+                </td>
+                <td><p-button label="Delete" /></td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+      <div class="col-2"></div>
     </div>
-</body>
+  </body>
 </html>

@@ -7,7 +7,7 @@ import { ProjectEditComponent } from './features/projects/components/project-edi
 const routes: Routes = [
   { path: 'projects', component: ProjectsComponent },
   { path: 'add-project', component: ProjectAddComponent },
-  { path: '', component: ProjectEditComponent },
+  { path: 'project/edit/:id', component: ProjectEditComponent },
   { path: '', redirectTo: '/projects', pathMatch: 'full' }
 ];
 
