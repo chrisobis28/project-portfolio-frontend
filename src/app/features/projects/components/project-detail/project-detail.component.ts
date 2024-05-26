@@ -8,7 +8,7 @@ import {CommonModule} from '@angular/common';
 import {TagModule} from 'primeng/tag';
 import {ButtonModule} from 'primeng/button';
 import {CarouselModule} from 'primeng/carousel';
-import {ProjectService} from '../../services/project-detail.service';
+import {ProjectService} from '../../services/project.service';
 import {ChipModule} from 'primeng/chip';
 import {OrderListModule} from 'primeng/orderlist';
 import {Collaborator, Link, MediaFile, Project, Tag} from "../../models/project-models";

@@ -84,13 +84,7 @@
               </div>
               <div class="card flex align-items-center gap-2 flex-wrap">
                 <ng-container *ngFor="let tag of tags">
-                  <p-chip styleClass=".color:red" >
-    <span class="bg-primary border-circle w-2rem h-2rem flex align-items-center justify-content-center">
-    </span>
-                    <span  class="ml-2 font-medium">{{tag.name}}
-    </span>
-                  </p-chip>
-
+                  <p-chip [style]="{'background':'rgba(11, 127, 171, 0.2)'}" icon="pi pi-tags" label="{{tag.name}}"/>
                 </ng-container>
               </div>
             </div>
