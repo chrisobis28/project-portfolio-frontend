@@ -52,7 +52,7 @@ export class ProjectService {
   }
 
   createProject(body: Project): Observable<Project> {
-    return this.httpClient.post<Project>(this.API_URL, body);
+    return this.httpClient.post<Project>(this.API_URL+"project/", body);
   }
 
   editProject(id: string, body: Project): Observable<Project> {

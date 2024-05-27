@@ -19,6 +19,16 @@
     padding-bottom: 20px;
 }
 
-#addtemplate {
-    padding-left: 20px;
+#templatecomponent {
+    padding-right: 20px;
+}
+
+#saveButton {
+    margin-left: 1.5rem;
+}
+
+@media (max-width: 513px) {
+    #templatecomponent {
+        padding-bottom: 20px;
+    }
 }

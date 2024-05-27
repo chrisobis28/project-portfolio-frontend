@@ -10,7 +10,6 @@ export interface Project {
     tagsToProjects: TagToProject[]
     links: Link[]
     requests: Request[]
-
 }
 
 export interface Media {

@@ -17,6 +17,7 @@ import { ToastModule } from 'primeng/toast';
 import { DropdownModule } from 'primeng/dropdown';
 import { firstValueFrom, map } from 'rxjs';
 
+
 @Component({
   selector: 'app-project-add',
   templateUrl: './project-add.component.html',
@@ -34,15 +35,15 @@ export class ProjectAddComponent implements OnInit{
   media!: Media[];
   projectId: string | null = null;
   project!: Project;
-  title: string | undefined;
-  description: string | undefined;
+  title!: string;
+  description!: string;
   tags: Tag[] | undefined;
   colaborators: Collaborator[] | undefined;
   tagnames: string[] | undefined;
   collaboratornames: string[] | undefined;
   links!: Link[];
   templates!: Template[];
-  templateNames: string[] =[];
+  templateNames: string[] = [];
   selectedTemplate: string | undefined;
   
   constructor(
@@ -102,6 +103,33 @@ export class ProjectAddComponent implements OnInit{
   onUpload(event: UploadEvent) {
     this.messageService.add({ severity: 'info', summary: 'Success', detail: 'File Uploaded with Basic Mode' });
   }
+
+  saveProject(): void {
+    
+    const project: Project = {
+      projectId: "",
+      title: this.title,
+      description: this.description,
+      bibtex: '',
+      archived: false,
+      media: [],
+      projectsToAccounts: [],
+      projectsToCollaborators: [],
+      tagsToProjects: [],
+      links: [],
+      requests: []
+    };
+
+    this.projectService.createProject(project).subscribe(response => {
+      console.log('Project created successfully', response);
+    });
+    
+  }
+
+  cancel(): void {
+    console.log('Operation cancelled');
+  }
+
 }
 
 
