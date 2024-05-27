@@ -1,4 +1,4 @@
-import {Component, CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA, OnInit} from '@angular/core';
+import {Component, CUSTOM_ELEMENTS_SCHEMA, HostListener, NO_ERRORS_SCHEMA, OnInit} from '@angular/core';
 import {AccordionModule} from 'primeng/accordion';
 import {BadgeModule} from 'primeng/badge';
 import {AvatarModule} from 'primeng/avatar';
@@ -11,26 +11,28 @@ import {CarouselModule} from 'primeng/carousel';
 import {ProjectService} from '../../services/project.service';
 import {ChipModule} from 'primeng/chip';
 import {OrderListModule} from 'primeng/orderlist';
-import {Collaborator, Link, MediaFile, Project, Tag} from "../../models/project-models";
+import {Collaborator, Link, Media, MediaFile, Project, Tag} from "../../models/project-models";
 import {ActivatedRoute} from '@angular/router';
+import { DividerModule } from 'primeng/divider';
 
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule, OrderListModule],
+  imports: [DividerModule,ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule, OrderListModule],
   templateUrl: './project-detail.component.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
   styleUrls: ['./project-detail.component.css']
 })
 export class ProjectDetailComponent implements OnInit {
-  imageFiles: MediaFile[] = [];
-  otherFiles: MediaFile[] = [];
+  images: MediaFile[] = [];
+  documents: Media[] = [];
   bibTeX: MediaFile | undefined = {
     a: '',
     b: '',
     c: ''
   };
   projectId: string = "";
+  projectDescription: string[] = [];
   project: Project = {
     projectId: '',
     title: '',
@@ -47,6 +49,7 @@ export class ProjectDetailComponent implements OnInit {
   collaborators: Collaborator[] = [];
   links: Link[] = [];
   tags: Tag[] = [];
+  isMobile: boolean;
   responsiveOptions: any[] | undefined;
   private mimeTypes: { [key: string]: string } = {
     'jpg': 'image/jpeg',
@@ -62,6 +65,7 @@ export class ProjectDetailComponent implements OnInit {
   };
 
   constructor(private readonly projectService: ProjectService, private route: ActivatedRoute) {
+    this.isMobile = window.innerWidth <= 767;
   }
 
   getCollaboratorNames(): string {
@@ -73,31 +77,40 @@ export class ProjectDetailComponent implements OnInit {
       this.projectId = (params['id']);
       this.projectService.getProjectById(params['id']).subscribe(responseProject => {
         this.project = responseProject;
+        this.projectDescription = this.project.description.split('\\n')
       });
       this.projectService.getLinksByProjectId(params['id']).subscribe(responseLinks => {
         this.links = responseLinks;
       });
       this.projectService.getCollaboratorsByProjectId(params['id']).subscribe(responseCollaborators => {
         this.collaborators = responseCollaborators;
-        console.log(this.collaborators);
       });
       this.projectService.getTagsByProjectId(params['id']).subscribe(responseTags => {
         this.tags = responseTags;
       });
     });
-    this.projectService.getProjectMedia(this.projectId).subscribe({
+    this.projectService.getMediasContentByProjectId(this.projectId).subscribe({
       next: (data: MediaFile[]) => {
-        this.imageFiles = data.filter(media => media.a && (media.a.endsWith(".jpg") || media.a.endsWith(".png")));
-        this.otherFiles = data.filter(media => media.a && !(
-          media.a.endsWith(".jpg") ||
-          media.a.endsWith(".png")
-        ));
+        this.images = data.filter(media => media.a && (media.a.endsWith(".jpg") || media.a.endsWith(".png")));
         this.bibTeX = data.find(media => media.a && media.a.endsWith(".bib"));
       },
       error: (err) => {
         console.error('Error fetching media files', err);
       }
-    });
+    })
+    this.projectService.getDocumentsByProjectId(this.projectId).subscribe({
+      next: (data: Media[]) => {
+        this.documents = data.filter(media => media.path && !(
+          media.path.endsWith(".jpg") ||
+          media.path.endsWith(".png")
+        ));
+      },
+      error: (err) => {
+        console.error('Error fetching media files', err);
+      }
+    }
+    );
+
 
     this.responsiveOptions = [
       {
@@ -116,6 +129,10 @@ export class ProjectDetailComponent implements OnInit {
         numScroll: 1
       }
     ];
+  }
+  @HostListener('window:resize', ['$event'])
+  onResize(event:any) {
+    this.isMobile = window.innerWidth <= 767;
   }
 
   getImageSrc(media: MediaFile): string {
@@ -173,4 +190,21 @@ export class ProjectDetailComponent implements OnInit {
     });
     return formattedBibtex.join('\n');
   }
+  async downloadDocument(mediaId: string){
+    let mediaFile : MediaFile = {
+      a:"",
+      b:"",
+      c:""
+    };
+    this.projectService.getDocumentContent(mediaId).subscribe({
+      next: (data: MediaFile) => {
+       mediaFile = data;
+      },
+      error: (err) => {
+        console.error('Error fetching media files', err);
+      }
+    })
+    this.downloadFile(mediaFile);
+  }
+
 }
