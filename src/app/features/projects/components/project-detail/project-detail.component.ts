@@ -131,7 +131,7 @@ export class ProjectDetailComponent implements OnInit {
     ];
   }
   @HostListener('window:resize', ['$event'])
-  onResize(event:any) {
+  onResize() {
     this.isMobile = window.innerWidth <= 767;
   }
 
