@@ -100,4 +100,18 @@ export interface Tag {
     tagsToProjects: TagToProject[]
 }
 
+export interface Template {
+    templateName: string
+    standardDescription: string
+    standardBibtex: string
+    numberOfCollaborators: number
+    projects: Project[]
+    templateAdditions: TemplateAddition[]
+}
 
+export interface TemplateAddition {
+    templateAdditionId: string
+    templateAdditionName: string
+    media: boolean
+    template: Template
+}
