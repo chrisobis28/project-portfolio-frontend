@@ -1,7 +1,7 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { Request } from '../../interface/Classes';
-import { RequestService } from '../../services/request.service';
+import { Request } from '../../models/project-models';
+import { RequestService } from '../../services/request-service/request.service'
 
 interface UserRequest {
   label: string;

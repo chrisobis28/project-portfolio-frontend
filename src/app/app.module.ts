@@ -5,15 +5,14 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 @NgModule({
   declarations: [
-    AppComponent,
-    RequestComponent
+    AppComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     HttpClientModule
   ],
-  providers: [RequestService],
+  providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
