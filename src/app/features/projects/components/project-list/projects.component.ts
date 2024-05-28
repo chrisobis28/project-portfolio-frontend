@@ -135,7 +135,7 @@ export class ProjectsComponent implements OnInit {
           return "rgba(111, 118, 133, 0.45)"
       }
   }
-  async downloadDocument(mediaId: string){
+   downloadDocument(mediaId: string){
     let mediaFile : MediaFile = {
       a:"",
       b:"",
@@ -154,8 +154,8 @@ export class ProjectsComponent implements OnInit {
     getImageSrc(): string {
     let media: Media = this.filteredData[0].media[0];
     console.log(media.mediaId);
-    //let md: MediaFile = await this.downloadDocument(media.mediaId);
-    //console.log(media.mediaId)
+    let md: MediaFile =  this.downloadDocument(media.mediaId);
+    console.log(md)
    /*let mediaFile: MediaFile = {
       a: "",
       b: "",
