@@ -1,4 +1,4 @@
-import {HttpClient, HttpHeaders} from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable} from '@angular/core';
 import { Observable } from 'rxjs';
 import {Project,Media,Tag,MediaFile,Link,Collaborator} from "../../models/project-models";
@@ -11,7 +11,7 @@ export class ProjectService {
   constructor(private readonly httpClient: HttpClient) { }
 
   getAllProjects(): Observable<Project[]> {
-    return this.httpClient.get<Project[]>(this.API_URL + "/project");
+    return this.httpClient.get<Project[]>(this.API_URL + "/project/");
   }
 
   getMediasContentByProjectId(projectId: string): Observable<MediaFile[]> {

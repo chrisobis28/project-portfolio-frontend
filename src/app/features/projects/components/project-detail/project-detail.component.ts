@@ -9,7 +9,6 @@ import {TagModule} from 'primeng/tag';
 import {ButtonModule} from 'primeng/button';
 import {CarouselModule} from 'primeng/carousel';
 import {ChipModule} from 'primeng/chip';
-import {OrderListModule} from 'primeng/orderlist';
 import {Collaborator, Link, Media, MediaFile, Project, Tag} from "../../models/project-models";
 import {ActivatedRoute} from '@angular/router';
 import { DividerModule } from 'primeng/divider';
@@ -18,7 +17,7 @@ import {ProjectService} from "../../services/project/project.service";
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [DividerModule,ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule, OrderListModule],
+  imports: [DividerModule,ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule],
   templateUrl: './project-detail.component.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
   styleUrls: ['./project-detail.component.css']
