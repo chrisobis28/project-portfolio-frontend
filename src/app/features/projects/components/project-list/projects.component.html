@@ -1,24 +1,160 @@
-<table>
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Title</th>
-      <th>Description</th>
-      <th>Bibtex</th>
-      <th>Archived?</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let project of data">
-      <td>{{ project.projectId }}</td>
-      <td>{{ project.title }}</td>
-      <td>{{ project.description }}</td>
-      <td>{{ project.bibtex }}</td>
-      <td>{{ project.archived }}</td>
-    </tr>
-  </tbody>
-</table>
+<!DOCTYPE html>
+<html lang="en">
 
-<div>
-  <button class="custom-button" (click)="navigateToAddProjects()">Add Project</button>
-</div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+
+
+<body>
+
+  <div class="grid">
+    <div class="col-1"></div>
+
+    <div class="col-10">
+      <h1 style="text-align: center;">Project portfolio management system</h1>
+    </div>
+
+    <div class="col-1"></div>
+  </div>
+
+  <div class="grid">
+    <div class="col-1"></div>
+    <div class="col-10">
+
+
+      <div class="card" style="align-self: center;">
+        <p-dataView #dv [value]="filteredData" [layout]="layout" [rows]="5" [paginator]="true">
+
+          <ng-template pTemplate="header">
+
+
+            <div class="grid">
+
+              <div class="card relative justify-content-center col-12 md:col-7 lg:col-3">
+                <p-multiSelect placeholder="Filter By Tag" styleClass="mb-2 md:mb-0 flex relative" [options]="tagNames"
+                  [showClear]="false" [(ngModel)]="selectedTagNames" (onChange)="onTagSelectedFilterChanged()" />
+              </div>
+
+              <div class="card relative justify-content-center col-12 md:col-5 lg:col-2">
+                <p-floatLabel styleClass="flex relative">
+                  <input pInputText id="project-name" [(ngModel)]="projectName" (input)="onTitleFilterChange($event)"
+                    class="responsive-input" />
+                  <label for="project-name" class="label-text">Search project</label>
+                </p-floatLabel>
+              </div>
+
+              <div class="card relative justify-content-center col-12 md:col-5 lg:col-2">
+                <p-floatLabel styleClass="flex relative">
+                  <input pInputText id="project-collaborator" [(ngModel)]="projectCollaborator"
+                    (input)="onCollaboratorFilterChange($event)" class="responsive-input" />
+                  <label for="project-collaborator" class="label-text">Search collaborator</label>
+                </p-floatLabel>
+              </div>
+
+              <div class="card relative justify-content-center col-12 md:col-7 lg:col-3">
+                <p-dropdown placeholder="Filter By Year" styleClass="mb-2 md:mb-0 flex relative" />
+              </div>
+
+              <div class="card relative justify-content-center col-12 md:col-12 lg:col-2">
+                <p-dataViewLayoutOptions styleClass="flex relative" />
+              </div>
+            </div>
+
+          </ng-template>
+          <ng-template pTemplate="list" let-filteredData>
+            <div class="grid grid-nogutter">
+              <div class="col-12" *ngFor="let item of filteredData; let first = first" class="col-12">
+                <div class="flex flex-column sm:flex-row sm:align-items-center p-4 gap-3"
+                  [ngClass]="{ 'border-top-1 surface-border': !first }">
+                  <div class="md:w-10rem relative">
+                    <img class="block xl:block mx-auto border-round w-full"
+                      [src]="'https://graphics.tudelft.nl/Publications-new/2024/MHCOLHHASD24/dice.png'"
+                      [alt]="item.title" />
+                  </div>
+                  <div class="flex flex-column md:flex-row justify-content-between md:align-items-center flex-1 gap-4">
+                    <div class="flex flex-row md:flex-column justify-content-between align-items-start gap-2">
+                      <div>
+
+                        <div class="text-lg font-medium text-900 mt-2">{{item.title}}</div>
+                        <p>
+
+
+                        </p>
+                        <span class="font-medium text-secondary text-sm">{{item.collaboratorNames}}</span>
+                        <p>
+
+
+                        </p>
+                        <span class="font-medium text-secondary text-sm">
+                          <div class="card flex align-items-center gap-2 flex-wrap">
+                            <ng-container *ngFor="let tag of item.tags">
+                              <p-chip [style]="{'background': getColorCode(tag.color)}" icon="pi pi-tags"
+                                label="{{tag.name}}" />
+                            </ng-container>
+                          </div>
+                        </span>
+                      </div>
+                      <div class="surface-100 p-1" style="border-radius: 30px">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+          <ng-template let-product pTemplate="grid" let-products>
+            <div class="grid grid-nogutter">
+              <div class="col-12 sm:col-6 md:col-4 xl:col-6 p-2" *ngFor="let item of products">
+                <div class="p-4 border-1 surface-border surface-card border-round flex flex-column">
+                  <div class="surface-50 flex justify-content-center border-round p-3">
+                    <div class="relative mx-auto">
+                      <img class="border-round w-full"
+                        [src]="'https://graphics.tudelft.nl/Publications-new/2024/MHCOLHHASD24/dice.png'"
+                        [alt]="product.name" style="max-width: 300px;" />
+                    </div>
+                  </div>
+                  <div class="pt-4">
+                    <div class="flex flex-row justify-content-between align-items-start gap-2">
+                      <div>
+
+                        <div class="text-lg font-medium text-900 mt-2">{{item.title}}</div>
+                        <p>
+
+
+                        </p>
+                        <span class="font-medium text-secondary text-sm">{{item.collaboratorNames}}</span>
+                        <p>
+
+
+                        </p>
+                        <span class="font-medium text-secondary text-sm">
+                          <div class="card flex align-items-center gap-2 flex-wrap">
+                            <ng-container *ngFor="let tag of item.tags">
+                              <p-chip [style]="{'background': getColorCode(tag.color)}" icon="pi pi-tags"
+                                label="{{tag.name}}" />
+                            </ng-container>
+                          </div>
+                        </span>
+
+                      </div>
+                      <!-- <div class="surface-100 p-1" style="border-radius: 30px">
+                        <div class="surface-0 flex align-items-center gap-2 justify-content-center py-1 px-2">
+                        </div>
+                      </div> -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </p-dataView>
+      </div>
+    </div>
+    <div class="col-1"></div>
+  </div>
+
+</body>
