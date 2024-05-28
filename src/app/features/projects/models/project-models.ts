@@ -10,6 +10,9 @@ export interface Project {
     tagsToProjects: TagToProject[]
     links: Link[]
     requests: Request[]
+    collaboratorNames: string[]
+    tagNames: string[]
+    tags: Tag[]
 
 }
 

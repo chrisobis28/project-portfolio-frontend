@@ -8,11 +8,6 @@ import {Collaborator, Link, Media, MediaFile, Project, Tag} from '../models/proj
 })
 export class ProjectService {
   private readonly API_URL = 'http://localhost:8080'
-  private readonly httpOptions = {
-    headers: new HttpHeaders({
-      'ngrok-skip-browser-warning': 'true'
-    })
-  };
   constructor(private readonly httpClient: HttpClient) { }
 
   getAllProjects(): Observable<Project[]> {
