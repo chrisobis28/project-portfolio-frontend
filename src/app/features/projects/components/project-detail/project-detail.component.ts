@@ -9,7 +9,7 @@ import {TagModule} from 'primeng/tag';
 import {ButtonModule} from 'primeng/button';
 import {CarouselModule} from 'primeng/carousel';
 import {ChipModule} from 'primeng/chip';
-import {Collaborator, Link, Media, MediaFile, Project, Tag} from "../../models/project-models";
+import {Collaborator, MediaFileContent, Link, Media, MediaFile, Project, Tag} from "../../models/project-models";
 import {ActivatedRoute} from '@angular/router';
 import {DividerModule } from 'primeng/divider';
 import {ProjectService} from "../../services/project/project.service";
@@ -39,6 +39,7 @@ export class ProjectDetailComponent implements OnInit {
   project: Project = {
     projectId: '',
     title: '',
+    tmb:{a:'',b:''},
     description: '',
     bibtex: '',
     archived: false,
@@ -52,11 +53,27 @@ export class ProjectDetailComponent implements OnInit {
     tagNames: [],
     tags: [],
   };
+  responsiveOptions = [
+    {
+      breakpoint: '1199px',
+      numVisible: 1,
+      numScroll: 1
+    },
+    {
+      breakpoint: '991px',
+      numVisible: 2,
+      numScroll: 1
+    },
+    {
+      breakpoint: '767px',
+      numVisible: 1,
+      numScroll: 1
+    }
+  ];
   collaborators: Collaborator[] = [];
   links: Link[] = [];
   tags: Tag[] = [];
   isMobile: boolean;
-  responsiveOptions: any[] | undefined;
   private mimeTypes: { [key: string]: string } = {
     'jpg': 'image/jpeg',
     'jpeg': 'image/jpeg',
@@ -78,64 +95,45 @@ export class ProjectDetailComponent implements OnInit {
     return this.collaborators.map(obj => obj.name).join(', ');
   }
 
-  ngOnInit() {
-    this.route.params.subscribe(params => {
-      this.projectId = (params['id']);
-      this.projectService.getProjectById(params['id']).subscribe((responseProject: Project) => {
-        this.project = responseProject;
-        this.projectDescription = this.project.description.split('\\n')
-      });
-      this.linkService.getLinksByProjectId(params['id']).subscribe((responseLinks: Link[]) => {
-        this.links = responseLinks;
-      });
-      this.collaboratorService.getCollaboratorsByProjectId(params['id']).subscribe((responseCollaborators: Collaborator[]) => {
-        this.collaborators = responseCollaborators;
-      });
-      this.tagService.getTagsByProjectId(params['id']).subscribe((responseTags: Tag[]) => {
-        this.tags = responseTags;
-      });
-    });
-    this.mediaService.getMediasContentByProjectId(this.projectId).subscribe({
-      next: (data: MediaFile[]) => {
-        this.images = data.filter(media => media.a && (media.a.endsWith(".jpg") || media.a.endsWith(".png")));
-        this.bibTeX = data.find(media => media.a && media.a.endsWith(".bib"));
-      },
-      error: (err:any) => {
-        console.error('Error fetching media files', err);
-      }
-    })
-    this.mediaService.getDocumentsByProjectId(this.projectId).subscribe({
-      next: (data: Media[]) => {
-        this.documents = data.filter(media => media.path && !(
-          media.path.endsWith(".jpg") ||
-          media.path.endsWith(".png")
-        ));
-      },
-      error: (err:any) => {
-        console.error('Error fetching media files', err);
-      }
+   ngOnInit() {
+     this.route.params.subscribe(params => {
+       this.projectId = (params['id']);
+       this.projectService.getProjectById(params['id']).subscribe((responseProject: Project) => {
+         this.project = responseProject;
+         this.projectDescription = this.project.description.split('\\n')
+       });
+       this.linkService.getLinksByProjectId(params['id']).subscribe((responseLinks: Link[]) => {
+         this.links = responseLinks;
+       });
+       this.collaboratorService.getCollaboratorsByProjectId(params['id']).subscribe((responseCollaborators: Collaborator[]) => {
+         this.collaborators = responseCollaborators;
+       });
+       this.tagService.getTagsByProjectId(params['id']).subscribe((responseTags: Tag[]) => {
+         this.tags = responseTags;
+       });
+     });
+     this.mediaService.getMediasContentByProjectId(this.projectId).subscribe({
+        next: (data: MediaFile[]) => {
+          this.images = data.filter(media => media.a && (media.a.endsWith(".jpg") || media.a.endsWith(".png")));
+          this.bibTeX = data.find(media => media.a && media.a.endsWith(".bib"));
+        },
+        error: (err: any) => {
+          console.error('Error fetching media files', err);
+        }
+      })
+      this.mediaService.getDocumentsByProjectId(this.projectId).subscribe({
+          next: (data: Media[]) => {
+            this.documents = data.filter(media => media.path && !(
+              media.path.endsWith(".jpg") ||
+              media.path.endsWith(".png")
+            ));
+          },
+          error: (err: any) => {
+            console.error('Error fetching media files', err);
+          }
+        }
+      );
     }
-    );
-
-
-    this.responsiveOptions = [
-      {
-        breakpoint: '1199px',
-        numVisible: 1,
-        numScroll: 1
-      },
-      {
-        breakpoint: '991px',
-        numVisible: 2,
-        numScroll: 1
-      },
-      {
-        breakpoint: '767px',
-        numVisible: 1,
-        numScroll: 1
-      }
-    ];
-  }
   @HostListener('window:resize', ['$event'])
   onResize() {
     this.isMobile = window.innerWidth <= 767;
@@ -150,7 +148,7 @@ export class ProjectDetailComponent implements OnInit {
     return this.mimeTypes[extension] || 'application/octet-stream';
   }
 
-  downloadFile(media: MediaFile) {
+  downloadFile(media: MediaFileContent) {
     const mimeType = this.getMimeType(media.a)
     const byteArray = new Uint8Array(atob(media.b).split('').map(char => char.charCodeAt(0)));
     const file = new Blob([byteArray], {type: mimeType});
@@ -197,20 +195,19 @@ export class ProjectDetailComponent implements OnInit {
     return formattedBibtex.join('\n');
   }
   async downloadDocument(mediaId: string){
-    let mediaFile : MediaFile = {
+    let mediaFile : MediaFileContent = {
       a:"",
       b:"",
-      c:""
     };
     this.mediaService.getDocumentContent(mediaId).subscribe({
-      next: (data: MediaFile) => {
-       mediaFile = data;
-      },
-      error: (err:any) => {
-        console.error('Error fetching media files', err);
-      }
-    })
-    this.downloadFile(mediaFile);
+       next: (data: MediaFileContent) => {
+        mediaFile = data;
+       },
+       error: (err:any) => {
+         console.error('Error fetching media files', err);
+       }
+     })
+     this.downloadFile(mediaFile);
   }
 
 }

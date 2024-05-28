@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {Observable} from "rxjs";
-import {Media, MediaFile} from "../../models/project-models";
+import {MediaFileContent, Media, MediaFile} from "../../models/project-models";
 import {HttpClient} from "@angular/common/http";
 
 @Injectable({
@@ -15,7 +15,7 @@ export class MediaService {
   getDocumentsByProjectId(projectId: string): Observable<Media[]> {
     return this.httpClient.get<Media[]>(this.API_URL + "file/" + `${projectId}`);
   }
-  getDocumentContent(mediaId: string): Observable<MediaFile> {
-    return this.httpClient.get<MediaFile>(this.API_URL + "file/content/" + `${mediaId}`);
+  getDocumentContent(mediaId: string): Observable<MediaFileContent> {
+    return this.httpClient.get<MediaFileContent>(this.API_URL + "file/content/" + `${mediaId}`);
   }
 }

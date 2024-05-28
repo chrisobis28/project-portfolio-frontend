@@ -13,6 +13,7 @@ export interface Project {
     collaboratorNames: string[]
     tagNames: string[]
     tags: Tag[]
+    tmb:MediaFileContent
 
 }
 
@@ -32,7 +33,7 @@ export interface MediaFile {
   b: string;
   c: string;
 }
-export interface ImageFile {
+export interface MediaFileContent {
   a: string;
   b: string;
 }
