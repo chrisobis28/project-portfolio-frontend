@@ -7,7 +7,6 @@ import {Collaborator, Link, Media, MediaFile, Project, Tag} from '../models/proj
   providedIn: 'root'
 })
 export class ProjectService {
-  // private readonly API_URL = 'https://8725-145-94-181-116.ngrok-free.app';
   private readonly API_URL = 'http://localhost:8080'
   private readonly httpOptions = {
     headers: new HttpHeaders({
