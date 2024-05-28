@@ -55,6 +55,14 @@ export class ProjectService {
     return this.httpClient.post<Project>(this.API_URL+"project/", body);
   }
 
+  addLinkToProject(link: Link, projectId: string): Observable<Link> {
+    return this.httpClient.post<Link>(this.API_URL+"link/"+`${projectId}`, link)
+  }
+
+  getTags(): Observable<Tag[]> {
+    return this.httpClient.get<Tag[]>(this.API_URL+"tag/")
+  }
+
   editProject(id: string, body: Project): Observable<Project> {
     return this.httpClient.put<Project>(this.API_URL + `/${id}`, body);
   }

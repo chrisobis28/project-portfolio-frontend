@@ -56,6 +56,13 @@
               <ng-template let-item pTemplate="item">
                 {{ item }} - (Tag) <i class="pi pi-user ml-2"></i>
               </ng-template>
+              <p-autoComplete
+                [(ngModel)]="tagnames"
+                [suggestions]="filteredTags"
+                (completeMethod)="filterTags($event)"
+                [multiple]="true"
+                [forceSelection]="false"
+              ></p-autoComplete>
             </p-chips>
             <label for="chips">Tags</label>
           </p-floatLabel>
@@ -73,16 +80,7 @@
         <div class="card">
           <div class="flex justify-content-between">
             <h3>Links</h3>
-            <p-fileUpload
-              mode="basic"
-              chooseLabel="Upload"
-              chooseIcon="pi pi-upload"
-              name="demo[]"
-              url="https://www.primefaces.org/cdn/api/upload.php"
-              accept="image/*"
-              maxFileSize="1000000"
-              (onUpload)="onUpload($event)"
-            />
+            <p-button label="Add Link" (click)="addLink()"/>
           </div>
           <p-table
             id="linktable"
@@ -93,14 +91,14 @@
               <tr>
                 <th>Name</th>
                 <th>Url</th>
-                <th></th>
+                <th>Delete Link</th>
               </tr>
             </ng-template>
-            <ng-template pTemplate="body" let-links>
+            <ng-template pTemplate="body" let-link let-rowIndex="rowIndex">
               <tr>
-                <td><input pInputText [(ngModel)]="links.name" /></td>
-                <td><input pInputText [(ngModel)]="links.url" /></td>
-                <td><p-button label="Submit" /></td>
+                <td><input pInputText [(ngModel)]="links[rowIndex].name" [ngClass]="{'error': !links[rowIndex].name}"/></td>
+                <td><input pInputText [(ngModel)]="links[rowIndex].url" [ngClass]="{'error': !links[rowIndex].url}"/></td>
+                <td><p-button icon="pi" (click)="removeLink(rowIndex)" severity="danger"><div class="font-bold">X</div></p-button></td>
               </tr>
             </ng-template>
           </p-table>

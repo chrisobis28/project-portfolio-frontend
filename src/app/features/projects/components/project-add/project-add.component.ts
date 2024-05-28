@@ -33,24 +33,25 @@ import { firstValueFrom, map } from 'rxjs';
 export class ProjectAddComponent implements OnInit{
 
   media!: Media[];
-  projectId: string | null = null;
   project!: Project;
   title!: string;
   description!: string;
   tags: Tag[] | undefined;
   colaborators: Collaborator[] | undefined;
-  tagnames: string[] | undefined;
+  tagnames: string[] = [];
   collaboratornames: string[] | undefined;
-  links!: Link[];
+  links: Link[] = [];
   templates!: Template[];
   templateNames: string[] = [];
   selectedTemplate: string | undefined;
+  filteredTags: string[] = [];
   
   constructor(
      private projectService: ProjectService, private messageService: MessageService) {}
 
   async ngOnInit() {
-
+    this.tags = await this.getAllTags();
+    this.tagnames = this.tags.map(x => x.name)
     this.templates = await this.getAllTemplates()
     this.templateNames = await this.getAllTemplateNames()
     console.log('Templates:', this.templates);
@@ -98,36 +99,77 @@ export class ProjectAddComponent implements OnInit{
     
   }
 
-  
+  filterTags(event: any) {
+    const query = event.query.toLowerCase();
+    this.filteredTags = this.tagnames.filter(tag => tag.toLowerCase().includes(query));
+  }
+
+  onTagSelect(event: any) {
+    const tag = event;
+    if (!this.tagnames.includes(tag)) {
+      this.tagnames.push(tag);
+    }
+  }
 
   onUpload(event: UploadEvent) {
     this.messageService.add({ severity: 'info', summary: 'Success', detail: 'File Uploaded with Basic Mode' });
   }
 
-  saveProject(): void {
-    
-    const project: Project = {
-      projectId: "",
-      title: this.title,
-      description: this.description,
-      bibtex: '',
-      archived: false,
-      media: [],
-      projectsToAccounts: [],
-      projectsToCollaborators: [],
-      tagsToProjects: [],
-      links: [],
-      requests: []
-    };
+  async saveProject(): Promise<void> {
 
-    this.projectService.createProject(project).subscribe(response => {
-      console.log('Project created successfully', response);
-    });
-    
+    if (this.isAnyLinkFieldEmpty()) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'All link fields must be filled out' });
+      return;
+    }
+
+    try {
+      const project: Project = {
+        projectId: "",
+        title: this.title,
+        description: this.description,
+        bibtex: '',
+        archived: false,
+        media: [],
+        projectsToAccounts: [],
+        projectsToCollaborators: [],
+        tagsToProjects: [],
+        links: [],
+        requests: []
+      };
+  
+      const createdProject = await firstValueFrom(this.projectService.createProject(project));
+      console.log('Project created successfully', createdProject);
+
+      for (const link of this.links) {
+        await firstValueFrom(this.projectService.addLinkToProject(link, createdProject.projectId))
+        console.log('Links updated successfully in project', createdProject);
+      }
+
+    } catch (error) {
+      console.error('Error saving project or links', error);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to save project or links' });
+    }
+  }
+
+  async getAllTags(): Promise<Tag[]> {
+    return firstValueFrom(this.projectService.getTags());
   }
 
   cancel(): void {
     console.log('Operation cancelled');
+  }
+
+  isAnyLinkFieldEmpty(): boolean {
+    return this.links.some(link => link.name == '' || link.url == '');
+  }
+
+  addLink() {
+    const link: Link = { linkId: '', name: '', url: '', requestLinkProjects: [] };
+    this.links.push(link);
+  }
+
+  removeLink(index: number): void {
+    this.links.splice(index, 1); 
   }
 
 }

@@ -27,6 +27,10 @@
     margin-left: 1.5rem;
 }
 
+.error {
+    border: 1px solid red;
+}
+
 @media (max-width: 513px) {
     #templatecomponent {
         padding-bottom: 20px;
