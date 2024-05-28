@@ -8,12 +8,12 @@ import {CommonModule} from '@angular/common';
 import {TagModule} from 'primeng/tag';
 import {ButtonModule} from 'primeng/button';
 import {CarouselModule} from 'primeng/carousel';
-import {ProjectService} from '../../services/project.service';
 import {ChipModule} from 'primeng/chip';
 import {OrderListModule} from 'primeng/orderlist';
 import {Collaborator, Link, Media, MediaFile, Project, Tag} from "../../models/project-models";
 import {ActivatedRoute} from '@angular/router';
 import { DividerModule } from 'primeng/divider';
+import {ProjectService} from "../../services/project/project.service";
 
 @Component({
   selector: 'app-project-detail',
@@ -44,7 +44,10 @@ export class ProjectDetailComponent implements OnInit {
     projectsToCollaborators: [],
     tagsToProjects: [],
     links: [],
-    requests: []
+    requests: [],
+    collaboratorNames: [],
+    tagNames: [],
+    tags: [],
   };
   collaborators: Collaborator[] = [];
   links: Link[] = [];
@@ -75,17 +78,17 @@ export class ProjectDetailComponent implements OnInit {
   ngOnInit() {
     this.route.params.subscribe(params => {
       this.projectId = (params['id']);
-      this.projectService.getProjectById(params['id']).subscribe(responseProject => {
+      this.projectService.getProjectById(params['id']).subscribe((responseProject: Project) => {
         this.project = responseProject;
         this.projectDescription = this.project.description.split('\\n')
       });
-      this.projectService.getLinksByProjectId(params['id']).subscribe(responseLinks => {
+      this.projectService.getLinksByProjectId(params['id']).subscribe((responseLinks: Link[]) => {
         this.links = responseLinks;
       });
-      this.projectService.getCollaboratorsByProjectId(params['id']).subscribe(responseCollaborators => {
+      this.projectService.getCollaboratorsByProjectId(params['id']).subscribe((responseCollaborators: Collaborator[]) => {
         this.collaborators = responseCollaborators;
       });
-      this.projectService.getTagsByProjectId(params['id']).subscribe(responseTags => {
+      this.projectService.getTagsByProjectId(params['id']).subscribe((responseTags: Tag[]) => {
         this.tags = responseTags;
       });
     });
@@ -94,7 +97,7 @@ export class ProjectDetailComponent implements OnInit {
         this.images = data.filter(media => media.a && (media.a.endsWith(".jpg") || media.a.endsWith(".png")));
         this.bibTeX = data.find(media => media.a && media.a.endsWith(".bib"));
       },
-      error: (err) => {
+      error: (err:any) => {
         console.error('Error fetching media files', err);
       }
     })
@@ -105,7 +108,7 @@ export class ProjectDetailComponent implements OnInit {
           media.path.endsWith(".png")
         ));
       },
-      error: (err) => {
+      error: (err:any) => {
         console.error('Error fetching media files', err);
       }
     }
@@ -200,7 +203,7 @@ export class ProjectDetailComponent implements OnInit {
       next: (data: MediaFile) => {
        mediaFile = data;
       },
-      error: (err) => {
+      error: (err:any) => {
         console.error('Error fetching media files', err);
       }
     })
