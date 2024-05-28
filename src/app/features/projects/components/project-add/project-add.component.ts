@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ProjectService } from '../../services/project.service';
+import { ProjectService } from '../../services/project/project.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 @Component({
