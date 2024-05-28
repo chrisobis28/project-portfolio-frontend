@@ -5,7 +5,7 @@ build:
   stage: build
   image: node:22.1.0
   script:
-    - npm install -g @angular/cli
+    - npm install -g @angular/cli@16.1.8
     - npm install
     - ng build
   artifacts:
