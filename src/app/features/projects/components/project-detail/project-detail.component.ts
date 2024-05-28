@@ -11,8 +11,12 @@ import {CarouselModule} from 'primeng/carousel';
 import {ChipModule} from 'primeng/chip';
 import {Collaborator, Link, Media, MediaFile, Project, Tag} from "../../models/project-models";
 import {ActivatedRoute} from '@angular/router';
-import { DividerModule } from 'primeng/divider';
+import {DividerModule } from 'primeng/divider';
 import {ProjectService} from "../../services/project/project.service";
+import {LinkService} from "../../services/link/link.service";
+import {MediaService} from "../../services/media/media.service";
+import {CollaboratorService} from "../../services/collaborator/collaborator.service";
+import {TagService} from "../../services/tag/tag.service";
 
 @Component({
   selector: 'app-project-detail',
@@ -66,7 +70,7 @@ export class ProjectDetailComponent implements OnInit {
     'bib': 'application/x-bibtex'
   };
 
-  constructor(private readonly projectService: ProjectService, private route: ActivatedRoute) {
+  constructor(private readonly projectService: ProjectService,private readonly tagService: TagService, private readonly linkService: LinkService,private readonly mediaService: MediaService,private readonly collaboratorService: CollaboratorService,private route: ActivatedRoute) {
     this.isMobile = window.innerWidth <= 767;
   }
 
@@ -81,17 +85,17 @@ export class ProjectDetailComponent implements OnInit {
         this.project = responseProject;
         this.projectDescription = this.project.description.split('\\n')
       });
-      this.projectService.getLinksByProjectId(params['id']).subscribe((responseLinks: Link[]) => {
+      this.linkService.getLinksByProjectId(params['id']).subscribe((responseLinks: Link[]) => {
         this.links = responseLinks;
       });
-      this.projectService.getCollaboratorsByProjectId(params['id']).subscribe((responseCollaborators: Collaborator[]) => {
+      this.collaboratorService.getCollaboratorsByProjectId(params['id']).subscribe((responseCollaborators: Collaborator[]) => {
         this.collaborators = responseCollaborators;
       });
-      this.projectService.getTagsByProjectId(params['id']).subscribe((responseTags: Tag[]) => {
+      this.tagService.getTagsByProjectId(params['id']).subscribe((responseTags: Tag[]) => {
         this.tags = responseTags;
       });
     });
-    this.projectService.getMediasContentByProjectId(this.projectId).subscribe({
+    this.mediaService.getMediasContentByProjectId(this.projectId).subscribe({
       next: (data: MediaFile[]) => {
         this.images = data.filter(media => media.a && (media.a.endsWith(".jpg") || media.a.endsWith(".png")));
         this.bibTeX = data.find(media => media.a && media.a.endsWith(".bib"));
@@ -100,7 +104,7 @@ export class ProjectDetailComponent implements OnInit {
         console.error('Error fetching media files', err);
       }
     })
-    this.projectService.getDocumentsByProjectId(this.projectId).subscribe({
+    this.mediaService.getDocumentsByProjectId(this.projectId).subscribe({
       next: (data: Media[]) => {
         this.documents = data.filter(media => media.path && !(
           media.path.endsWith(".jpg") ||
@@ -198,7 +202,7 @@ export class ProjectDetailComponent implements OnInit {
       b:"",
       c:""
     };
-    this.projectService.getDocumentContent(mediaId).subscribe({
+    this.mediaService.getDocumentContent(mediaId).subscribe({
       next: (data: MediaFile) => {
        mediaFile = data;
       },

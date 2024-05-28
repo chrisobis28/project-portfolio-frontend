@@ -16,6 +16,4 @@ export class CollaboratorService {
   getCollaboratorsByProjectId(id: string): Observable<Collaborator[]> {
     return this.httpClient.get<Collaborator[]>(this.API_URL + `${id}`);
   }
-
-
 }

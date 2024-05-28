@@ -32,6 +32,10 @@ export interface MediaFile {
   b: string;
   c: string;
 }
+export interface ImageFile {
+  a: string;
+  b: string;
+}
 export interface Account {
     username: string
     name: string

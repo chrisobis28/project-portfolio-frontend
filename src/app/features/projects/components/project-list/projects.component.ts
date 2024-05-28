@@ -1,6 +1,6 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { Project } from '../../models/project-models';
+import {Media, MediaFile, Project} from '../../models/project-models';
 import { Collaborator } from '../../models/project-models';
 import { Tag } from '../../models/project-models';
 import { ProjectService } from '../../services/project/project.service';
@@ -12,6 +12,7 @@ import { CollaboratorService } from '../../services/collaborator/collaborator.se
 import { firstValueFrom, map } from 'rxjs';
 import { TagService } from '../../services/tag/tag.service';
 import { ChipsModule } from 'primeng/chips';
+import {MediaService} from "../../services/media/media.service";
 @Component({
   selector: 'app-projects',
   templateUrl: './projects.component.html',
@@ -30,7 +31,8 @@ export class ProjectsComponent implements OnInit {
   constructor(
     private readonly projectService: ProjectService,
     private readonly collaboratorService: CollaboratorService,
-    private tagService: TagService
+    private tagService: TagService,
+    private mediaService: MediaService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -39,6 +41,7 @@ export class ProjectsComponent implements OnInit {
         this.data.forEach(async x => x.collaboratorNames = await this.getCollaboratorsForId(x.projectId))
         this.data.forEach(async x => x.tagNames = await this.getTagNamesForId(x.projectId))
         this.data.forEach(async x => x.tags = await this.getTagsForId(x.projectId))
+        this.data.forEach(async x => x.media = await this.getMediasByProjectId(x.projectId))
         this.filteredData = this.data
       })
 
@@ -54,6 +57,9 @@ export class ProjectsComponent implements OnInit {
 
   async getTagsForId(id: string): Promise<Tag[]> {
     return firstValueFrom(this.tagService.getTagsByProjectId(id))
+  }
+  async getMediasByProjectId(id: string): Promise<Media[]> {
+    return firstValueFrom(this.mediaService.getDocumentsByProjectId(id).pipe(map(x=>x.filter(y=> y.path.endsWith(".png")))));
   }
 
   async getTagNamesForId(id: string): Promise<string[]> {
@@ -128,5 +134,40 @@ export class ProjectsComponent implements OnInit {
         default:
           return "rgba(111, 118, 133, 0.45)"
       }
+  }
+  async downloadDocument(mediaId: string){
+    let mediaFile : MediaFile = {
+      a:"",
+      b:"",
+      c:""
+    };
+    this.mediaService.getDocumentContent(mediaId).subscribe({
+      next: (data: MediaFile) => {
+        mediaFile = data;
+      },
+      error: (err:any) => {
+        console.error('Error fetching media files', err);
+      }
+    })
+    return mediaFile;
+  }
+    getImageSrc(): string {
+    let media: Media = this.filteredData[0].media[0];
+    console.log(media.mediaId);
+    //let md: MediaFile = await this.downloadDocument(media.mediaId);
+    //console.log(media.mediaId)
+   /*let mediaFile: MediaFile = {
+      a: "",
+      b: "",
+      c: ""
+    }
+
+
+
+    console.log(mediaFile.a)
+    console.log(mediaFile.b)
+
+    */
+    return '';
   }
  }
