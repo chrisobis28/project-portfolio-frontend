@@ -5,9 +5,9 @@ build:
   stage: build
   image: node:22.1.0
   script:
-    - npm install -g @angular/cli@16.1.8
-    - npm install
-    - ng build
+      - npm install -g @angular/cli@17.x.x
+      - ng update @angular/core@17 @angular/cli@17
+      - npm install
   artifacts:
     paths:
       - dist/
