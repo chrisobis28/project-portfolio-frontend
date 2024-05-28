@@ -4,7 +4,6 @@ import { Project } from '../../models/project-models';
 import { Collaborator } from '../../models/project-models';
 import { Tag } from '../../models/project-models';
 import { ProjectService } from '../../services/project/project.service';
-import { Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
@@ -31,8 +30,7 @@ export class ProjectsComponent implements OnInit {
   constructor(
     private readonly projectService: ProjectService, 
     private readonly collaboratorService: CollaboratorService,
-    private tagService: TagService, 
-    private router: Router
+    private tagService: TagService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -47,9 +45,6 @@ export class ProjectsComponent implements OnInit {
       this.tagNames = await this.getAllTagNames()
     }
 
-  navigateToAddProjects(): void {
-    this.router.navigate(['/add-project']);
-  }
 
   async getCollaboratorsForId(id: string): Promise<string[]> {
     return firstValueFrom(this.collaboratorService.getCollaboratorsByProjectId(id).pipe(
