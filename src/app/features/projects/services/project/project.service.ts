@@ -25,11 +25,11 @@ export class ProjectService {
   }
 
   editProject(id: String, body: Project): Observable<Project> {
-    return this.httpClient.put<Project>(this.API_URL + `/${id}`, body);
+    return this.httpClient.put<Project>(this.API_URL + `${id}`, body);
   }
 
-  deleteProject(id: String): Observable<Object> {
-    return this.httpClient.delete<Object>(this.API_URL + `/${id}`);
+  deleteProject(id: String): Observable<String> {
+    return this.httpClient.delete<String>(this.API_URL + `${id}`);
   }
 
 }

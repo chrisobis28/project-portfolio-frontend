@@ -135,9 +135,9 @@ export class ProjectsComponent implements OnInit {
           return "rgba(111, 118, 133, 0.45)"
       }
   }
-     getImageSrc(): string {
-       if(this.data[0].tmb == undefined)
+     getImageSrc(project:Project): string {
+       if(project.tmb == undefined)
          return 'https://as2.ftcdn.net/v2/jpg/01/25/64/11/1000_F_125641180_KxdtmpD15Ar5h8jXXrE5vQLcusX8z809.jpg'
-      return `data:${this.data[0].tmb.a};base64,${this.data[0].tmb.b}`;
+      return `data:${project.tmb.a};base64,${project.tmb.b}`;
     }
  }
