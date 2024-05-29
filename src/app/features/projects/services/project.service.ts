@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, Type } from '@angular/core';
 import { Observable } from 'rxjs';
-import {Collaborator, Link, Media, Project, Tag} from '..//models/project-models';
+import {Collaborator, Link, Media, Project, Tag, Template} from '..//models/project-models';
 
 @Injectable({
   providedIn: 'root'
@@ -14,12 +14,20 @@ export class ProjectService {
   imageFiles: Media[] = [];
   otherFiles: Media[] = [];
   projectId: string = "";
+  defaultTemplate: Template = {
+    templateName: '',
+    standardDescription: '',
+    standardBibtex: '',
+    numberOfCollaborators: 0,
+    projects: [],
+    templateAdditions: []
+  };
   project: Project = {
     projectId: '',
     title: '',
     description: '',
-    bibtex: '',
     archived: false,
+    template: this.defaultTemplate,
     media: [],
     projectsToAccounts: [],
     projectsToCollaborators: [],
@@ -31,8 +39,8 @@ export class ProjectService {
   links: Link[] = [];
   tags: Tag[] =[];
   
-  getProjectMedia(projectId: string): Observable<Media[]> {
-    return this.httpClient.get<Media[]>(`${this.API_URL}media/${projectId}`);
+  getDocumentsByProjectId(projectId: string): Observable<Media[]> {
+    return this.httpClient.get<Media[]>(this.API_URL+"media/file/" + `${projectId}`);
   }
 
   getProjectById(id: string): Observable<Project> {
@@ -47,17 +55,36 @@ export class ProjectService {
   getCollaboratorsByProjectId(id: string): Observable<Collaborator[]> {
     return this.httpClient.get<Collaborator[]>(this.API_URL+"collaborator/" + `${id}`);
   }
+  getTemplates(): Observable<Template[]> {
+    return this.httpClient.get<Template[]>(this.API_URL + "template");
+  }
 
   createProject(body: Project): Observable<Project> {
-    return this.httpClient.post<Project>(this.API_URL, body);
+    return this.httpClient.post<Project>(this.API_URL+"project/", body);
+  }
+
+  addLinkToProject(link: Link, projectId: string): Observable<Link> {
+    return this.httpClient.post<Link>(this.API_URL+"link/"+`${projectId}`, link)
+  }
+
+  getTags(): Observable<Tag[]> {
+    return this.httpClient.get<Tag[]>(this.API_URL+"tag/")
   }
 
   editProject(id: string, body: Project): Observable<Project> {
-    return this.httpClient.put<Project>(this.API_URL + `/${id}`, body);
+    return this.httpClient.put<Project>(this.API_URL + "project/" + `${id}`, body);
   }
 
   deleteProject(id: string): Observable<Object> {
     return this.httpClient.delete<Object>(this.API_URL + `/${id}`);
+  }
+
+  deleteLinkById(id: string): Observable<Object> {
+    return this.httpClient.delete<Object>(this.API_URL + "link/" + `${id}`)
+  }
+
+  editLinkOfProject(link: Link): Observable<Link> {
+    return this.httpClient.put<Link>(this.API_URL + "link/", link)
   }
 
 }
