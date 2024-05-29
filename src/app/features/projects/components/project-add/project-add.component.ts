@@ -16,6 +16,9 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { DropdownModule } from 'primeng/dropdown';
 import { firstValueFrom, map } from 'rxjs';
+import { AutoCompleteModule } from 'primeng/autocomplete';
+import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
+
 
 
 @Component({
@@ -26,7 +29,7 @@ import { firstValueFrom, map } from 'rxjs';
   imports: [FormsModule, InputTextModule, FloatLabelModule,
      InputTextareaModule, ChipsModule, TableModule, TagModule,
       RatingModule, ButtonModule, CommonModule, FileUploadModule,
-      DropdownModule, ToastModule],
+      DropdownModule, ToastModule, AutoCompleteModule],
   providers: [ProjectService, MessageService]
 
 })
@@ -37,6 +40,7 @@ export class ProjectAddComponent implements OnInit{
   title!: string;
   description!: string;
   tags: Tag[] | undefined;
+  selectedTags: Tag[] = []
   colaborators: Collaborator[] | undefined;
   tagnames: string[] = [];
   collaboratornames: string[] | undefined;
@@ -52,10 +56,14 @@ export class ProjectAddComponent implements OnInit{
   async ngOnInit() {
     this.tags = await this.getAllTags();
     this.tagnames = this.tags.map(x => x.name)
+    this.filteredTags = this.tagnames
     this.templates = await this.getAllTemplates()
     this.templateNames = await this.getAllTemplateNames()
     console.log('Templates:', this.templates);
     console.log('Template Names:', this.templateNames);
+    this.selectedTags = []
+
+
     // this.projectService.getTemplates().subscribe((response: Template[]) => {
     //   this.templates = response;
     //   this.templateNames = this.templates.map(x => x.templateName)
@@ -100,8 +108,8 @@ export class ProjectAddComponent implements OnInit{
   }
 
   filterTags(event: any) {
-    const query = event.query.toLowerCase();
-    this.filteredTags = this.tagnames.filter(tag => tag.toLowerCase().includes(query));
+    const query = (event as AutoCompleteCompleteEvent).query
+    this.filteredTags = this.tagnames.filter(tag => tag.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
   }
 
   onTagSelect(event: any) {
@@ -145,6 +153,8 @@ export class ProjectAddComponent implements OnInit{
         console.log('Links updated successfully in project', createdProject);
       }
 
+      this.selectedTags = []
+
     } catch (error) {
       console.error('Error saving project or links', error);
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to save project or links' });
@@ -157,6 +167,7 @@ export class ProjectAddComponent implements OnInit{
 
   cancel(): void {
     console.log('Operation cancelled');
+    this.selectedTags = []
   }
 
   isAnyLinkFieldEmpty(): boolean {
