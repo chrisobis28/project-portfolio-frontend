@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, Type } from '@angular/core';
+import { Injectable} from '@angular/core';
 import { Observable } from 'rxjs';
 import { Project } from '../../models/project-models';
 
@@ -16,19 +16,19 @@ export class ProjectService {
     return this.httpClient.get<Project[]>(this.API_URL);
   }
 
-  getProjectById(id: number): Observable<Project> {
-    return this.httpClient.get<Project>(this.API_URL + `?${id}`);
+  getProjectById(id: String): Observable<Project> {
+    return this.httpClient.get<Project>(this.API_URL + `${id}`);
   }
 
   createProject(body: Project): Observable<Project> {
     return this.httpClient.post<Project>(this.API_URL, body);
   }
 
-  editProject(id: number, body: Project): Observable<Project> {
+  editProject(id: String, body: Project): Observable<Project> {
     return this.httpClient.put<Project>(this.API_URL + `/${id}`, body);
   }
 
-  deleteProject(id: number): Observable<Object> {
+  deleteProject(id: String): Observable<Object> {
     return this.httpClient.delete<Object>(this.API_URL + `/${id}`);
   }
 

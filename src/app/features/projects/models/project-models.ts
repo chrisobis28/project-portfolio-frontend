@@ -13,6 +13,7 @@ export interface Project {
     collaboratorNames: string[]
     tagNames: string[]
     tags: Tag[]
+    tmb:MediaFileContent
 
 }
 
@@ -27,7 +28,15 @@ export interface ProjectsToAccounts {
     ptaId: string
     role: string
 }
-
+export interface MediaFile {
+  a: string;
+  b: string;
+  c: string;
+}
+export interface MediaFileContent {
+  a: string;
+  b: string;
+}
 export interface Account {
     username: string
     name: string

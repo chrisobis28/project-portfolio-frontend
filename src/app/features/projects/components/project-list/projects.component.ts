@@ -1,17 +1,12 @@
-import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { Project } from '../../models/project-models';
-import { Collaborator } from '../../models/project-models';
+import {MediaFileContent, Media, Project} from '../../models/project-models';
 import { Tag } from '../../models/project-models';
 import { ProjectService } from '../../services/project/project.service';
-import { CardModule } from 'primeng/card';
-import { ButtonModule } from 'primeng/button';
-import { DividerModule } from 'primeng/divider';
 import { DataView } from 'primeng/dataview';
 import { CollaboratorService } from '../../services/collaborator/collaborator.service';
 import { firstValueFrom, map } from 'rxjs';
 import { TagService } from '../../services/tag/tag.service';
-import { ChipsModule } from 'primeng/chips';
+import {MediaService} from "../../services/media/media.service";
 @Component({
   selector: 'app-projects',
   templateUrl: './projects.component.html',
@@ -21,28 +16,35 @@ export class ProjectsComponent implements OnInit {
   data: Project[] = [];
   filteredData: Project[] = [];
   layout: DataView["layout"] = "list";
-  collaborators: string[] = []
   projectName: string = '';
   projectCollaborator: string = ''
   tagNames: string[] = []
   selectedTagNames: string[] = []
-  
+
   constructor(
-    private readonly projectService: ProjectService, 
+    private readonly projectService: ProjectService,
     private readonly collaboratorService: CollaboratorService,
-    private tagService: TagService
+    private tagService: TagService,
+    private mediaService: MediaService
   ) {}
 
   async ngOnInit(): Promise<void> {
+
       this.projectService.getAllProjects().subscribe((response: Project[]) => {
         this.data = response;
         this.data.forEach(async x => x.collaboratorNames = await this.getCollaboratorsForId(x.projectId))
         this.data.forEach(async x => x.tagNames = await this.getTagNamesForId(x.projectId))
         this.data.forEach(async x => x.tags = await this.getTagsForId(x.projectId))
+        this.data.forEach(async x =>x.media = await this.getMediaForId(x.projectId))
+        this.data.forEach(async (x) => {
+          x.media = await this.getMediaForId(x.projectId);
+          if (x.media && x.media.length > 0) {
+            x.tmb = await this.getImageForId(x.media[0].mediaId);
+          }
+        });
         this.filteredData = this.data
       })
-
-      this.tagNames = await this.getAllTagNames()
+        this.tagNames = await this.getAllTagNames();
     }
 
 
@@ -51,25 +53,29 @@ export class ProjectsComponent implements OnInit {
       map(data => data.map(x => x.name))
     ))
   }
-
-  async getTagsForId(id: string): Promise<Tag[]> {
-    return firstValueFrom(this.tagService.getTagsByProjectId(id))
+  async getImageForId(id: string): Promise<MediaFileContent> {
+    return firstValueFrom(this.mediaService.getDocumentContent(id).pipe())
+  }
+  async getMediaForId(id: string): Promise<Media[]> {
+    return firstValueFrom(this.mediaService.getDocumentsByProjectId(id).pipe())
   }
 
-  async getTagNamesForId(id: string): Promise<string[]> {
-    return firstValueFrom(this.tagService.getTagsByProjectId(id)
-    .pipe(
-      map(data => data.map(x => x.name))
-    ))
-  }
+   async getTagsForId(id: string): Promise<Tag[]> {
+     return firstValueFrom(this.tagService.getTagsByProjectId(id))
+   }
 
-  async getAllTagNames(): Promise<string[]> {
-    return firstValueFrom(this.tagService.getAllTags().pipe(
-      map(x => x.map(x => x.name))
-    ))
-  }
+   async getTagNamesForId(id: string): Promise<string[]> {
+     return firstValueFrom(this.tagService.getTagsByProjectId(id)
+     .pipe(
+       map(data => data.map(x => x.name))
+     ))
+   }
 
-
+   async getAllTagNames(): Promise<string[]> {
+     return firstValueFrom(this.tagService.getAllTags().pipe(
+       map(x => x.map(x => x.name))
+     ))
+   }
 
   onTitleFilterChange(event: Event): void {
     this.projectName = (event.target as HTMLInputElement).value
@@ -87,8 +93,8 @@ export class ProjectsComponent implements OnInit {
   }
 
   filterByCollaborator(dataToFilter: Project[]): Project[] {
-    return dataToFilter.filter(project => 
-      project.collaboratorNames.some(collaborator => 
+    return dataToFilter.filter(project =>
+      project.collaboratorNames.some(collaborator =>
         collaborator.toLocaleLowerCase().includes(this.projectCollaborator.toLocaleLowerCase())
       )
     );
@@ -101,14 +107,14 @@ export class ProjectsComponent implements OnInit {
   filterByTags(dataToFilter: Project[]) {
     return dataToFilter.filter(project => this.selectedTagNames.every(name => project.tagNames.includes(name)))
   }
-  
+
 
   filterProjects(): void {
     this.filteredData = this.filterByTitle(this.data)
     this.filteredData = this.filterByCollaborator(this.filteredData)
     this.filteredData = this.filterByTags(this.filteredData)
   }
-  
+
   getColorCode(color: string): string {
       switch(color) {
         case "red":
@@ -129,4 +135,9 @@ export class ProjectsComponent implements OnInit {
           return "rgba(111, 118, 133, 0.45)"
       }
   }
+     getImageSrc(): string {
+       if(this.data[0].tmb == undefined)
+         return 'https://as2.ftcdn.net/v2/jpg/01/25/64/11/1000_F_125641180_KxdtmpD15Ar5h8jXXrE5vQLcusX8z809.jpg'
+      return `data:${this.data[0].tmb.a};base64,${this.data[0].tmb.b}`;
+    }
  }
