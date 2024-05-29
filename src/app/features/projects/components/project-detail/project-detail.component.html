@@ -14,7 +14,22 @@
     </div>
   </ng-container>
   <div [ngClass]="{'col-10': !isMobile, 'col-12': isMobile}">
+    <div class="grid">
+      <div class="col-12 md:col-10 lg:col-10">
         <h1>{{project.title}}</h1>
+      </div>
+      <div class="flex align-items-center justify-content-center gap-2">
+        <p-button icon="pi pi-pencil" label="Edit" [rounded]="true" severity="info"></p-button>
+        <p-button (click)="showDeleteDialog()" icon="pi pi-trash" label="Delete" [rounded]="true" severity="danger"></p-button>
+        <p-dialog header="Delete project" [modal]="true" [(visible)]="visible" [style]="{ width: '25rem' }">
+          <span class="p-text-secondary block mb-5">You are about to delete this project. Please be careful as this action cannot be undone. Please confirm your action.</span>
+          <div class="flex justify-content-end gap-2">
+            <p-button label="Cancel" severity="secondary" (click)="visible = false" />
+            <p-button (click)="deleteProject(project.projectId);visible = false" icon="pi pi-trash" label="Confirm" severity="danger"/>
+          </div>
+        </p-dialog>
+      </div>
+    </div>
         <em><p>{{getCollaboratorNames()}}</p></em>
     <p-divider></p-divider>
           <h2>Description</h2>
@@ -63,7 +78,7 @@
               </div>
               <div class="flex justify-content-center align-items-center gap-2 flex-wrap">
                 <ng-container *ngFor="let link of links">
-                  <a [href]="isAbsoluteUrl(link.url) ? link.url : 'http://' + link.url">
+                  <a [href]="isAbsoluteUrl(link.url) ? link.url : 'http://' + link.url" target="_blank">
                     <p-chip [label]="link.name" icon="pi pi-link"></p-chip>
                   </a>
                 </ng-container>
@@ -87,7 +102,7 @@
               </div>
               <div class="flex justify-content-center align-items-center gap-2 flex-wrap">
                 <ng-container *ngFor="let tag of tags">
-                  <p-chip [style]="{'background':'rgba(11, 127, 171, 0.2)'}" icon="pi pi-tags" label="{{tag.name}}"/>
+                  <p-chip [style]="{'background': getColorCode(tag.color)}" icon="pi pi-tags" label="{{tag.name}}"/>
                 </ng-container>
               </div>
             </div>

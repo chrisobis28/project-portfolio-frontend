@@ -67,12 +67,12 @@
           </ng-template>
           <ng-template pTemplate="list" let-filteredData>
             <div class="grid grid-nogutter">
-              <div class="col-12" *ngFor="let item of filteredData; let first = first" class="col-12">
+              <div class="col-12" *ngFor="let item of filteredData; let first = first">
                 <div class="flex flex-column sm:flex-row sm:align-items-center p-4 gap-3"
                   [ngClass]="{ 'border-top-1 surface-border': !first }">
                   <div class="md:w-10rem relative">
                     <img class="block xl:block mx-auto border-round w-full"
-                      [src]="getImageSrc()"
+                      [src]="getImageSrc(item)"
                       [alt]="item.title" />
                   </div>
                   <div class="flex flex-column md:flex-row justify-content-between md:align-items-center flex-1 gap-4">
@@ -114,8 +114,8 @@
                   <div class="surface-50 flex justify-content-center border-round p-3">
                     <div class="relative mx-auto">
                       <img class="border-round w-full"
-                        [src]="'https://graphics.tudelft.nl/Publications-new/2024/MHCOLHHASD24/dice.png'"
-                        [alt]="product.name" style="max-width: 300px;" />
+                        [src]=getImageSrc(item)
+                        [alt]="item.title" style="max-width: 300px;" />
                     </div>
                   </div>
                   <div class="pt-4">

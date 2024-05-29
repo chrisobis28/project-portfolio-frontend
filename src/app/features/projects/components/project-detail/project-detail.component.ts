@@ -9,19 +9,20 @@ import {TagModule} from 'primeng/tag';
 import {ButtonModule} from 'primeng/button';
 import {CarouselModule} from 'primeng/carousel';
 import {ChipModule} from 'primeng/chip';
-import {Collaborator, MediaFileContent, Link, Media, MediaFile, Project, Tag} from "../../models/project-models";
+import {Collaborator, Link, Media, MediaFile, MediaFileContent, Project, Tag} from "../../models/project-models";
 import {ActivatedRoute} from '@angular/router';
-import {DividerModule } from 'primeng/divider';
+import {DividerModule} from 'primeng/divider';
 import {ProjectService} from "../../services/project/project.service";
 import {LinkService} from "../../services/link/link.service";
 import {MediaService} from "../../services/media/media.service";
 import {CollaboratorService} from "../../services/collaborator/collaborator.service";
 import {TagService} from "../../services/tag/tag.service";
-
+import {DialogModule} from "primeng/dialog";
+import { Router } from '@angular/router'
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [DividerModule,ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule],
+  imports: [DividerModule, ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule, DialogModule],
   templateUrl: './project-detail.component.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
   styleUrls: ['./project-detail.component.css']
@@ -35,6 +36,7 @@ export class ProjectDetailComponent implements OnInit {
     c: ''
   };
   projectId: string = "";
+  visible: boolean = false;
   projectDescription: string[] = [];
   project: Project = {
     projectId: '',
@@ -87,7 +89,7 @@ export class ProjectDetailComponent implements OnInit {
     'bib': 'application/x-bibtex'
   };
 
-  constructor(private readonly projectService: ProjectService,private readonly tagService: TagService, private readonly linkService: LinkService,private readonly mediaService: MediaService,private readonly collaboratorService: CollaboratorService,private route: ActivatedRoute) {
+  constructor(private readonly router:Router, readonly projectService: ProjectService,private readonly tagService: TagService, private readonly linkService: LinkService,private readonly mediaService: MediaService,private readonly collaboratorService: CollaboratorService,private route: ActivatedRoute) {
     this.isMobile = window.innerWidth <= 767;
   }
 
@@ -149,6 +151,7 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   downloadFile(media: MediaFileContent) {
+    console.log(media);
     const mimeType = this.getMimeType(media.a)
     const byteArray = new Uint8Array(atob(media.b).split('').map(char => char.charCodeAt(0)));
     const file = new Blob([byteArray], {type: mimeType});
@@ -194,20 +197,47 @@ export class ProjectDetailComponent implements OnInit {
     });
     return formattedBibtex.join('\n');
   }
-  async downloadDocument(mediaId: string){
+  downloadDocument(mediaId: string){
     let mediaFile : MediaFileContent = {
       a:"",
       b:"",
     };
+    console.log(mediaId);
     this.mediaService.getDocumentContent(mediaId).subscribe({
        next: (data: MediaFileContent) => {
         mediaFile = data;
+        this.downloadFile(mediaFile);
        },
        error: (err:any) => {
          console.error('Error fetching media files', err);
        }
      })
-     this.downloadFile(mediaFile);
   }
-
+  showDeleteDialog() {
+    this.visible = true;
+  }
+  deleteProject(projectId:string){
+    this.projectService.deleteProject(projectId).subscribe(response => {});
+    this.router.navigateByUrl('');
+  }
+  getColorCode(color: string): string {
+    switch(color) {
+      case "red":
+        return "rgba(255, 93, 70, 0.45)"
+      case "green":
+        return "rgba(10, 118, 77, 0.45)"
+      case "blue":
+        return "rgba(10, 118, 255, 0.45)"
+      case "yellow":
+        return "rgba(255, 255, 0, 0.45)"
+      case "orange":
+        return "rgba(255, 190, 61, 0.45)"
+      case "purple":
+        return "rgba(106, 0, 255, 0.45)"
+      case "black":
+        return "rgba(0, 0, 0, 0.4)"
+      default:
+        return "rgba(111, 118, 133, 0.45)"
+    }
+  }
 }
