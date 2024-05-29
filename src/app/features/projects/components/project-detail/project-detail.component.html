@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>{{project.title}}</title>
+  <style>
+  </style>
+</head>
+<body>
+<div class="grid">
+  <ng-container *ngIf=!isMobile>
+    <div class="col-1">
+    </div>
+  </ng-container>
+  <div [ngClass]="{'col-10': !isMobile, 'col-12': isMobile}">
+        <h1>{{project.title}}</h1>
+        <em><p>{{getCollaboratorNames()}}</p></em>
+    <p-divider></p-divider>
+          <h2>Description</h2>
+          <p style="font-size: 18px;text-align: justify;">
+          <ng-container *ngFor="let line of projectDescription">
+           {{ line }}
+            <br>
+          </ng-container>
+          </p>
+          <h2>Images</h2>
+          <div class="card">
+            <p-carousel
+              [circular]="false"
+              [numScroll]="3"
+              [numVisible]="3"
+              [responsiveOptions]="responsiveOptions"
+              [value]="images">
+              <ng-template let-image pTemplate="item">
+                <div class="border-1 surface-border border-round m-2 p-3">
+                  <div class="mb-3">
+                    <div class="relative mx-auto">
+                      <img
+                        [alt]="image.c"
+                        [src]="getImageSrc(image)"
+                        class="w-full border-round"/>
+                    </div>
+                  </div>
+                  <div class="flex justify-content-between align-items-center">
+                    <div class="mt-0 font-semibold text-m">
+                      {{ image.c }}
+                    </div>
+                    <span>
+
+                        <p-button (click)="downloadFile(image)" icon="pi pi-download" styleClass="ml-2"/>
+                    </span>
+                  </div>
+                </div>
+              </ng-template>
+            </p-carousel>
+          </div>
+          <h2>Further Information</h2>
+          <div class="grid">
+            <div class="col-4">
+              <div class="flex justify-content-center align-items-center">
+                <h4>Project Links</h4>
+              </div>
+              <div class="flex justify-content-center align-items-center gap-2 flex-wrap">
+                <ng-container *ngFor="let link of links">
+                  <a [href]="isAbsoluteUrl(link.url) ? link.url : 'http://' + link.url">
+                    <p-chip [label]="link.name" icon="pi pi-link"></p-chip>
+                  </a>
+                </ng-container>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="flex justify-content-center align-items-center">
+                <h4>Project files</h4>
+              </div>
+              <div class="flex justify-content-center align-items-center gap-2 flex-wrap">
+                <ng-container *ngFor="let doc of documents">
+                  <a (click)="downloadDocument(doc.mediaId)" href="javascript:void(0);">
+                    <p-chip icon="pi pi-file-pdf" label="{{doc.name}}.{{doc.path.split('.').pop()?.toLowerCase()}}"/>
+                  </a>
+                </ng-container>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="flex justify-content-center align-items-center">
+                <h4>Project Tags</h4>
+              </div>
+              <div class="flex justify-content-center align-items-center gap-2 flex-wrap">
+                <ng-container *ngFor="let tag of tags">
+                  <p-chip [style]="{'background':'rgba(11, 127, 171, 0.2)'}" icon="pi pi-tags" label="{{tag.name}}"/>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+        <ng-container *ngIf="convertBibtex()!=undefined">
+            <h2>BibTex References</h2>
+            <pre style="font-size: smaller; max-width: 100%; width: auto;">{{ convertBibtex() }}</pre>
+        </ng-container>
+    <p-divider></p-divider>
+        <footer style="display: flex; align-items: center; justify-content: center;">
+          <img alt="icon" src="https://seeklogo.com/images/T/TU_Delft-logo-D6086E1A70-seeklogo.com.png"
+               style="max-width: 100px; max-height: 100px;">
+        </footer>
+  </div>
+  <ng-container *ngIf=!isMobile>
+    <div class="col-1">
+    </div>
+  </ng-container>
+</div>
+</body>
+</html>

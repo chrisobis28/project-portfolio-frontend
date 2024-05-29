@@ -1,23 +1,15 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { TodolistModule } from './todolist/projects.module';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-@NgModule({
-  declarations: [
-    AppComponent
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    HttpClientModule,
-    ReactiveFormsModule,
-    FormsModule,
-    TodolistModule
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
-})
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ProjectsModule } from './features/projects/projects.module';
+@NgModule({ declarations: [
+        AppComponent
+    ],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        BrowserAnimationsModule,
+        AppRoutingModule,
+        ProjectsModule], providers: [provideHttpClient(withInterceptorsFromDi())] })
 export class AppModule { }

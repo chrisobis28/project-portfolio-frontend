@@ -1,13 +1,16 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { ProjectsComponent } from './todolist/projects/projects.component';
+import { ProjectsComponent } from './features/projects/components/project-list/projects.component';
+import { ProjectAddComponent } from './features/projects/components/project-add/project-add.component';
+import {ProjectDetailComponent} from "./features/projects/components/project-detail/project-detail.component";
+import { ProjectCardComponent } from './features/projects/components/project-card/project-card.component';
 
 const routes: Routes = [
-  {
-   title: 'Home',
-   path: '',
-   component: ProjectsComponent
-  }
+  { path: '', component: ProjectsComponent },
+  { path: 'add-project', component: ProjectAddComponent },
+  { path: 'project-card', component: ProjectCardComponent},
+  { path: 'project-detail/:id', component: ProjectDetailComponent },
+  { path: '', redirectTo: '/projects', pathMatch: 'full' }
 ];
 
 @NgModule({

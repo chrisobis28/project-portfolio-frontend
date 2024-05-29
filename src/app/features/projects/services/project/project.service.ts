@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, Type } from '@angular/core';
+import { Injectable} from '@angular/core';
 import { Observable } from 'rxjs';
-import { Project } from '../../interface/Classes';
+import { Project } from '../../models/project-models';
 
 @Injectable({
   providedIn: 'root'
@@ -12,25 +12,24 @@ export class ProjectService {
     private readonly httpClient: HttpClient
   ) { }
 
-  getAllTodolist(): Observable<Project[]> {
+  getAllProjects(): Observable<Project[]> {
     return this.httpClient.get<Project[]>(this.API_URL);
   }
 
-  getTodolistById(id: number): Observable<Project> {
-    return this.httpClient.get<Project>(this.API_URL + `?${id}`);
+  getProjectById(id: String): Observable<Project> {
+    return this.httpClient.get<Project>(this.API_URL + `${id}`);
   }
 
-  createTodolist(body: Project): Observable<Project> {
+  createProject(body: Project): Observable<Project> {
     return this.httpClient.post<Project>(this.API_URL, body);
   }
 
-  updateTodolist(id: number, body: Project): Observable<Project> {
+  editProject(id: String, body: Project): Observable<Project> {
     return this.httpClient.put<Project>(this.API_URL + `/${id}`, body);
   }
 
-  deleteTodolist(id: number): Observable<Object> {
+  deleteProject(id: String): Observable<Object> {
     return this.httpClient.delete<Object>(this.API_URL + `/${id}`);
   }
-
 
 }

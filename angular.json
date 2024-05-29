@@ -25,6 +25,8 @@
               "src/assets"
             ],
             "styles": [
+              "node_modules/primeng/resources/themes/lara-light-blue/theme.css",
+              "node_modules/primeng/resources/primeng.min.css",
               "src/styles.css"
             ],
             "scripts": []
@@ -34,8 +36,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kb",
-                  "maximumError": "1mb"
+                  "maximumWarning": "1.5mb",
+                  "maximumError": "1.8mb"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -60,10 +62,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "angular-tutorial-consume-api:build:production"
+              "buildTarget": "angular-tutorial-consume-api:build:production"
             },
             "development": {
-              "browserTarget": "angular-tutorial-consume-api:build:development"
+              "buildTarget": "angular-tutorial-consume-api:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -71,7 +73,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "angular-tutorial-consume-api:build"
+            "buildTarget": "angular-tutorial-consume-api:build"
           }
         },
         "test": {

@@ -1,0 +1,24 @@
+
+.imageDiv {
+    height: 80%;
+    width: 40%;
+    background-color: #009900;
+    margin: auto;
+    text-align: center;
+}
+
+.titleAndSubtitleDiv {
+    height: 40%;
+    width: 60% ;
+    background-color: #880000;
+    margin: auto;
+    text-align: center;
+}
+
+.descriptionDiv {
+    height: 60%;
+    width: 60% ;
+    background-color: #880000;
+    margin: auto;
+    text-align: center;
+}
