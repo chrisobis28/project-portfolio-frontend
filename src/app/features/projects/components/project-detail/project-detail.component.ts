@@ -41,9 +41,7 @@ export class ProjectDetailComponent implements OnInit {
   project: Project = {
     projectId: '',
     title: '',
-    tmb:{a:'',b:''},
     description: '',
-    bibtex: '',
     archived: false,
     media: [],
     projectsToAccounts: [],
@@ -54,6 +52,8 @@ export class ProjectDetailComponent implements OnInit {
     collaboratorNames: [],
     tagNames: [],
     tags: [],
+    tmb: { a: '', b: '' },
+    template: null
   };
   responsiveOptions = [
     {

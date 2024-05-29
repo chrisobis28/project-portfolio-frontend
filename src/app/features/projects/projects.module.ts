@@ -17,6 +17,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ChipsModule } from 'primeng/chips';
 import { ChipModule } from 'primeng/chip';
 import { MultiSelectModule } from 'primeng/multiselect';
+
 @NgModule({
     declarations: [
         ProjectsComponent,

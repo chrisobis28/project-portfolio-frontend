@@ -2,8 +2,8 @@ export interface Project {
     projectId: string;
     title: string
     description: string;
-    bibtex: string
     archived: boolean
+    template: Template | null
     media: Media[]
     projectsToAccounts: ProjectsToAccounts[]
     projectsToCollaborators: ProjectsToCollaborators[]
@@ -21,6 +21,7 @@ export interface Media {
     mediaId: string
     name: string
     path: string
+    project: Project
     requestMediaProjects: RequestMediaProject[]
 }
 
@@ -112,4 +113,19 @@ export interface Tag {
     tagsToProjects: TagToProject[]
 }
 
+export interface Template {
+    templateName: string
+    standardDescription: string
+    standardBibtex: string
+    numberOfCollaborators: number
+    projects: Project[]
+    templateAdditions: TemplateAddition[]
+}
+
+export interface TemplateAddition {
+    templateAdditionId: string
+    templateAdditionName: string
+    media: boolean
+    template: Template
+}
 
