@@ -154,6 +154,7 @@
         <div class="card">
           <div class="flex justify-content-end">
             <p-button label="Cancel" class="p-button-secondary" severity="danger" (click)="cancel()"></p-button>
+            <a [routerLink]="['/project-detail', project.projectId]">
             <button
                 id="saveButton"
                 pButton
@@ -163,6 +164,7 @@
                 type="submit"
                 (click)="saveProject()">
             </button>
+            </a>
           </div>
         </div>
       </div>

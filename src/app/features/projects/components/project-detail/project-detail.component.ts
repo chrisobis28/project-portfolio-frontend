@@ -10,7 +10,7 @@ import {ButtonModule} from 'primeng/button';
 import {CarouselModule} from 'primeng/carousel';
 import {ChipModule} from 'primeng/chip';
 import {Collaborator, Link, Media, MediaFile, MediaFileContent, Project, Tag} from "../../models/project-models";
-import {ActivatedRoute} from '@angular/router';
+import {ActivatedRoute, RouterLink} from '@angular/router';
 import {DividerModule} from 'primeng/divider';
 import {ProjectService} from "../../services/project/project.service";
 import {LinkService} from "../../services/link/link.service";
@@ -22,7 +22,7 @@ import { Router } from '@angular/router'
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [DividerModule, ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule, DialogModule],
+  imports: [DividerModule, ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule, DialogModule, RouterLink],
   templateUrl: './project-detail.component.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
   styleUrls: ['./project-detail.component.css']
@@ -89,7 +89,7 @@ export class ProjectDetailComponent implements OnInit {
        this.projectId = (params['id']);
        this.projectService.getProjectById(params['id']).subscribe((responseProject: Project) => {
          this.project = responseProject;
-         this.projectDescription = this.project.description.split('\\n')
+         this.projectDescription = this.project.description.split(/\r?\n|\r|\n/g);
        });
        this.linkService.getLinksByProjectId(params['id']).subscribe((responseLinks: Link[]) => {
          this.links = responseLinks;

@@ -1,5 +1,5 @@
 import { Component , OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import {ActivatedRoute, RouterLink} from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { FloatLabelModule } from 'primeng/floatlabel';
@@ -24,9 +24,9 @@ import { firstValueFrom, map } from 'rxjs';
   styleUrls: ['./project-edit.component.css'],
   standalone: true,
   imports: [FormsModule, InputTextModule, FloatLabelModule,
-     InputTextareaModule, ChipsModule, TableModule, TagModule,
-      RatingModule, ButtonModule, CommonModule, FileUploadModule,
-      DropdownModule, ToastModule],
+    InputTextareaModule, ChipsModule, TableModule, TagModule,
+    RatingModule, ButtonModule, CommonModule, FileUploadModule,
+    DropdownModule, ToastModule, RouterLink],
   providers: [ProjectService, MessageService]
 })
 
