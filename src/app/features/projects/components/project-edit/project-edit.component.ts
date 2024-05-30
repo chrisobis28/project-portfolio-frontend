@@ -18,6 +18,10 @@ import { ToastModule } from 'primeng/toast';
 import{ MediaService} from "../../services/media/media.service";
 import { DropdownModule } from 'primeng/dropdown';
 import { firstValueFrom, map } from 'rxjs';
+import { LinkService } from '../../services/link/link.service';
+import { CollaboratorService } from '../../services/collaborator/collaborator.service';
+import { TemplateService } from '../../services/template/template.service';
+import { TagService } from '../../services/tag/tag.service';
 @Component({
   selector: 'app-project-edit',
   templateUrl: './project-edit.component.html',
@@ -50,17 +54,20 @@ export class ProjectEditComponent implements OnInit {
   addedMediaList:FormData[]=[];
 
   constructor(private route: ActivatedRoute,
-     private projectService: ProjectService, private messageService: MessageService,private mediaService: MediaService,) {}
+     private projectService: ProjectService, private messageService: MessageService,private mediaService: MediaService,
+     private linkService: LinkService, private collaboratorService: CollaboratorService, private templateService: TemplateService,
+     private tagService: TagService
+    ) {}
 
   async ngOnInit() {
     this.projectId = this.route.snapshot.paramMap.get('id');
     this.templates = await this.getAllTemplates()
     this.templateNames = await this.getAllTemplateNames()
     if (this.projectId) {
-      this.projectService.getLinksByProjectId(this.projectId).subscribe((response: Link[]) => {
+      this.linkService.getLinksByProjectId(this.projectId).subscribe((response: Link[]) => {
         this.links = response
       });
-      this.projectService.getDocumentsByProjectId(this.projectId).subscribe((response: Media[]) => {
+      this.mediaService.getDocumentsByProjectId(this.projectId).subscribe((response: Media[]) => {
         this.media = response;
       });
       this.projectService.getProjectById(this.projectId).subscribe((response: Project) => {
@@ -71,11 +78,11 @@ export class ProjectEditComponent implements OnInit {
         this.selectedTemplateName = this.project.template?.templateName;
         console.log(this.selectedTemplateName)
       });
-      this.projectService.getTagsByProjectId(this.projectId).subscribe((response: Tag[]) => {
+      this.tagService.getTagsByProjectId(this.projectId).subscribe((response: Tag[]) => {
         this.tags = response;
         this.tagnames = this.tags.map(x => x.name);
       });
-      this.projectService.getCollaboratorsByProjectId(this.projectId).subscribe((response: Collaborator[]) => {
+      this.collaboratorService.getCollaboratorsByProjectId(this.projectId).subscribe((response: Collaborator[]) => {
         this.colaborators = response;
         this.collaboratornames = this.colaborators.map(x => x.name)
       });
@@ -102,11 +109,11 @@ export class ProjectEditComponent implements OnInit {
   }
 
   async getAllTemplates(): Promise<Template[]> {
-    return firstValueFrom(this.projectService.getTemplates())
+    return firstValueFrom(this.templateService.getTemplates())
   }
 
   async getAllTemplateNames(): Promise<string[]> {
-    return firstValueFrom(this.projectService.getTemplates()
+    return firstValueFrom(this.templateService.getTemplates()
     .pipe(
       map(x => x.map(y => y.templateName))
     ))
@@ -156,17 +163,17 @@ export class ProjectEditComponent implements OnInit {
 
       for (const link of this.links) {
         if(link.linkId == '') {
-          await firstValueFrom(this.projectService.addLinkToProject(link, createdProject.projectId))
+          await firstValueFrom(this.linkService.addLinkToProject(link, createdProject.projectId))
           console.log('Links added successfully in project', createdProject);
         } else {
           console.log(link)
-          await firstValueFrom(this.projectService.editLinkOfProject(link))
+          await firstValueFrom(this.linkService.editLinkOfProject(link))
           console.log('Links updated successfully in project', createdProject);
         }
       }
 
       for (const link of this.deleteLinkList) {
-        await firstValueFrom(this.projectService.deleteLinkById(link.linkId));
+        await firstValueFrom(this.linkService.deleteLinkById(link.linkId));
         console.log('Link deleted successfully', link);
       }
       this.deleteLinkList = []

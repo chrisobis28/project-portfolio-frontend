@@ -24,4 +24,7 @@ export class MediaService {
   deleteMedia(mediaId:string): Observable<string> {
     return this.httpClient.delete<string>(this.API_URL + `${mediaId}`);
   }
+  getProjectMedia(projectId: string): Observable<Media[]> {
+    return this.httpClient.get<Media[]>(this.API_URL + `${projectId}`);
+  }
 }

@@ -16,4 +16,14 @@ export class CollaboratorService {
   getCollaboratorsByProjectId(id: string): Observable<Collaborator[]> {
     return this.httpClient.get<Collaborator[]>(this.API_URL + `${id}`);
   }
+
+  getAllCollaborators(): Observable<Collaborator[]> {
+    return this.httpClient.get<Collaborator[]>(this.API_URL)
+  }
+
+  addCollaboratorToProject(collaborator: Collaborator, projectId: string): Observable<Collaborator> {
+    const body = "role1"
+    return this.httpClient.post<Collaborator>(this.API_URL + `${projectId}` + "/" + `${collaborator.collaboratorId}`, body);
+  }
+
 }

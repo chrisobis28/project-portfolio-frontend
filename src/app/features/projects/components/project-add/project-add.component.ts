@@ -10,7 +10,8 @@ import { TagModule } from 'primeng/tag';
 import { RatingModule } from 'primeng/rating';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
-import { ProjectService } from '../../services/project.service';
+import { ProjectService } from '../../services/project/project.service';
+import { TemplateService } from '../../services/template/template.service';
 import { FileUploadModule, UploadEvent } from 'primeng/fileupload';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
@@ -23,6 +24,9 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { DataViewModule } from 'primeng/dataview';
 import {FileUploadEvent} from 'primeng/fileupload';
 import { MediaService } from '../../services/media/media.service';
+import { LinkService } from '../../services/link/link.service';
+import { CollaboratorService } from '../../services/collaborator/collaborator.service';
+import { TagService } from '../../services/tag/tag.service';
 
 
 
@@ -34,7 +38,8 @@ import { MediaService } from '../../services/media/media.service';
   imports: [FormsModule, InputTextModule, FloatLabelModule,
      InputTextareaModule, ChipsModule, TableModule, TagModule,
       RatingModule, ButtonModule, CommonModule, FileUploadModule,
-      DropdownModule, ToastModule, AutoCompleteModule, ChipModule, ReactiveFormsModule, DataViewModule],
+      DropdownModule, ToastModule, AutoCompleteModule, ChipModule, ReactiveFormsModule, DataViewModule, 
+      ],
   providers: [ProjectService, MessageService]
 
 })
@@ -68,7 +73,9 @@ export class ProjectAddComponent implements OnInit{
   
   constructor(
      private projectService: ProjectService, private messageService: MessageService,
-    private mediaService: MediaService
+    private mediaService: MediaService, private templateService: TemplateService, 
+    private linkService: LinkService, private collaboratorService: CollaboratorService,
+    private tagService: TagService
     ) {}
 
   async ngOnInit() {
@@ -89,11 +96,11 @@ export class ProjectAddComponent implements OnInit{
   }
 
   async getAllTemplates(): Promise<Template[]> {
-    return firstValueFrom(this.projectService.getTemplates())
+    return firstValueFrom(this.templateService.getTemplates())
   }
 
   async getAllTemplateNames(): Promise<string[]> {
-    return firstValueFrom(this.projectService.getTemplates()
+    return firstValueFrom(this.templateService.getTemplates()
     .pipe(
       map(x => x.map(y => y.templateName))
     ))
@@ -188,7 +195,7 @@ export class ProjectAddComponent implements OnInit{
       this.description = ""
 
       for (const link of this.links) {
-        await firstValueFrom(this.projectService.addLinkToProject(link, createdProject.projectId))
+        await firstValueFrom(this.linkService.addLinkToProject(link, createdProject.projectId))
         console.log('Links updated successfully in project', createdProject);
       }
       this.links = []
@@ -196,7 +203,7 @@ export class ProjectAddComponent implements OnInit{
       const finalCollaborators = this.colaborators.filter(x => this.selectedCollaborators.includes(x.name))
       for(const collaborator of finalCollaborators) {
         console.log(this.colaborators)
-        await firstValueFrom(this.projectService.addCollaboratorToProject(collaborator, createdProject.projectId))
+        await firstValueFrom(this.collaboratorService.addCollaboratorToProject(collaborator, createdProject.projectId))
       }
 
       this.selectedCollaborators = []
@@ -204,7 +211,7 @@ export class ProjectAddComponent implements OnInit{
       const finalTags = this.tags.filter(x => this.selectedTags.includes(x.name))
 
       for(const tag of finalTags) {
-        await firstValueFrom(this.projectService.addTagToProject(tag, createdProject.projectId))
+        await firstValueFrom(this.tagService.addTagToProject(tag, createdProject.projectId))
       }
 
       this.selectedTags = []
@@ -225,7 +232,7 @@ export class ProjectAddComponent implements OnInit{
   }
 
   async getAllTags(): Promise<Tag[]> {
-    return firstValueFrom(this.projectService.getTags());
+    return firstValueFrom(this.tagService.getAllTags());
   }
 
   cancel(): void {
@@ -287,7 +294,7 @@ getNamesForCollaborators(collaborators: Collaborator[]): string[] {
 }
 
 getAllCollaborators(): Promise<Collaborator[]> {
-  return firstValueFrom(this.projectService.getAllCollaborators())
+  return firstValueFrom(this.collaboratorService.getAllCollaborators())
 }
 
 isTitleDescriptionAndMediaValid(): boolean{
