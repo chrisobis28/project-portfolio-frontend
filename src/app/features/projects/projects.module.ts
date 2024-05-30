@@ -17,12 +17,16 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ChipsModule } from 'primeng/chips';
 import { ChipModule } from 'primeng/chip';
 import { MultiSelectModule } from 'primeng/multiselect';
+import { LoginComponent } from './components/login/login.component';
+import { RegisterComponent } from './components/register/register.component';
 
 @NgModule({
     declarations: [
         ProjectsComponent,
         ProjectAddComponent,
-        ProjectCardComponent
+        ProjectCardComponent,
+        RegisterComponent,
+        LoginComponent,
     ],
     exports: [
         ProjectsComponent,
