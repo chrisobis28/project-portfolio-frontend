@@ -16,3 +16,22 @@
   .custom-button:hover {
     background-color: #45a049;
   }
+
+  
+.responsive-input {
+  width: 100%; /* Default width */
+  padding: 0.5em;
+  box-sizing: border-box; /* Ensure padding doesn't affect total width */
+}
+
+.label-text {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.no-border-chip {
+  border: none !important
+}

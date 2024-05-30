@@ -2,20 +2,26 @@ export interface Project {
     projectId: string;
     title: string
     description: string;
-    bibtex: string
     archived: boolean
+    template: Template | null
     media: Media[]
     projectsToAccounts: ProjectsToAccounts[]
     projectsToCollaborators: ProjectsToCollaborators[]
     tagsToProjects: TagToProject[]
     links: Link[]
     requests: Request[]
+    collaboratorNames: string[]
+    tagNames: string[]
+    tags: Tag[]
+    tmb:MediaFileContent
+
 }
 
 export interface Media {
     mediaId: string
     name: string
     path: string
+    project: Project
     requestMediaProjects: RequestMediaProject[]
     project: Project
 }
@@ -24,18 +30,15 @@ export interface ProjectsToAccounts {
     ptaId: string
     role: string
 }
-
 export interface MediaFile {
-    a: string;
-    b: string;
-    c: string;
-  }
-  export interface MediaFileContent {
-    a: string;
-    b: string;
-  }
-  
-
+  a: string;
+  b: string;
+  c: string;
+}
+export interface MediaFileContent {
+  a: string;
+  b: string;
+}
 export interface Account {
     username: string
     name: string
@@ -126,3 +129,4 @@ export interface TemplateAddition {
     media: boolean
     template: Template
 }
+
