@@ -12,7 +12,7 @@
     <div class="col-1"></div>
     <div class="col-10">
       <div class="introduction">
-        <h1 id="title">Add project page:</h1>
+        <h1 id="title">Add a new project:</h1>
         <p id="subtitle">Add your project with respect to the template*.</p>
       </div>
       <div class="card flex justify-content-start flex-wrap">
@@ -25,38 +25,37 @@
       </div>
       <div class="card flex justify-content-start">
         <p-floatLabel>
-          <input pInputText id="projecttitle" [(ngModel)]="title" style="width: 81vw" />
+          <input pInputText id="projectTitle" [(ngModel)]="title" [ngClass]="{'error': !title}"
+            [formControl]="titleInput" style="width: 81vw" />
           <label for="username">Project Title</label>
         </p-floatLabel>
       </div>
       <div class="card flex justify-content-start min-w-full">
         <p-floatLabel>
           <textarea id="float-input" rows="5" pInputTextarea style="width: 81vw" [(ngModel)]="description"
-            [autoResize]="true">
+            [ngClass]="{'error': !description}" [formControl]="descriptionInput" [autoResize]="true">
             </textarea>
           <label for="float-input">Description</label>
         </p-floatLabel>
       </div>
       <div class="card p-fluid">
         <p-floatLabel>
-
-          <p-autoComplete [(ngModel)]="selectedTags" [suggestions]="filteredTags" (completeMethod)="filterTags($event)"
-            [multiple]="true" [forceSelection]="true"> <p-chips id="chips" [(ngModel)]="tagnames">
-              <ng-template let-item pTemplate="item">
-                {{ item }} <i class="pi pi-user ml-2"></i>
-              </ng-template>
-            </p-chips>
+          <p-autoComplete [(ngModel)]="selectedTags" [suggestions]="getNamesForTags(filteredTags)"
+            (completeMethod)="filterTags($event)" [multiple]="true" [forceSelection]="true">
           </p-autoComplete>
-          <label for="chips">Tags</label>
+
+          <label>Tags</label>
         </p-floatLabel>
+
       </div>
       <div class="card p-fluid">
         <p-floatLabel>
-          <p-chips id="chips" [(ngModel)]="collaboratornames" separator=",">
-            <ng-template let-item pTemplate="item">
-              {{ item }} - (User) <i class="pi pi-user ml-2"></i>
-            </ng-template>
-          </p-chips>
+
+          <p-autoComplete [(ngModel)]="selectedCollaborators"
+            [suggestions]="getNamesForCollaborators(filteredCollaborators)"
+            (completeMethod)="filterCollaborators($event)" [multiple]="true" [forceSelection]="true">
+          </p-autoComplete>
+
           <label for="chips">Colaborators</label>
         </p-floatLabel>
       </div>

@@ -1,6 +1,6 @@
 import { Component , OnInit } from '@angular/core';
 import { InputTextModule } from 'primeng/inputtext';
-import { FormsModule } from '@angular/forms';
+import { AbstractControl, FormControl, FormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ChipsModule } from 'primeng/chips';
@@ -18,6 +18,8 @@ import { DropdownModule } from 'primeng/dropdown';
 import { firstValueFrom, map } from 'rxjs';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
+import { ChipModule } from 'primeng/chip';
+import { ReactiveFormsModule } from '@angular/forms';
 
 
 
@@ -29,7 +31,7 @@ import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
   imports: [FormsModule, InputTextModule, FloatLabelModule,
      InputTextareaModule, ChipsModule, TableModule, TagModule,
       RatingModule, ButtonModule, CommonModule, FileUploadModule,
-      DropdownModule, ToastModule, AutoCompleteModule],
+      DropdownModule, ToastModule, AutoCompleteModule, ChipModule, ReactiveFormsModule],
   providers: [ProjectService, MessageService]
 
 })
@@ -37,18 +39,27 @@ export class ProjectAddComponent implements OnInit{
 
   media!: Media[];
   project!: Project;
-  title!: string;
-  description!: string;
-  tags: Tag[] | undefined;
+  title: string = '';
+  description: string = '';
+  tags: Tag[] = [];
   selectedTags: Tag[] = []
-  colaborators: Collaborator[] | undefined;
+  colaborators: Collaborator[] = []
   tagnames: string[] = [];
-  collaboratornames: string[] | undefined;
+  collaboratornames: string[] = []
+  selectedCollaborators: Collaborator[] = []
   links: Link[] = [];
   templates!: Template[];
   templateNames: string[] = [];
   selectedTemplate: string | undefined;
-  filteredTags: string[] = [];
+  filteredTags: Tag[] = [];
+  filteredCollaborators: Collaborator[] = []
+  titleInput = new FormControl('', [Validators.required]);
+  descriptionInput = new FormControl('', [Validators.required]);
+  
+
+  invalidTitle: boolean = false
+  invalidDescription: boolean = false
+  invalidMedia: boolean = false
   
   constructor(
      private projectService: ProjectService, private messageService: MessageService) {}
@@ -56,43 +67,18 @@ export class ProjectAddComponent implements OnInit{
   async ngOnInit() {
     this.tags = await this.getAllTags();
     this.tagnames = this.tags.map(x => x.name)
-    this.filteredTags = this.tagnames
+    this.filteredTags = this.tags
     this.templates = await this.getAllTemplates()
     this.templateNames = await this.getAllTemplateNames()
+    this.colaborators = await this.getAllCollaborators()
     console.log('Templates:', this.templates);
     console.log('Template Names:', this.templateNames);
     this.selectedTags = []
+    this.selectedCollaborators = []
+    this.titleInput.setValue("")
+    this.descriptionInput.setValue("")
+    
 
-
-    // this.projectService.getTemplates().subscribe((response: Template[]) => {
-    //   this.templates = response;
-    //   this.templateNames = this.templates.map(x => x.templateName)
-    //   console.log('Templates:', this.templates);
-    //   console.log('Template Names:', this.templateNames);
-    // })
-    // if (this.projectId) {
-    //   this.projectService.getLinksByProjectId(this.projectId).subscribe((response: Link[]) => {
-    //     this.links = response
-    //   });
-    //   this.projectService.getProjectMedia(this.projectId).subscribe((response: Media[]) => {
-    //     this.media = response;
-    //   });
-    //   this.projectService.getProjectById(this.projectId).subscribe((response: Project) => {
-    //     this.project = response;
-    //     this.title = this.project.title;
-    //     this.description = this.project.description;
-    //   });
-    //   this.projectService.getTagsByProjectId(this.projectId).subscribe((response: Tag[]) => {
-    //     this.tags = response;
-    //     this.tagnames = this.tags.map(x => x.name);
-    //   });
-    //   this.projectService.getCollaboratorsByProjectId(this.projectId).subscribe((response: Collaborator[]) => {
-    //     this.colaborators = response;
-    //     this.collaboratornames = this.colaborators.map(x => x.name)
-    //   });
-    // } else {
-    //   console.error('Project ID is null');
-    // }
   }
 
   async getAllTemplates(): Promise<Template[]> {
@@ -109,7 +95,12 @@ export class ProjectAddComponent implements OnInit{
 
   filterTags(event: any) {
     const query = (event as AutoCompleteCompleteEvent).query
-    this.filteredTags = this.tagnames.filter(tag => tag.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
+    this.filteredTags = this.tags.filter(tag => tag.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
+  }
+
+  filterCollaborators(event: any) {
+    const query = (event as AutoCompleteCompleteEvent).query
+    this.filteredCollaborators = this.colaborators.filter(collaborator => collaborator.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
   }
 
   onTagSelect(event: any) {
@@ -130,7 +121,20 @@ export class ProjectAddComponent implements OnInit{
       return;
     }
 
+
+    if(!this.isTitleDescriptionAndMediaValid()) {
+      if(this.title.length == 0)
+        this.titleInput.setErrors({ invalid: true });
+      if(this.description.length == 0)
+        this.descriptionInput.setErrors({ invalid: true });
+      if(this.media.length == 0)
+        this.invalidMedia = true
+
+      return;
+    }
     try {
+      this.titleInput.setErrors({ invalid: false });
+      this.descriptionInput.setErrors({ invalid: false });
       const project: Project = {
         projectId: "",
         title: this.title,
@@ -183,6 +187,55 @@ export class ProjectAddComponent implements OnInit{
     this.links.splice(index, 1); 
   }
 
+  titleValidator(control: AbstractControl): ValidationErrors | null {
+    if(this.invalidTitle)
+      return null
+    else return { customError: true };
 }
+
+  
+  getColorCode(color: string): string {
+    switch(color) {
+      case "red":
+        return "rgba(255, 93, 70, 0.45)"
+      case "green":
+        return "rgba(10, 118, 77, 0.45)"
+      case "blue":
+        return "rgba(10, 118, 255, 0.45)"
+      case "yellow":
+        return "rgba(255, 255, 0, 0.45)"
+      case "orange":
+        return "rgba(255, 190, 61, 0.45)"
+      case "purple":
+        return "rgba(106, 0, 255, 0.45)"
+      case "black":
+        return "rgba(0, 0, 0, 0.45)"
+      default:
+        return "rgba(111, 118, 133, 0.45)"
+    }
+}
+
+getNamesForTags(tags: Tag[]): string[] {
+  return tags.map(x => x.name)
+}
+
+getNamesForCollaborators(collaborators: Collaborator[]): string[] {
+  return collaborators.map(x => x.name)
+}
+
+getAllCollaborators(): Promise<Collaborator[]> {
+  return firstValueFrom(this.projectService.getAllCollaborators())
+}
+
+isTitleDescriptionAndMediaValid(): boolean{
+  return this.title.length > 0 && this.description.length > 0 && this.media.length > 0
+}
+
+getInvalidTitle(): boolean {
+  return this.invalidTitle
+}
+
+}
+
 
 

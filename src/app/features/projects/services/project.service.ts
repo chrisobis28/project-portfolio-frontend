@@ -71,4 +71,8 @@ export class ProjectService {
     return this.httpClient.delete<Object>(this.API_URL + `/${id}`);
   }
 
+  getAllCollaborators(): Observable<Collaborator[]> {
+    return this.httpClient.get<Collaborator[]>(this.API_URL + 'collaborator/')
+  }
+
 }

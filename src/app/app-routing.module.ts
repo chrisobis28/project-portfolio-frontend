@@ -6,7 +6,7 @@ import { ProjectAddComponent } from './features/projects/components/project-add/
 const routes: Routes = [
   { path: 'projects', component: ProjectsComponent },
   { path: 'add-project', component: ProjectAddComponent },
-  { path: '', redirectTo: '/projects', pathMatch: 'full' }
+  { path: '', redirectTo: '/add-project', pathMatch: 'full' }
 ];
 
 @NgModule({

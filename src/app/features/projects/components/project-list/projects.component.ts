@@ -4,6 +4,7 @@ import { Project } from '../../models/project-models';
 import { ProjectService } from '../../services/project.service';
 import { Router } from '@angular/router';
 
+
 @Component({
   selector: 'app-projects',
   templateUrl: './projects.component.html',
