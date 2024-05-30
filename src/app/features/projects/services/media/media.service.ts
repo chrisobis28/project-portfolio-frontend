@@ -18,7 +18,10 @@ export class MediaService {
   getDocumentContent(mediaId: string): Observable<MediaFileContent> {
     return this.httpClient.get<MediaFileContent>(this.API_URL + "file/content/" + `${mediaId}`);
   }
-  addDocumentToProject(projectId:string,document:FormData,fileName:string){
+  addDocumentToProject(projectId:string,document:FormData){
     return this.httpClient.post<Media>(this.API_URL+`${projectId}`, document)
+  }
+  deleteMedia(mediaId:string): Observable<string> {
+    return this.httpClient.delete<string>(this.API_URL + `${mediaId}`);
   }
 }

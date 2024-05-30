@@ -106,9 +106,9 @@
               chooseIcon="pi pi-upload"
               url="https://www.primefaces.org/cdn/api/upload.php"
               maxFileSize="1000000"
-              (onUpload)="onBasicUploadAuto($event)"
+              (onUpload)="uploadFile($event)"
               [auto]="true"
-              chooseLabel="Upload" />
+              chooseLabel="Upload File" />
           </div>
           <p-table
             id="mediatable"

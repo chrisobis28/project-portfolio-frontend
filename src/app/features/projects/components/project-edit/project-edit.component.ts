@@ -18,11 +18,6 @@ import { ToastModule } from 'primeng/toast';
 import{ MediaService} from "../../services/media/media.service";
 import { DropdownModule } from 'primeng/dropdown';
 import { firstValueFrom, map } from 'rxjs';
-interface UploadEvent {
-  originalEvent: Event;
-  files: File[];
-}
-
 @Component({
   selector: 'app-project-edit',
   templateUrl: './project-edit.component.html',
@@ -51,7 +46,8 @@ export class ProjectEditComponent implements OnInit {
   selectedTemplateName: string | undefined;
   selectedTemplate: Template | null = null;
   deleteLinkList: Link[] = [];
-
+  deletedMediaList:Media[] =[];
+  addedMediaList:FormData[]=[];
 
   constructor(private route: ActivatedRoute,
      private projectService: ProjectService, private messageService: MessageService,private mediaService: MediaService,) {}
@@ -88,14 +84,21 @@ export class ProjectEditComponent implements OnInit {
     }
   }
 
-  async onBasicUploadAuto(event: FileUploadEvent) {
+  async uploadFile(event: FileUploadEvent) {
     const file = event.files[0];
     const formData = new FormData();
-    console.log(this.projectId);
     formData.append('file', file);
-    formData.append('name', "testName");
-    console.log(await firstValueFrom(this.mediaService.addDocumentToProject(this.project.projectId, formData, "test2")));
-    this.messageService.add({severity: 'info', summary: 'Success', detail: 'File Uploaded with Auto Mode'});
+    formData.append('name', file.name);
+    this.addedMediaList.push(formData);
+    this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media added! The media will be uploaded when the edit will be saved!'});
+    let newMedia:Media = {
+      mediaId:'',
+      name:file.name,
+      path:file.name,
+      project:this.project,
+      requestMediaProjects:[]
+    }
+    this.media.push(newMedia)
   }
 
   async getAllTemplates(): Promise<Template[]> {
@@ -149,7 +152,7 @@ export class ProjectEditComponent implements OnInit {
       };
 
       const createdProject = await firstValueFrom(this.projectService.editProject(this.projectId, prj));
-      console.log('Project created successfully', createdProject);
+      console.log('Project edited successfully', createdProject);
 
       for (const link of this.links) {
         if(link.linkId == '') {
@@ -166,9 +169,22 @@ export class ProjectEditComponent implements OnInit {
         await firstValueFrom(this.projectService.deleteLinkById(link.linkId));
         console.log('Link deleted successfully', link);
       }
+      this.deleteLinkList = []
+      for (const media of this.addedMediaList) {
+        await firstValueFrom(this.mediaService.addDocumentToProject(this.project.projectId, media));
+        console.log('Media added successfully', media);
+      }
+      this.addedMediaList = []
+      for (const media of this.deletedMediaList) {
+          if(media.mediaId!='')
+          {await firstValueFrom(this.mediaService.deleteMedia(media.mediaId));
+          console.log('Media deleted successfully', media);
+          }
+      }
+      this.deletedMediaList = []
 
     } catch (error) {
-      console.error('Error saving project or links', error);
+      console.error('Error saving project,media or links', error);
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to save project or links' });
     }
   }
@@ -180,7 +196,6 @@ export class ProjectEditComponent implements OnInit {
   isAnyLinkFieldEmpty(): boolean {
     return this.links.some(link => link.name == '' || link.url == '');
   }
-
   addLink() {
     const link: Link = { linkId: '', name: '', url: '', requestLinkProjects: [] };
     this.links.push(link);
@@ -192,32 +207,19 @@ export class ProjectEditComponent implements OnInit {
   }
 
   removeMedia(index: number): void {
+    this.deletedMediaList.push(this.media[index])
+    this.addedMediaList = this.addedMediaList.filter(x=>x.get('name')!=this.media[index].path);
+    console.log(this.media[index].path);
     this.media.splice(index, 1);
   }
 
   removeTemplate(): void {
     this.selectedTemplateName = ''
-    this.selectedTemplate = null;
-  }
-  private mimeTypes: { [key: string]: string } = {
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'png': 'image/png',
-    'gif': 'image/gif',
-    'bmp': 'image/bmp',
-    'webp': 'image/webp',
-    'pdf': 'application/pdf',
-    'txt': 'text/plain',
-    'html': 'text/html',
-    'bib': 'application/x-bibtex'
-  };
-  getMimeType(fileName: string): string {
-    const extension = fileName.split('.').pop()?.toLowerCase() || '';
-    return this.mimeTypes[extension] || 'application/octet-stream';
-  }
+    this.selectedTemplate = null;}
+
   downloadFile(media: MediaFileContent) {
     console.log(media);
-    const mimeType = this.getMimeType(media.a)
+    const mimeType = 'application/octet-stream'
     const byteArray = new Uint8Array(atob(media.b).split('').map(char => char.charCodeAt(0)));
     const file = new Blob([byteArray], {type: mimeType});
     const fileUrl = URL.createObjectURL(file);

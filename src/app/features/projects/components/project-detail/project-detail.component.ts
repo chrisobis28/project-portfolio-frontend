@@ -76,19 +76,6 @@ export class ProjectDetailComponent implements OnInit {
   links: Link[] = [];
   tags: Tag[] = [];
   isMobile: boolean;
-  private mimeTypes: { [key: string]: string } = {
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'png': 'image/png',
-    'gif': 'image/gif',
-    'bmp': 'image/bmp',
-    'webp': 'image/webp',
-    'pdf': 'application/pdf',
-    'txt': 'text/plain',
-    'html': 'text/html',
-    'bib': 'application/x-bibtex'
-  };
-
   constructor(private readonly router:Router, readonly projectService: ProjectService,private readonly tagService: TagService, private readonly linkService: LinkService,private readonly mediaService: MediaService,private readonly collaboratorService: CollaboratorService,private route: ActivatedRoute) {
     this.isMobile = window.innerWidth <= 767;
   }
@@ -144,15 +131,9 @@ export class ProjectDetailComponent implements OnInit {
   getImageSrc(media: MediaFile): string {
     return `data:${media.a};base64,${media.b}`;
   }
-
-  getMimeType(fileName: string): string {
-    const extension = fileName.split('.').pop()?.toLowerCase() || '';
-    return this.mimeTypes[extension] || 'application/octet-stream';
-  }
-
   downloadFile(media: MediaFileContent) {
     console.log(media);
-    const mimeType = this.getMimeType(media.a)
+    const mimeType = 'application/octet-stream'
     const byteArray = new Uint8Array(atob(media.b).split('').map(char => char.charCodeAt(0)));
     const file = new Blob([byteArray], {type: mimeType});
     const fileUrl = URL.createObjectURL(file);
