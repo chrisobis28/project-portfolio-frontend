@@ -60,30 +60,52 @@
         </p-floatLabel>
       </div>
       <div class="card">
-        <div class="flex justify-content-between">
-          <h3>Links</h3>
-          <p-button label="Add Link" (click)="addLink()" />
+
+        <div class=" grid flex">
+
+          <h3 class="col-2">Links</h3>
+          <div class="col-6"></div>
+          <div class="col-2">
+            <p-button label="Add Link" (click)="addLink()" />
+          </div>
         </div>
-        <p-table id="linktable" [value]="links" [tableStyle]="{ 'min-width': '50rem' }">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Name</th>
-              <th>Url</th>
-              <th>Delete Link</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-link let-rowIndex="rowIndex">
-            <tr>
-              <td><input pInputText [(ngModel)]="links[rowIndex].name" [ngClass]="{'error': !links[rowIndex].name}" />
-              </td>
-              <td><input pInputText [(ngModel)]="links[rowIndex].url" [ngClass]="{'error': !links[rowIndex].url}" />
-              </td>
-              <td><p-button icon="pi" (click)="removeLink(rowIndex)" severity="danger">
-                  <div class="font-bold">X</div>
-                </p-button></td>
-            </tr>
-          </ng-template>
-        </p-table>
+
+
+
+        <div class="card">
+          <p-dataView #dv [value]="links">
+            <ng-template pTemplate="list" let-links>
+              <div class="grid grid-nogutter">
+                <div class="col-12" *ngFor="let item of links" class="col-12">
+
+                  <div class="grid">
+                    <div class="card relative justify-content-center lg:col-4 md:col-8 sm:col-12">
+                      <p-floatLabel styleClass="flex relative">
+                        <input pInputText [(ngModel)]="item.name" [ngClass]="{'error': !item.name}"
+                          style="width: 100%;" />
+                        <label for="input">Name</label>
+                      </p-floatLabel>
+                    </div>
+                    <div class="card relative  lg:col-4 md:col-8 sm:col-12">
+                      <p-floatLabel styleClass="flex relative">
+                        <input pInputText [(ngModel)]="item.url" [ngClass]="{'error': !item.url}"
+                          style="width: 100%;" />
+                        <label for="input">Url</label>
+                      </p-floatLabel>
+                    </div>
+                    <div class="card relative lg:col-2 md:col-4 sm:col-12">
+                      <p-button icon="pi" (click)="removeLink(item)" severity="danger" styleClass="flex relative">
+                        <div class="font-bold">X</div>
+                      </p-button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </ng-template>
+          </p-dataView>
+        </div>
+
       </div>
       <div class="card">
         <div class="flex justify-content-between">

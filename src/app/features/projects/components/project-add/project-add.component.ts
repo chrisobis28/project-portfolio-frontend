@@ -20,6 +20,7 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { ChipModule } from 'primeng/chip';
 import { ReactiveFormsModule } from '@angular/forms';
+import { DataViewModule } from 'primeng/dataview';
 
 
 
@@ -31,7 +32,7 @@ import { ReactiveFormsModule } from '@angular/forms';
   imports: [FormsModule, InputTextModule, FloatLabelModule,
      InputTextareaModule, ChipsModule, TableModule, TagModule,
       RatingModule, ButtonModule, CommonModule, FileUploadModule,
-      DropdownModule, ToastModule, AutoCompleteModule, ChipModule, ReactiveFormsModule],
+      DropdownModule, ToastModule, AutoCompleteModule, ChipModule, ReactiveFormsModule, DataViewModule],
   providers: [ProjectService, MessageService]
 
 })
@@ -42,12 +43,12 @@ export class ProjectAddComponent implements OnInit{
   title: string = '';
   description: string = '';
   tags: Tag[] = [];
-  selectedTags: Tag[] = []
+  selectedTags: string[] = []
   colaborators: Collaborator[] = []
   tagnames: string[] = [];
   collaboratornames: string[] = []
-  selectedCollaborators: Collaborator[] = []
-  links: Link[] = [];
+  selectedCollaborators: string[] = []
+  links: Link[] = [{ linkId: '', name: '', url: '', requestLinkProjects: [] }];
   templates!: Template[];
   templateNames: string[] = [];
   selectedTemplate: string | undefined;
@@ -157,6 +158,18 @@ export class ProjectAddComponent implements OnInit{
         console.log('Links updated successfully in project', createdProject);
       }
 
+      const finalCollaborators = this.colaborators.filter(x => this.selectedCollaborators.includes(x.name))
+      for(const collaborator of finalCollaborators) {
+        console.log(this.colaborators)
+        await firstValueFrom(this.projectService.addCollaboratorToProject(collaborator, createdProject.projectId))
+      }
+
+      const finalTags = this.tags.filter(x => this.selectedTags.includes(x.name))
+
+      for(const tag of finalTags) {
+        await firstValueFrom(this.projectService.addTagToProject(tag, createdProject.projectId))
+      }
+
       this.selectedTags = []
 
     } catch (error) {
@@ -183,9 +196,13 @@ export class ProjectAddComponent implements OnInit{
     this.links.push(link);
   }
 
-  removeLink(index: number): void {
-    this.links.splice(index, 1); 
+  removeLink(linkToRemove: Link): void {
+    let index = this.links.findIndex(obj => obj === linkToRemove);
+
+    if (index !== -1) {
+    this.links.splice(index, 1);
   }
+}
 
   titleValidator(control: AbstractControl): ValidationErrors | null {
     if(this.invalidTitle)
@@ -228,7 +245,8 @@ getAllCollaborators(): Promise<Collaborator[]> {
 }
 
 isTitleDescriptionAndMediaValid(): boolean{
-  return this.title.length > 0 && this.description.length > 0 && this.media.length > 0
+  return this.title.length > 0 && this.description.length > 0 
+  //&& this.media.length > 0
 }
 
 getInvalidTitle(): boolean {

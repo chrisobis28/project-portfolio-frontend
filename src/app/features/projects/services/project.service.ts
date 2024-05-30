@@ -75,4 +75,14 @@ export class ProjectService {
     return this.httpClient.get<Collaborator[]>(this.API_URL + 'collaborator/')
   }
 
+  addCollaboratorToProject(collaborator: Collaborator, projectId: string): Observable<Collaborator> {
+    const body = "role1"
+    console.log(collaborator)
+    return this.httpClient.post<Collaborator>(`${this.API_URL}collaborator/${projectId}/${collaborator.collaboratorId}`, body);
+  }
+
+  addTagToProject(tag: Tag, projectId: string): Observable<Tag> {
+    return this.httpClient.post<Tag>(this.API_URL + "tag/" + `${projectId}` + "/" + `${tag.tagId}`, "")
+  }
+
 }
