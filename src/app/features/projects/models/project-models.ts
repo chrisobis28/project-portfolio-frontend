@@ -17,12 +17,24 @@ export interface Media {
     name: string
     path: string
     requestMediaProjects: RequestMediaProject[]
+    project: Project
 }
 
 export interface ProjectsToAccounts {
     ptaId: string
     role: string
 }
+
+export interface MediaFile {
+    a: string;
+    b: string;
+    c: string;
+  }
+  export interface MediaFileContent {
+    a: string;
+    b: string;
+  }
+  
 
 export interface Account {
     username: string

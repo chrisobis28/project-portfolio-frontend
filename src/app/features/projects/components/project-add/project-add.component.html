@@ -110,31 +110,43 @@
       <div class="card">
         <div class="flex justify-content-between">
           <h3>Media</h3>
-          <p-fileUpload mode="basic" chooseLabel="Upload" chooseIcon="pi pi-upload" name="demo[]"
-            url="https://www.primefaces.org/cdn/api/upload.php" accept="image/*" maxFileSize="1000000"
-            (onUpload)="onUpload($event)" />
+          <p-toast />
+          <p-fileUpload mode="basic" name="demo[]" chooseIcon="pi pi-upload"
+            url="https://www.primefaces.org/cdn/api/upload.php" maxFileSize="1000000" (onUpload)="uploadFile($event)"
+            [auto]="true" chooseLabel="Upload File" />
         </div>
         <p-table id="mediatable" [value]="media" [tableStyle]="{ 'min-width': '50rem' }">
           <ng-template pTemplate="header">
             <tr>
               <th>Name</th>
-              <th>Preview</th>
-              <th>Upload new File</th>
+              <th>Download File</th>
+              <!--                <th>Change File</th>-->
               <th>Delete File</th>
             </tr>
           </ng-template>
-          <ng-template pTemplate="body" let-item>
+          <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
             <tr>
-              <td><input pInputText [(ngModel)]="item.name" /></td>
+              <!--                <td><input pInputText [(ngModel)]="media[rowIndex].path" [ngClass]="{'error': !media[rowIndex].name}" /></td>
+-->
               <td>
-                <img [src]="item.path + item.name" [alt]="item.name" width="100" class="shadow-4" />
+                <h5>{{media[rowIndex].path}}</h5>
               </td>
               <td>
-                <p-fileUpload mode="basic" chooseLabel="Upload" chooseIcon="pi pi-upload" name="demo[]"
-                  url="https://www.primefaces.org/cdn/api/upload.php" accept="image/*" maxFileSize="1000000"
-                  (onUpload)="onUpload($event)" />
+                <p-button (onClick)="downloadDocument(media[rowIndex].mediaId)" label="Download"
+                  icon="pi pi-download" />
               </td>
-              <td><p-button label="Delete" /></td>
+              <!--                <td>-->
+              <!--                  <p-fileUpload-->
+              <!--                    mode="basic"-->
+              <!--                    chooseLabel="Change"-->
+              <!--                    chooseIcon="pi pi-sync"-->
+              <!--                    name="demo[]"-->
+              <!--                    url="https://www.primefaces.org/cdn/api/upload.php"-->
+              <!--                    maxFileSize="1000000"-->
+              <!--                    (onUpload)="onBasicUploadAuto($event)"-->
+              <!--                  />-->
+              <!--                </td>-->
+              <td><p-button (click)="removeMedia(rowIndex)" severity="danger" icon="pi pi-trash" /></td>
             </tr>
           </ng-template>
           <ng-template pTemplate="summary">
@@ -144,6 +156,7 @@
           </ng-template>
         </p-table>
       </div>
+
       <div class="card">
         <div class="flex justify-content-end">
           <p-button label="Cancel" class="p-button-secondary" severity="danger" (click)="cancel()"></p-button>

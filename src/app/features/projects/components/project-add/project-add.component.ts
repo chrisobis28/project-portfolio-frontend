@@ -4,7 +4,7 @@ import { AbstractControl, FormControl, FormsModule, ValidationErrors, Validators
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ChipsModule } from 'primeng/chips';
-import { Collaborator, Link, Media, Project, Tag, Template } from '../../models/project-models';
+import { Collaborator, Link, Media, MediaFileContent, Project, Tag, Template } from '../../models/project-models';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { RatingModule } from 'primeng/rating';
@@ -21,6 +21,8 @@ import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { ChipModule } from 'primeng/chip';
 import { ReactiveFormsModule } from '@angular/forms';
 import { DataViewModule } from 'primeng/dataview';
+import {FileUploadEvent} from 'primeng/fileupload';
+import { MediaService } from '../../services/media/media.service';
 
 
 
@@ -38,7 +40,7 @@ import { DataViewModule } from 'primeng/dataview';
 })
 export class ProjectAddComponent implements OnInit{
 
-  media!: Media[];
+  media: Media[] = [];
   project!: Project;
   title: string = '';
   description: string = '';
@@ -48,7 +50,7 @@ export class ProjectAddComponent implements OnInit{
   tagnames: string[] = [];
   collaboratornames: string[] = []
   selectedCollaborators: string[] = []
-  links: Link[] = [{ linkId: '', name: '', url: '', requestLinkProjects: [] }];
+  links: Link[] = [];
   templates!: Template[];
   templateNames: string[] = [];
   selectedTemplate: string | undefined;
@@ -56,6 +58,8 @@ export class ProjectAddComponent implements OnInit{
   filteredCollaborators: Collaborator[] = []
   titleInput = new FormControl('', [Validators.required]);
   descriptionInput = new FormControl('', [Validators.required]);
+  addedMediaList:FormData[]=[];
+  deletedMediaList:Media[] =[];
   
 
   invalidTitle: boolean = false
@@ -63,7 +67,9 @@ export class ProjectAddComponent implements OnInit{
   invalidMedia: boolean = false
   
   constructor(
-     private projectService: ProjectService, private messageService: MessageService) {}
+     private projectService: ProjectService, private messageService: MessageService,
+    private mediaService: MediaService
+    ) {}
 
   async ngOnInit() {
     this.tags = await this.getAllTags();
@@ -124,12 +130,28 @@ export class ProjectAddComponent implements OnInit{
 
 
     if(!this.isTitleDescriptionAndMediaValid()) {
-      if(this.title.length == 0)
-        this.titleInput.setErrors({ invalid: true });
-      if(this.description.length == 0)
-        this.descriptionInput.setErrors({ invalid: true });
-      if(this.media.length == 0)
-        this.invalidMedia = true
+      if(this.title.length == 0){
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Title can not be empty' });
+        return;
+      }
+      if(this.description.length == 0){
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Description can not be empty' });
+        return;
+      }
+      if(this.media.length == 0){
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not be empty' });
+        return
+      }
+      for (const link of this.links) {
+        if(link.name.length < 1) {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Links can not have an empty title' });
+          return
+        }
+        if(link.url.length < 1) {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Links can not have an empty url' });
+          return
+        }
+      }
 
       return;
     }
@@ -153,16 +175,22 @@ export class ProjectAddComponent implements OnInit{
       const createdProject = await firstValueFrom(this.projectService.createProject(project));
       console.log('Project created successfully', createdProject);
 
+      this.title = ""
+      this.description = ""
+
       for (const link of this.links) {
         await firstValueFrom(this.projectService.addLinkToProject(link, createdProject.projectId))
         console.log('Links updated successfully in project', createdProject);
       }
+      this.links = []
 
       const finalCollaborators = this.colaborators.filter(x => this.selectedCollaborators.includes(x.name))
       for(const collaborator of finalCollaborators) {
         console.log(this.colaborators)
         await firstValueFrom(this.projectService.addCollaboratorToProject(collaborator, createdProject.projectId))
       }
+
+      this.selectedCollaborators = []
 
       const finalTags = this.tags.filter(x => this.selectedTags.includes(x.name))
 
@@ -172,9 +200,17 @@ export class ProjectAddComponent implements OnInit{
 
       this.selectedTags = []
 
+      for (const media of this.addedMediaList) {
+        await firstValueFrom(this.mediaService.addDocumentToProject(createdProject.projectId, media));
+        console.log('Media added successfully', media);
+      }
+      
+      this.addedMediaList = []
+
+
     } catch (error) {
       console.error('Error saving project or links', error);
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to save project or links' });
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: (error as Error).message });
     }
   }
 
@@ -246,12 +282,74 @@ getAllCollaborators(): Promise<Collaborator[]> {
 
 isTitleDescriptionAndMediaValid(): boolean{
   return this.title.length > 0 && this.description.length > 0 
-  //&& this.media.length > 0
+  && this.media.length > 0
 }
 
 getInvalidTitle(): boolean {
   return this.invalidTitle
 }
+
+async uploadFile(event: FileUploadEvent) {
+  const file = event.files[0];
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('name', file.name);
+  this.addedMediaList.push(formData);
+  this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media added! The media will be uploaded when the edit will be saved!'});
+  let newMedia:Media = {
+    mediaId:'',
+    name:file.name,
+    path:file.name,
+    project:this.project,
+    requestMediaProjects:[]
+  }
+  this.media.push(newMedia)
+}
+
+downloadDocument(mediaId: string){
+  let mediaFile : MediaFileContent = {
+    a:"",
+    b:"",
+  };
+  console.log(mediaId);
+  this.mediaService.getDocumentContent(mediaId).subscribe({
+    next: (data: MediaFileContent) => {
+      mediaFile = data;
+      this.downloadFile(mediaFile);
+    },
+    error: (err:any) => {
+      console.error('Error fetching media files', err);
+    }
+  })
+}
+
+downloadFile(media: MediaFileContent) {
+  console.log(media);
+  const mimeType = 'application/octet-stream'
+  const byteArray = new Uint8Array(atob(media.b).split('').map(char => char.charCodeAt(0)));
+  const file = new Blob([byteArray], {type: mimeType});
+  const fileUrl = URL.createObjectURL(file);
+  const fileName = media.a;
+  let link = document.createElement("a");
+  link.download = fileName;
+  link.href = fileUrl;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(fileUrl);
+}
+
+removeMedia(index: number): void {
+  this.deletedMediaList.push(this.media[index])
+  this.addedMediaList = this.addedMediaList.filter(x=>x.get('name')!=this.media[index].path);
+  console.log(this.media[index].path);
+  this.media.splice(index, 1);
+}
+
+
+
+
+
 
 }
 
