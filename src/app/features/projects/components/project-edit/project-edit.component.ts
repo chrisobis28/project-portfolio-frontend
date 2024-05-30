@@ -1,5 +1,5 @@
 import { Component , OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import {ActivatedRoute, RouterLink} from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { FloatLabelModule } from 'primeng/floatlabel';
@@ -12,21 +12,21 @@ import { RatingModule } from 'primeng/rating';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProjectService } from '../../services/project/project.service';
-import { FileUploadModule, UploadEvent } from 'primeng/fileupload';
+import {FileUploadEvent, FileUploadModule} from 'primeng/fileupload';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import{ MediaService} from "../../services/media/media.service";
 import { DropdownModule } from 'primeng/dropdown';
 import { firstValueFrom, map } from 'rxjs';
-
 @Component({
   selector: 'app-project-edit',
   templateUrl: './project-edit.component.html',
   styleUrls: ['./project-edit.component.css'],
   standalone: true,
   imports: [FormsModule, InputTextModule, FloatLabelModule,
-     InputTextareaModule, ChipsModule, TableModule, TagModule,
-      RatingModule, ButtonModule, CommonModule, FileUploadModule,
-      DropdownModule, ToastModule],
+    InputTextareaModule, ChipsModule, TableModule, TagModule,
+    RatingModule, ButtonModule, CommonModule, FileUploadModule,
+    DropdownModule, ToastModule, RouterLink],
   providers: [ProjectService, MessageService]
 })
 
@@ -46,10 +46,11 @@ export class ProjectEditComponent implements OnInit {
   selectedTemplateName: string | undefined;
   selectedTemplate: Template | null = null;
   deleteLinkList: Link[] = [];
+  deletedMediaList:Media[] =[];
+  addedMediaList:FormData[]=[];
 
-  
   constructor(private route: ActivatedRoute,
-     private projectService: ProjectService, private messageService: MessageService) {}
+     private projectService: ProjectService, private messageService: MessageService,private mediaService: MediaService,) {}
 
   async ngOnInit() {
     this.projectId = this.route.snapshot.paramMap.get('id');
@@ -83,8 +84,21 @@ export class ProjectEditComponent implements OnInit {
     }
   }
 
-  onUpload(event: UploadEvent) {
-    this.messageService.add({ severity: 'info', summary: 'Success', detail: 'File Uploaded with Basic Mode' });
+  async uploadFile(event: FileUploadEvent) {
+    const file = event.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('name', file.name);
+    this.addedMediaList.push(formData);
+    this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media added! The media will be uploaded when the edit will be saved!'});
+    let newMedia:Media = {
+      mediaId:'',
+      name:file.name,
+      path:file.name,
+      project:this.project,
+      requestMediaProjects:[]
+    }
+    this.media.push(newMedia)
   }
 
   async getAllTemplates(): Promise<Template[]> {
@@ -115,7 +129,7 @@ export class ProjectEditComponent implements OnInit {
         a: '',
         b: ''
       }
-      
+
       const foundTemplate = this.templates.find(x => x.templateName === this.selectedTemplateName);
       this.selectedTemplate = foundTemplate !== undefined ? foundTemplate : null;
 
@@ -136,9 +150,9 @@ export class ProjectEditComponent implements OnInit {
         tags: [],
         tmb: tmb
       };
-  
+
       const createdProject = await firstValueFrom(this.projectService.editProject(this.projectId, prj));
-      console.log('Project created successfully', createdProject);
+      console.log('Project edited successfully', createdProject);
 
       for (const link of this.links) {
         if(link.linkId == '') {
@@ -155,9 +169,22 @@ export class ProjectEditComponent implements OnInit {
         await firstValueFrom(this.projectService.deleteLinkById(link.linkId));
         console.log('Link deleted successfully', link);
       }
+      this.deleteLinkList = []
+      for (const media of this.addedMediaList) {
+        await firstValueFrom(this.mediaService.addDocumentToProject(this.project.projectId, media));
+        console.log('Media added successfully', media);
+      }
+      this.addedMediaList = []
+      for (const media of this.deletedMediaList) {
+          if(media.mediaId!='')
+          {await firstValueFrom(this.mediaService.deleteMedia(media.mediaId));
+          console.log('Media deleted successfully', media);
+          }
+      }
+      this.deletedMediaList = []
 
     } catch (error) {
-      console.error('Error saving project or links', error);
+      console.error('Error saving project,media or links', error);
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to save project or links' });
     }
   }
@@ -169,7 +196,6 @@ export class ProjectEditComponent implements OnInit {
   isAnyLinkFieldEmpty(): boolean {
     return this.links.some(link => link.name == '' || link.url == '');
   }
-
   addLink() {
     const link: Link = { linkId: '', name: '', url: '', requestLinkProjects: [] };
     this.links.push(link);
@@ -181,11 +207,45 @@ export class ProjectEditComponent implements OnInit {
   }
 
   removeMedia(index: number): void {
+    this.deletedMediaList.push(this.media[index])
+    this.addedMediaList = this.addedMediaList.filter(x=>x.get('name')!=this.media[index].path);
+    console.log(this.media[index].path);
     this.media.splice(index, 1);
   }
 
   removeTemplate(): void {
     this.selectedTemplateName = ''
-    this.selectedTemplate = null;
+    this.selectedTemplate = null;}
+
+  downloadFile(media: MediaFileContent) {
+    console.log(media);
+    const mimeType = 'application/octet-stream'
+    const byteArray = new Uint8Array(atob(media.b).split('').map(char => char.charCodeAt(0)));
+    const file = new Blob([byteArray], {type: mimeType});
+    const fileUrl = URL.createObjectURL(file);
+    const fileName = media.a;
+    let link = document.createElement("a");
+    link.download = fileName;
+    link.href = fileUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(fileUrl);
+  }
+  downloadDocument(mediaId: string){
+    let mediaFile : MediaFileContent = {
+      a:"",
+      b:"",
+    };
+    console.log(mediaId);
+    this.mediaService.getDocumentContent(mediaId).subscribe({
+      next: (data: MediaFileContent) => {
+        mediaFile = data;
+        this.downloadFile(mediaFile);
+      },
+      error: (err:any) => {
+        console.error('Error fetching media files', err);
+      }
+    })
   }
 }
