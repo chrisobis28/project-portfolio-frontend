@@ -17,11 +17,11 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ChipsModule } from 'primeng/chips';
 import { ChipModule } from 'primeng/chip';
 import { MultiSelectModule } from 'primeng/multiselect';
+import { RouterModule, Routes } from '@angular/router';
 
 @NgModule({
     declarations: [
         ProjectsComponent,
-        ProjectAddComponent,
         ProjectCardComponent
     ],
     exports: [
@@ -43,7 +43,8 @@ import { MultiSelectModule } from 'primeng/multiselect';
         InputTextModule, 
         ChipsModule,
         ChipModule,
-        MultiSelectModule
+        MultiSelectModule,
+        RouterModule
     ]
 })
 export class ProjectsModule { }

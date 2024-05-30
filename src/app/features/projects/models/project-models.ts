@@ -23,7 +23,6 @@ export interface Media {
     path: string
     project: Project
     requestMediaProjects: RequestMediaProject[]
-    project: Project
 }
 
 export interface ProjectsToAccounts {

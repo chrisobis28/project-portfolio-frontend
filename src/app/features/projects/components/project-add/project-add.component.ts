@@ -158,18 +158,27 @@ export class ProjectAddComponent implements OnInit{
     try {
       this.titleInput.setErrors({ invalid: false });
       this.descriptionInput.setErrors({ invalid: false });
+      const tmb: MediaFileContent = {
+        a: '',
+        b: ''
+      }
       const project: Project = {
         projectId: "",
         title: this.title,
         description: this.description,
-        bibtex: '',
         archived: false,
+        template: null,
         media: [],
         projectsToAccounts: [],
         projectsToCollaborators: [],
         tagsToProjects: [],
         links: [],
-        requests: []
+        requests: [],
+        collaboratorNames: [],
+        tagNames: [],
+        tags: [],
+        tmb: tmb
+
       };
   
       const createdProject = await firstValueFrom(this.projectService.createProject(project));
@@ -206,6 +215,7 @@ export class ProjectAddComponent implements OnInit{
       }
       
       this.addedMediaList = []
+      this.media = []
 
 
     } catch (error) {

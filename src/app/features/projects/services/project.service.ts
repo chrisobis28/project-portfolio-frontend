@@ -14,19 +14,7 @@ export class ProjectService {
   imageFiles: Media[] = [];
   otherFiles: Media[] = [];
   projectId: string = "";
-  project: Project = {
-    projectId: '',
-    title: '',
-    description: '',
-    bibtex: '',
-    archived: false,
-    media: [],
-    projectsToAccounts: [],
-    projectsToCollaborators: [],
-    tagsToProjects: [],
-    links: [],
-    requests: []
-  };
+
   collaborators: Collaborator[] = [];
   links: Link[] = [];
   tags: Tag[] =[];

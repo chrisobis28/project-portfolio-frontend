@@ -59,8 +59,14 @@
                 <p-dropdown placeholder="Filter By Year" styleClass="mb-2 md:mb-0 flex relative" />
               </div>
 
-              <div class="card relative justify-content-center col-12 md:col-12 lg:col-2">
+              <div class="card relative justify-content-center col-6 md:col-6 lg:col-1">
                 <p-dataViewLayoutOptions styleClass="flex relative" />
+              </div>
+
+              <div class="card relative justify-content-center col-6 md:col-6 lg:col-1">
+                <a [routerLink]="['/add-project']">
+                  <p-button icon="pi pi-plus" label="Add" rounded severity="info"></p-button>
+                </a>
               </div>
             </div>
 
@@ -71,15 +77,14 @@
                 <div class="flex flex-column sm:flex-row sm:align-items-center p-4 gap-3"
                   [ngClass]="{ 'border-top-1 surface-border': !first }">
                   <div class="md:w-10rem relative">
-                    <img class="block xl:block mx-auto border-round w-full"
-                      [src]="getImageSrc(item)"
+                    <img class="block xl:block mx-auto border-round w-full" [src]="getImageSrc(item)"
                       [alt]="item.title" />
                   </div>
                   <div class="flex flex-column md:flex-row justify-content-between md:align-items-center flex-1 gap-4">
                     <div class="flex flex-row md:flex-column justify-content-between align-items-start gap-2">
                       <div>
                         <a href="http://localhost:4200/project-detail/{{item.projectId}}">
-                        <div class="text-lg font-medium text-900 mt-2">{{item.title}}</div>
+                          <div class="text-lg font-medium text-900 mt-2">{{item.title}}</div>
                         </a>
                         <p>
 
@@ -113,16 +118,15 @@
                 <div class="p-4 border-1 surface-border surface-card border-round flex flex-column">
                   <div class="surface-50 flex justify-content-center border-round p-3">
                     <div class="relative mx-auto">
-                      <img class="border-round w-full"
-                        [src]=getImageSrc(item)
-                        [alt]="item.title" style="max-width: 300px;" />
+                      <img class="border-round w-full" [src]=getImageSrc(item) [alt]="item.title"
+                        style="max-width: 300px;" />
                     </div>
                   </div>
                   <div class="pt-4">
                     <div class="flex flex-row justify-content-between align-items-start gap-2">
                       <div>
                         <a href="http://localhost:4200/project-detail/{{item.projectId}}">
-                        <div class="text-lg font-medium text-900 mt-2">{{item.title}}</div>
+                          <div class="text-lg font-medium text-900 mt-2">{{item.title}}</div>
                         </a>
                         <p>
 

@@ -12,8 +12,20 @@
     <div class="col-1"></div>
     <div class="col-10">
       <div class="introduction">
-        <h1 id="title">Add a new project:</h1>
-        <p id="subtitle">Add your project with respect to the template*.</p>
+        <div class="grid">
+          <div class="col-1 center" style="align-items: center;">
+            <a href="http://localhost:4200">
+              <p-button icon="pi pi-arrow-left" [outlined]="true" severity="contrast" />
+            </a>
+          </div>
+          <div class="col-9">
+            <h1 id="title" style="text-align: center;">Add a new project</h1>
+          </div>
+          <div class="col-3"></div>
+          <div class="col-12">
+            <p id="subtitle">Add your project with respect to the template*.</p>
+          </div>
+        </div>
       </div>
       <div class="card flex justify-content-start flex-wrap">
         <p-floatLabel id="templatecomponent">
