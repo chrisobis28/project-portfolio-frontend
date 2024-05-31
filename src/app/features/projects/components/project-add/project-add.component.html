@@ -1,32 +1,188 @@
-<!-- <div class="container">
-    <h2 class="heading">Add a Project to the Platform</h2>
-    <form [formGroup]="projectForm" (ngSubmit)="onSubmit()">
+<!DOCTYPE html>
+<html lang="en">
 
-        <div class="form-group">
-        <label for="title">Title</label>
-        <input type="text" class="form-control" id="title" formControlName="title">
-        <div *ngIf="projectForm?.get('title')?.invalid && projectForm?.get('title')?.touched" class="text-danger">
-          Name is required.
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+</head>
+
+<body>
+  <div class="grid">
+    <div class="col-1"></div>
+    <div class="col-10">
+      <div class="introduction">
+        <div class="grid">
+          <div class="col-1 center" style="align-items: center;">
+            <a href="http://localhost:4200">
+              <p-button icon="pi pi-arrow-left" [outlined]="true" severity="contrast" />
+            </a>
+          </div>
+          <div class="col-9">
+            <h1 id="title" style="text-align: center;">Add a new project</h1>
+          </div>
+          <div class="col-3"></div>
+          <div class="col-12">
+            <p id="subtitle">Add your project with respect to the template*.</p>
+          </div>
         </div>
       </div>
-  
-      <div class="form-group">
-        <label for="description">Description</label>
-        <input type="text" class="form-control" id="description" formControlName="description">
-        <div *ngIf="projectForm?.get('description')?.invalid && projectForm?.get('description')?.touched" class="text-danger">
-          Description is required.
+      <div class="card flex justify-content-start flex-wrap">
+        <p-floatLabel id="templatecomponent">
+          <p-dropdown [options]="templateNames" [(ngModel)]="selectedTemplate" [showClear]="true"
+            inputId="float-label" />
+          <label for="float-label">Select a Template</label>
+        </p-floatLabel>
+        <p-button id="addtemplate" label="Add Template" />
+      </div>
+      <div class="card flex justify-content-start">
+        <p-floatLabel>
+          <input pInputText id="projectTitle" [(ngModel)]="title" [ngClass]="{'error': !title}"
+            [formControl]="titleInput" style="width: 81vw" />
+          <label for="username">Project Title</label>
+        </p-floatLabel>
+      </div>
+      <div class="card flex justify-content-start min-w-full">
+        <p-floatLabel>
+          <textarea id="float-input" rows="5" pInputTextarea style="width: 81vw" [(ngModel)]="description"
+            [ngClass]="{'error': !description}" [formControl]="descriptionInput" [autoResize]="true">
+            </textarea>
+          <label for="float-input">Description</label>
+        </p-floatLabel>
+      </div>
+      <div class="card p-fluid">
+        <p-floatLabel>
+          <p-autoComplete [(ngModel)]="selectedTags" [suggestions]="getNamesForTags(filteredTags)"
+            (completeMethod)="filterTags($event)" [multiple]="true" [forceSelection]="true">
+          </p-autoComplete>
+
+          <label>Tags</label>
+        </p-floatLabel>
+
+      </div>
+      <div class="card p-fluid">
+        <p-floatLabel>
+
+          <p-autoComplete [(ngModel)]="selectedCollaborators"
+            [suggestions]="getNamesForCollaborators(filteredCollaborators)"
+            (completeMethod)="filterCollaborators($event)" [multiple]="true" [forceSelection]="true">
+          </p-autoComplete>
+
+          <label for="chips">Colaborators</label>
+        </p-floatLabel>
+      </div>
+      <div class="card">
+
+        <div class=" grid flex">
+
+          <h3 class="col-2">Links</h3>
+          <div class="col-6"></div>
+          <div class="col-2">
+            <p-button label="Add Link" (click)="addLink()" />
+          </div>
+        </div>
+
+
+
+        <div class="card">
+          <p-dataView #dv [value]="links">
+            <ng-template pTemplate="list" let-links>
+              <div class="grid grid-nogutter">
+                <div class="col-12" *ngFor="let item of links" class="col-12">
+
+                  <div class="grid">
+                    <div class="card relative justify-content-center lg:col-4 md:col-8 sm:col-12">
+                      <p-floatLabel styleClass="flex relative">
+                        <input pInputText [(ngModel)]="item.name" [ngClass]="{'error': !item.name}"
+                          style="width: 100%;" />
+                        <label for="input">Name</label>
+                      </p-floatLabel>
+                    </div>
+                    <div class="card relative  lg:col-4 md:col-8 sm:col-12">
+                      <p-floatLabel styleClass="flex relative">
+                        <input pInputText [(ngModel)]="item.url" [ngClass]="{'error': !item.url}"
+                          style="width: 100%;" />
+                        <label for="input">Url</label>
+                      </p-floatLabel>
+                    </div>
+                    <div class="card relative lg:col-2 md:col-4 sm:col-12">
+                      <p-button icon="pi" (click)="removeLink(item)" severity="danger" styleClass="flex relative">
+                        <div class="font-bold">X</div>
+                      </p-button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </ng-template>
+          </p-dataView>
+        </div>
+
+      </div>
+      <div class="card">
+        <div class="flex justify-content-between">
+          <h3>Media</h3>
+          <p-toast />
+          <p-fileUpload mode="basic" name="demo[]" chooseIcon="pi pi-upload"
+            url="https://www.primefaces.org/cdn/api/upload.php" maxFileSize="1000000" (onUpload)="uploadFile($event)"
+            [auto]="true" chooseLabel="Upload File" />
+        </div>
+        <p-table id="mediatable" [value]="media" [tableStyle]="{ 'min-width': '50rem' }">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Name</th>
+              <th>Download File</th>
+              <!--                <th>Change File</th>-->
+              <th>Delete File</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+            <tr>
+              <!--                <td><input pInputText [(ngModel)]="media[rowIndex].path" [ngClass]="{'error': !media[rowIndex].name}" /></td>
+-->
+              <td>
+                <h5>{{media[rowIndex].path}}</h5>
+              </td>
+              <td>
+                <p-button (onClick)="downloadDocument(media[rowIndex].mediaId)" label="Download"
+                  icon="pi pi-download" />
+              </td>
+              <!--                <td>-->
+              <!--                  <p-fileUpload-->
+              <!--                    mode="basic"-->
+              <!--                    chooseLabel="Change"-->
+              <!--                    chooseIcon="pi pi-sync"-->
+              <!--                    name="demo[]"-->
+              <!--                    url="https://www.primefaces.org/cdn/api/upload.php"-->
+              <!--                    maxFileSize="1000000"-->
+              <!--                    (onUpload)="onBasicUploadAuto($event)"-->
+              <!--                  />-->
+              <!--                </td>-->
+              <td><p-button (click)="removeMedia(rowIndex)" severity="danger" icon="pi pi-trash" /></td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="summary">
+            <div class="flex align-items-center justify-content-between font-normal text-sm">
+              *Maximum file size is 10MB
+            </div>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <div class="card">
+        <div class="flex justify-content-end">
+          <p-button label="Cancel" class="p-button-secondary" severity="danger" (click)="cancel()"></p-button>
+          <button id="saveButton" pButton pRipple label="Save" class="p-button-success" type="submit"
+            (click)="saveProject()">
+          </button>
         </div>
       </div>
-  
-      <div class="form-group">
-        <label for="bibtex">Bibtex</label>
-        <input type="text" class="form-control" id="bibtex" formControlName="bibtex">
-        <div *ngIf="projectForm?.get('bibtex')?.invalid && projectForm?.get('bibtex')?.touched" class="text-danger">
-          Bibtex is required.
-        </div>
+      <div>
+
       </div>
-  
-      <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
-  </div> -->
-  
+    </div>
+    <div class="col-2"></div>
+  </div>
+</body>
+
+</html>
