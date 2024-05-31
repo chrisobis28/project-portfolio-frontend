@@ -15,11 +15,18 @@
   </ng-container>
   <div [ngClass]="{'col-10': !isMobile, 'col-12': isMobile}">
     <div class="grid">
+      <div class="col-12 md:col-1 lg:col-1 flex align-items-center justify-content-center">
+        <a href="http://localhost:4200">
+        <p-button icon="pi pi-arrow-left" [outlined]="true"  severity="contrast"/>
+        </a>
+      </div>
       <div class="col-12 md:col-10 lg:col-10">
         <h1>{{project.title}}</h1>
       </div>
       <div class="flex align-items-center justify-content-center gap-2">
-        <p-button icon="pi pi-pencil" label="Edit" [rounded]="true" severity="info"></p-button>
+        <a [routerLink]="['/project', 'edit', project.projectId]">
+          <p-button icon="pi pi-pencil" label="Edit" rounded severity="info"></p-button>
+        </a>
         <p-button (click)="showDeleteDialog()" icon="pi pi-trash" label="Delete" [rounded]="true" severity="danger"></p-button>
         <p-dialog header="Delete project" [modal]="true" [(visible)]="visible" [style]="{ width: '25rem' }">
           <span class="p-text-secondary block mb-5">You are about to delete this project. Please be careful as this action cannot be undone. Please confirm your action.</span>
@@ -30,8 +37,17 @@
         </p-dialog>
       </div>
     </div>
-        <em><p>{{getCollaboratorNames()}}</p></em>
-    <p-divider></p-divider>
+      <div class="flex justify-content-between">
+        <div class="flex align-items-center">
+          <em>
+            <p>{{ getCollaboratorNames() }}</p>
+          </em>
+        </div>
+        <div class="flex align-items-center">
+          <p class="text-muted">24.10.2024</p>
+        </div>
+      </div>
+      <p-divider></p-divider>
           <h2>Description</h2>
           <p style="font-size: 18px;text-align: justify;">
           <ng-container *ngFor="let line of projectDescription">

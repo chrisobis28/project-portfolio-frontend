@@ -10,7 +10,7 @@ import {ButtonModule} from 'primeng/button';
 import {CarouselModule} from 'primeng/carousel';
 import {ChipModule} from 'primeng/chip';
 import {Collaborator, Link, Media, MediaFile, MediaFileContent, Project, Tag} from "../../models/project-models";
-import {ActivatedRoute} from '@angular/router';
+import {ActivatedRoute, RouterLink} from '@angular/router';
 import {DividerModule} from 'primeng/divider';
 import {ProjectService} from "../../services/project/project.service";
 import {LinkService} from "../../services/link/link.service";
@@ -22,7 +22,7 @@ import { Router } from '@angular/router'
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [DividerModule, ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule, DialogModule],
+  imports: [DividerModule, ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule, DialogModule, RouterLink],
   templateUrl: './project-detail.component.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
   styleUrls: ['./project-detail.component.css']
@@ -76,19 +76,6 @@ export class ProjectDetailComponent implements OnInit {
   links: Link[] = [];
   tags: Tag[] = [];
   isMobile: boolean;
-  private mimeTypes: { [key: string]: string } = {
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'png': 'image/png',
-    'gif': 'image/gif',
-    'bmp': 'image/bmp',
-    'webp': 'image/webp',
-    'pdf': 'application/pdf',
-    'txt': 'text/plain',
-    'html': 'text/html',
-    'bib': 'application/x-bibtex'
-  };
-
   constructor(private readonly router:Router, readonly projectService: ProjectService,private readonly tagService: TagService, private readonly linkService: LinkService,private readonly mediaService: MediaService,private readonly collaboratorService: CollaboratorService,private route: ActivatedRoute) {
     this.isMobile = window.innerWidth <= 767;
   }
@@ -102,7 +89,7 @@ export class ProjectDetailComponent implements OnInit {
        this.projectId = (params['id']);
        this.projectService.getProjectById(params['id']).subscribe((responseProject: Project) => {
          this.project = responseProject;
-         this.projectDescription = this.project.description.split('\\n')
+         this.projectDescription = this.project.description.split(/\r?\n|\r|\n/g);
        });
        this.linkService.getLinksByProjectId(params['id']).subscribe((responseLinks: Link[]) => {
          this.links = responseLinks;
@@ -144,15 +131,9 @@ export class ProjectDetailComponent implements OnInit {
   getImageSrc(media: MediaFile): string {
     return `data:${media.a};base64,${media.b}`;
   }
-
-  getMimeType(fileName: string): string {
-    const extension = fileName.split('.').pop()?.toLowerCase() || '';
-    return this.mimeTypes[extension] || 'application/octet-stream';
-  }
-
   downloadFile(media: MediaFileContent) {
     console.log(media);
-    const mimeType = this.getMimeType(media.a)
+    const mimeType = 'application/octet-stream'
     const byteArray = new Uint8Array(atob(media.b).split('').map(char => char.charCodeAt(0)));
     const file = new Blob([byteArray], {type: mimeType});
     const fileUrl = URL.createObjectURL(file);

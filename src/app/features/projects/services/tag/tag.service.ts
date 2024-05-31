@@ -20,4 +20,8 @@ export class TagService {
   getAllTags(): Observable<Tag[]> {
     return this.httpClient.get<Tag[]>(this.API_URL);
   }
+
+  addTagToProject(tag: Tag, projectId: string): Observable<Tag> {
+    return this.httpClient.post<Tag>(this.API_URL+ `${projectId}` + "/" + `${tag.tagId}`, "")
+  }
 }

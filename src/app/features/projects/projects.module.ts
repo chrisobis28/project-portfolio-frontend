@@ -19,7 +19,7 @@ import { ChipModule } from 'primeng/chip';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { LoginComponent } from './components/login/login.component';
 import { RegisterComponent } from './components/register/register.component';
-
+import { RouterModule, Routes } from '@angular/router'
 @NgModule({
     declarations: [
         ProjectsComponent,
@@ -47,7 +47,8 @@ import { RegisterComponent } from './components/register/register.component';
         InputTextModule, 
         ChipsModule,
         ChipModule,
-        MultiSelectModule
+        MultiSelectModule,
+        RouterModule
     ]
 })
 export class ProjectsModule { }
