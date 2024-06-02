@@ -129,3 +129,7 @@ export interface TemplateAddition {
     template: Template
 }
 
+export interface WebSocketStringMessage {
+    message: string
+}
+
