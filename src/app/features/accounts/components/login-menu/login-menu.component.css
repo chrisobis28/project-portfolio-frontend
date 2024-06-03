@@ -1,0 +1,95 @@
+@import "primeng/resources/themes/lara-light-blue/theme.css";
+@import "primeng/resources/primeng.css";        
+        
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+}
+button {
+    background-color: #0077B6;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition-duration: 0.4s;
+}
+button:hover {
+    background-color: #45a049;
+}
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 60%;
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+}
+
+.login, .register, .loggedin {
+    flex: 1 1 45%;
+    min-width: 300px;
+    margin: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.login form, .register form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.login input, .register input {
+    width: 80%;
+    margin-bottom: 10px;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+@media (max-width: 700px) {
+    .login, .register {
+        flex: 1 1 100%;
+        min-width: auto;
+    }
+}
+.form-section {
+    width: 50%;
+    padding: 20px;
+}
+h2 {
+    margin-top: 0;
+    text-align: center;
+}
+form {
+    display: flex;
+    flex-direction: column;
+}
+input {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.error {
+    color: red;
+    font-weight: bold;
+}
