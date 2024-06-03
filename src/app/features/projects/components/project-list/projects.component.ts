@@ -26,14 +26,29 @@ export class ProjectsComponent implements OnInit, OnDestroy {
 
   wsProjectsSubscription: Subscription = new Subscription();
   wsCollaboratorsProjectSubscription: Subscription = new Subscription()
+  wsTagsSubscription: Subscription = new Subscription()
+  wsTagsProjectSubscription: Subscription = new Subscription()
+  wsMediaProjectSubscription: Subscription = new Subscription()
 
-  
+
   projectsWebSocket: WebSocketSubject<any> = webSocket({
     url: "ws://localhost:8080/topic/projects",
     deserializer: msg => String(msg.data)
   })
   collaboratorsProjectWebSocket: WebSocketSubject<any> = webSocket({
     url: "ws://localhost:8080/topic/collaborators/project",
+    deserializer: msg => String(msg.data)
+  })
+  tagsWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/tags",
+    deserializer: msg => String(msg.data)
+  })
+  tagsProjectWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/tags/project",
+    deserializer: msg => String(msg.data)
+  })
+  mediaProjectWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/media/project",
     deserializer: msg => String(msg.data)
   })
   
@@ -49,25 +64,85 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     console.log("OnInit called")
 
     this.wsProjectsSubscription = this.projectsWebSocket.subscribe(
-      async msg => {console.log("refreshing all projects.."); await this.initProjects()}
+      async msg => {
+        const words = msg.split(" ")
+        if(words[0].includes("edited")) {
+          console.log("refreshing only project: " + words[1])
+          this.data.filter(x => x.projectId == words[1]).forEach(async x => {
+             const project = await this.getProjectForId(x.projectId)
+             x.title = project.title
+             x.description = project.description
+             x.archived = project.archived
+            })
+        }
+        else 
+        {
+        console.log("refreshing all projects"); 
+        await this.initProjects()
+      }
+      }
     )
 
     this.wsCollaboratorsProjectSubscription = this.collaboratorsProjectWebSocket.subscribe(
       async msg => {
-            console.log("refreshing only collaborators")
+            console.log("refreshing only collaborators for project: " + msg)
             switch(msg) {
               case "all" : return this.data.forEach(async x => x.collaboratorNames = await this.getCollaboratorsForId(x.projectId))
               default : return this.data.filter(x => x.projectId == msg).forEach(async x => x.collaboratorNames = await this.getCollaboratorsForId(x.projectId)) 
           }}
     )
+
+    this.wsTagsSubscription = this.tagsWebSocket.subscribe(
+      async msg => {
+            console.log("refreshing entire tag list")
+            this.tagNames = await this.getAllTagNames()
+      }
+    )
+
+    this.wsTagsProjectSubscription = this.tagsProjectWebSocket.subscribe(
+      async msg => {
+            console.log("refreshing only tags for project: " + msg)
+            switch(msg) {
+              case "all" : return this.data.forEach(async x => {x.tagNames = await this.getTagNamesForId(x.projectId); 
+                                                                x.tags = await this.getTagsForId(x.projectId)})
+              default : return this.data.filter(x => x.projectId == msg).forEach(async x => {x.tagNames = await this.getTagNamesForId(x.projectId); 
+                                                                                             x.tags = await this.getTagsForId(x.projectId)})
+            }
+      }
+    )
+
+    this.wsMediaProjectSubscription = this.mediaProjectWebSocket.subscribe(
+      async msg => {
+            console.log("refreshing media for project: " + msg) 
+              this.data.filter(x => x.projectId == msg).forEach(async x => {
+                const newMedia = await this.getMediaForId(x.projectId)
+                x.media = newMedia
+                console.log(x.media)
+                if (newMedia && newMedia.length > 0) {
+                  x.tmb = await this.getImageForId(newMedia[0].mediaId);
+                }
+                else 
+                  x.tmb = undefined
+              })   
+      }
+    )
   
     }
 
     ngOnDestroy() {
+
+      console.log("OnDestroyCalled")
+
       if(this.wsProjectsSubscription)
         this.wsProjectsSubscription.unsubscribe()
       if(this.wsCollaboratorsProjectSubscription)
         this.wsCollaboratorsProjectSubscription.unsubscribe()
+      if(this.wsTagsSubscription)
+        this.wsTagsSubscription.unsubscribe()
+      if(this.wsTagsProjectSubscription)
+        this.wsTagsProjectSubscription.unsubscribe()
+      if(this.wsMediaProjectSubscription)
+        this.wsMediaProjectSubscription.unsubscribe()
     }
 
     async initProjects(): Promise<void> {
@@ -90,6 +165,11 @@ export class ProjectsComponent implements OnInit, OnDestroy {
 
 
 
+
+
+  async getProjectForId(id: string): Promise<Project> {
+    return firstValueFrom(this.projectService.getProjectById(id))
+  }
 
   async getCollaboratorsForId(id: string): Promise<string[]> {
     return firstValueFrom(this.collaboratorService.getCollaboratorsByProjectId(id).pipe(

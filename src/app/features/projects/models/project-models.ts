@@ -13,7 +13,7 @@ export interface Project {
     collaboratorNames: string[]
     tagNames: string[]
     tags: Tag[]
-    tmb:MediaFileContent
+    tmb:MediaFileContent | undefined
 
 }
 
