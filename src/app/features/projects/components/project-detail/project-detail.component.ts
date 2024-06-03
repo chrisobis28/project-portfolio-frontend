@@ -98,7 +98,7 @@ export class ProjectDetailComponent implements OnInit {
     deserializer: msg => String(msg.data)
   })
   linksProjectWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/links/project",
+    url: "ws://localhost:8080/topic/link/project",
     deserializer: msg => String(msg.data)
   })
 
