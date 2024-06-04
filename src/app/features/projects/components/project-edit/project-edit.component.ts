@@ -1,5 +1,5 @@
 import { Component , OnInit } from '@angular/core';
-import {ActivatedRoute, RouterLink} from '@angular/router';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { FloatLabelModule } from 'primeng/floatlabel';
@@ -22,6 +22,7 @@ import { LinkService } from '../../services/link/link.service';
 import { CollaboratorService } from '../../services/collaborator/collaborator.service';
 import { TemplateService } from '../../services/template/template.service';
 import { TagService } from '../../services/tag/tag.service';
+import { Serializer } from '@angular/compiler';
 @Component({
   selector: 'app-project-edit',
   templateUrl: './project-edit.component.html',
@@ -56,7 +57,8 @@ export class ProjectEditComponent implements OnInit {
   constructor(private route: ActivatedRoute,
      private projectService: ProjectService, private messageService: MessageService,private mediaService: MediaService,
      private linkService: LinkService, private collaboratorService: CollaboratorService, private templateService: TemplateService,
-     private tagService: TagService
+     private tagService: TagService,
+     private readonly router: Router
     ) {}
 
   async ngOnInit() {
@@ -184,11 +186,13 @@ export class ProjectEditComponent implements OnInit {
       this.addedMediaList = []
       for (const media of this.deletedMediaList) {
           if(media.mediaId!='')
-          {await firstValueFrom(this.mediaService.deleteMedia(media.mediaId));
+          {const res = await firstValueFrom(this.mediaService.deleteMedia(media.mediaId).pipe(map(x => x as String)));
           console.log('Media deleted successfully', media);
           }
       }
       this.deletedMediaList = []
+      this.router.navigate(['/project-detail/', this.projectId])
+      
 
     } catch (error) {
       console.error('Error saving project,media or links', error);

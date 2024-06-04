@@ -133,16 +133,26 @@ export class ProjectsComponent implements OnInit, OnDestroy {
 
       console.log("OnDestroyCalled")
 
-      if(this.wsProjectsSubscription)
+      if(this.wsProjectsSubscription){
         this.wsProjectsSubscription.unsubscribe()
-      if(this.wsCollaboratorsProjectSubscription)
+        this.projectsWebSocket.unsubscribe()
+      }
+      if(this.wsCollaboratorsProjectSubscription){
         this.wsCollaboratorsProjectSubscription.unsubscribe()
-      if(this.wsTagsSubscription)
+        this.collaboratorsProjectWebSocket.unsubscribe()
+      }
+      if(this.wsTagsSubscription){
         this.wsTagsSubscription.unsubscribe()
-      if(this.wsTagsProjectSubscription)
+        this.tagsWebSocket.unsubscribe()
+      }
+      if(this.wsTagsProjectSubscription){
         this.wsTagsProjectSubscription.unsubscribe()
-      if(this.wsMediaProjectSubscription)
+        this.tagsProjectWebSocket.unsubscribe()
+      }
+      if(this.wsMediaProjectSubscription){
         this.wsMediaProjectSubscription.unsubscribe()
+        this.mediaProjectWebSocket.unsubscribe()
+      }
     }
 
     async initProjects(): Promise<void> {

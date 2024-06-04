@@ -1,4 +1,4 @@
-import {Component, CUSTOM_ELEMENTS_SCHEMA, HostListener, NO_ERRORS_SCHEMA, OnInit} from '@angular/core';
+import {Component, CUSTOM_ELEMENTS_SCHEMA, HostListener, NO_ERRORS_SCHEMA, OnDestroy, OnInit} from '@angular/core';
 import {AccordionModule} from 'primeng/accordion';
 import {BadgeModule} from 'primeng/badge';
 import {AvatarModule} from 'primeng/avatar';
@@ -29,7 +29,7 @@ import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
   schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
   styleUrls: ['./project-detail.component.css']
 })
-export class ProjectDetailComponent implements OnInit {
+export class ProjectDetailComponent implements OnInit, OnDestroy {
   images: MediaFile[] = [];
   documents: Media[] = [];
   bibTeX: MediaFile | undefined = {
@@ -83,6 +83,7 @@ export class ProjectDetailComponent implements OnInit {
   wsCollaboratorsProjectSubscription: Subscription = new Subscription()
   wsTagsProjectSubscription: Subscription = new Subscription()
   wsLinksProjectSubscription: Subscription = new Subscription()
+  wsMediaProjectSubscription: Subscription = new Subscription()
 
 
   projectsWebSocket: WebSocketSubject<any> = webSocket({
@@ -101,10 +102,23 @@ export class ProjectDetailComponent implements OnInit {
     url: "ws://localhost:8080/topic/link/project",
     deserializer: msg => String(msg.data)
   })
+  mediaProjectWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/media/project",
+    deserializer: msg => String(msg.data)
+  })
 
 
 
-  constructor(private readonly router:Router, readonly projectService: ProjectService,private readonly tagService: TagService, private readonly linkService: LinkService,private readonly mediaService: MediaService,private readonly collaboratorService: CollaboratorService,private route: ActivatedRoute) {
+
+  constructor(
+    private readonly router:Router, 
+    readonly projectService: ProjectService, 
+    private readonly tagService: TagService, 
+    private readonly linkService: LinkService, 
+    private readonly mediaService: MediaService, 
+    private readonly collaboratorService: CollaboratorService,
+    private route: ActivatedRoute
+  ) {
     this.isMobile = window.innerWidth <= 767;
   }
 
@@ -156,6 +170,34 @@ export class ProjectDetailComponent implements OnInit {
         }
       }
      )
+     this.wsMediaProjectSubscription = this.mediaProjectWebSocket.subscribe(
+      async msg => {
+        if(msg == this.projectId) {
+          const mediaFileData = await this.getMediaContentByProjectId(this.projectId)
+          this.images = mediaFileData.filter(media => media.a && (media.a.endsWith(".jpg") || media.a.endsWith(".png")));
+          this.bibTeX = mediaFileData.find(media => media.a && media.a.endsWith(".bib"));
+
+          const documentData = await this.getDocumentsByProjectId(this.projectId)
+          this.documents = documentData.filter(media => media.path && !(
+            media.path.endsWith(".jpg") ||
+            media.path.endsWith(".png")
+          ));
+        }
+      }
+     )
+    }
+
+    ngOnDestroy(): void {
+      if(this.wsProjectsSubscription)
+        this.wsProjectsSubscription.unsubscribe()
+      if(this.wsTagsProjectSubscription)
+        this.wsTagsProjectSubscription.unsubscribe()
+      if(this.wsCollaboratorsProjectSubscription)
+        this.wsCollaboratorsProjectSubscription.unsubscribe()
+      if(this.wsMediaProjectSubscription)
+        this.wsMediaProjectSubscription.unsubscribe()
+      if(this.wsLinksProjectSubscription)
+        this.wsLinksProjectSubscription.unsubscribe()
     }
 
 
@@ -219,6 +261,14 @@ export class ProjectDetailComponent implements OnInit {
 
   async getLinksByProjectId(id: string): Promise<Link[]> {
     return firstValueFrom(this.linkService.getLinksByProjectId(id))
+  }
+
+  async getMediaContentByProjectId(id: string): Promise<MediaFile[]> {
+    return firstValueFrom(this.mediaService.getMediasContentByProjectId(this.projectId))
+  }
+
+  async getDocumentsByProjectId(id: string): Promise<Media[]> {
+    return firstValueFrom(this.mediaService.getDocumentsByProjectId(id))
   }
 
   getImageSrc(media: MediaFile): string {
