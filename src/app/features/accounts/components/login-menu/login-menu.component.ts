@@ -9,7 +9,6 @@ import { ConfirmationService, Message, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { ButtonModule } from 'primeng/button';
 import { RouterModule } from '@angular/router';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {ConfirmDialogModule} from 'primeng/confirmdialog';
 
 @Component({
@@ -165,7 +164,6 @@ export class LoginMenuComponent implements OnInit {
       accept: () => {
         this.authenticationService.logout().subscribe({
           next: () => {
-            this.storageService.removeUser();
             this.isLoggedIn = false;
             this.storageService.clean();
             this.loginForm.reset();
