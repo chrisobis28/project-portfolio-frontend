@@ -5,16 +5,27 @@ import { FormBuilder, FormGroup, FormsModule, Validators, ReactiveFormsModule, F
 import { StorageService } from '../../services/authentication/storage.service';
 import { NgIf } from '@angular/common';
 import { LoginUserRequest, RegisterUserRequest } from '../../models/accounts-models';
-import { Message, MessageService } from 'primeng/api';
+import { ConfirmationService, Message, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { ButtonModule } from 'primeng/button';
+import { RouterModule } from '@angular/router';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import {ConfirmDialogModule} from 'primeng/confirmdialog';
 
 @Component({
   selector: 'app-login-menu',
   standalone: true,
-  imports: [InputTextModule, FormsModule, NgIf, ReactiveFormsModule, ToastModule],
+  imports: [InputTextModule, 
+    FormsModule, 
+    NgIf, 
+    ReactiveFormsModule, 
+    ToastModule,
+    ButtonModule,
+    RouterModule,
+    ConfirmDialogModule],
   templateUrl: './login-menu.component.html',
   styleUrl: './login-menu.component.css',
-  providers: [MessageService]
+  providers: [MessageService, ConfirmationService]
 })
 
 export class LoginMenuComponent implements OnInit {
@@ -68,7 +79,8 @@ export class LoginMenuComponent implements OnInit {
   constructor(private fb: FormBuilder, 
     private storageService: StorageService, 
     private authenticationService: AuthenticationService,
-    private messageService: MessageService) {}
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService) {}
 
   ngOnInit(): void {
     if(this.storageService.dateExpired()) {
@@ -148,18 +160,23 @@ export class LoginMenuComponent implements OnInit {
   }
 
   logout() {
-    this.authenticationService.logout().subscribe({
-      next: data => {
-        this.storageService.removeUser();
-        this.isLoggedIn = false;
-        this.storageService.clean();
-        this.loginForm.reset();
-
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Logged out successfully.' });
-      },
-      error: err => {
-        alert(err.errorMessage);
-        this.loginForm.reset();
+    this.confirmationService.confirm({
+      message: "Are you sure you want to log out of the account " + this.storageService.getUser() + "?",
+      accept: () => {
+        this.authenticationService.logout().subscribe({
+          next: () => {
+            this.storageService.removeUser();
+            this.isLoggedIn = false;
+            this.storageService.clean();
+            this.loginForm.reset();
+    
+            this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Logged out successfully.' });
+          },
+          error: err => {
+            alert(err.errorMessage);
+            this.loginForm.reset();
+          }
+        })
       }
     })
   }

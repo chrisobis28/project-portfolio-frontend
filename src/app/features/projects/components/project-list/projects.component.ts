@@ -7,6 +7,7 @@ import { CollaboratorService } from '../../services/collaborator/collaborator.se
 import { firstValueFrom, map } from 'rxjs';
 import { TagService } from '../../services/tag/tag.service';
 import {MediaService} from "../../services/media/media.service";
+import { StorageService } from 'src/app/features/accounts/services/authentication/storage.service';
 @Component({
   selector: 'app-projects',
   templateUrl: './projects.component.html',
@@ -20,15 +21,23 @@ export class ProjectsComponent implements OnInit {
   projectCollaborator: string = ''
   tagNames: string[] = []
   selectedTagNames: string[] = []
+  isLoggedIn: boolean = false;
+  username: string = '';
 
   constructor(
     private readonly projectService: ProjectService,
     private readonly collaboratorService: CollaboratorService,
     private tagService: TagService,
-    private mediaService: MediaService
+    private mediaService: MediaService,
+    private storageService: StorageService
   ) {}
 
   async ngOnInit(): Promise<void> {
+
+    if(this.storageService.isLoggedIn()) {
+      this.isLoggedIn = true;
+      this.username = this.storageService.getUser();
+    }
 
       this.projectService.getAllProjects().subscribe((response: Project[]) => {
         this.data = response;

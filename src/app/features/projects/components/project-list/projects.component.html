@@ -12,14 +12,25 @@
 <body>
 
   <div class="grid">
-    <div class="col-1"></div>
 
-    <div class="col-10">
-      <h1 style="text-align: center;">Project portfolio management system</h1>
+    <div *ngIf="!isLoggedIn" class="col-12" style="text-align: right;">
+        <a [routerLink]="['/login']">
+          <p-button label="Login" ></p-button>
+        </a>
+    </div>
+
+    <div *ngIf="isLoggedIn" class="col-12" style="text-align: right;">
+      <h4><i>You are logged in as {{username}}.</i></h4>
     </div>
 
     <div class="col-1"></div>
-  </div>
+
+    <div class="col-10">
+        <h1 style="text-align: center;">Project portfolio management system</h1>
+    </div>
+
+    <div class="col-1"></div>
+</div>
 
   <div class="grid">
     <div class="col-1"></div>
