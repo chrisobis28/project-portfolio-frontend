@@ -7,42 +7,46 @@
     <link rel="stylesheet" href="login-menu.component.css">
 </head>
 <body>
+    <div class="grid">
+        <div class="col-12" style="text-align: right;">
+            <a [routerLink]="['']">
+              <p-button label="Home" ></p-button>
+            </a>
+        </div>
+    </div>
+
     <div class="container">
         <p-toast />
         <div *ngIf="!isLoggedIn" class="login">
             <h2>Login</h2>
             <form [formGroup]="loginForm" (ngSubmit)="login()">
-                <input type="text" [(ngModel)]="loginUserRequest.username" formControlName="username" placeholder="Username" [class.invalid]="usernameL.invalid && (usernameL.dirty || usernameL.touched)" required (focus)="isUsernameFocusedLogin = true" (blur)="isUsernameFocusedLogin = false">
-                <div *ngIf="usernameL.invalid && (usernameL.dirty || usernameL.touched) && !isUsernameFocusedLogin" class="error">
+                <input type="text" [(ngModel)]="loginUserRequest.username" formControlName="username" placeholder="Username" [class.invalid]="usernameL.invalid" required>
+                <div *ngIf="usernameL.invalid && loginSubmitted" class="error">
                     Enter a valid username.
                 </div>
-                <input type="password" [(ngModel)]="loginUserRequest.password" formControlName="password" placeholder="Password" [class.invalid]="passwordL.invalid && (passwordL.dirty || passwordL.touched)" required (focus)="isPasswordFocusedLogin = true" (blur)="isPasswordFocusedLogin = false">
-                <div *ngIf="passwordL.invalid && (passwordL.dirty || passwordL.touched) && !isPasswordFocusedLogin" class="error">
+                <input type="password" [(ngModel)]="loginUserRequest.password" formControlName="password" placeholder="Password" [class.invalid]="passwordL.invalid" required>
+                <div *ngIf="passwordL.invalid && loginSubmitted" class="error">
                     Enter a valid password.
                 </div>
-                <button type="submit" [disabled]="loginForm.invalid">Login</button>
+                <button type="submit">Login</button>
             </form>
         </div>
-        <div *ngIf="isLoggedIn" class="loggedin">
-            <h2>You are logged in to the platform.</h2>
-            <button type="button" (click)="logout()">Logout</button>
-        </div>
-        <div class="register">
+        <div *ngIf="!isLoggedIn" class="register">
             <h2>Register</h2>
             <form [formGroup]="registerForm" (ngSubmit)="register()">
-                <input type="text" [(ngModel)]="registerUserRequest.username" formControlName="username" placeholder="Username" [class.invalid]="usernameR.invalid && (usernameR.dirty || usernameR.touched)" required (focus)="isUsernameFocusedRegister = true" (blur)="isUsernameFocusedRegister = false">
-                <div *ngIf="usernameR.invalid && (usernameR.dirty || usernameR.touched) && !isUsernameFocusedRegister" class="error">
+                <input type="text" [(ngModel)]="registerUserRequest.username" formControlName="username" placeholder="Username" [class.invalid]="usernameR.invalid" required>
+                <div *ngIf="usernameR.invalid && registerSubmitted" class="error">
                     Enter a valid username.
                 </div>
-                <input type="text" [(ngModel)]="registerUserRequest.name" formControlName="name" placeholder="Name" [class.invalid]="nameR.invalid && (nameR.dirty || nameR.touched)" required (focus)="isNameFocusedRegister = true" (blur)="isNameFocusedRegister = false">
-                <div *ngIf="nameR.invalid && (nameR.dirty || nameR.touched) && !isNameFocusedRegister" class="error">
+                <input type="text" [(ngModel)]="registerUserRequest.name" formControlName="name" placeholder="Name" [class.invalid]="nameR.invalid" required>
+                <div *ngIf="nameR.invalid && registerSubmitted" class="error">
                     Enter a valid name.
                 </div>
-                <input type="password" [(ngModel)]="registerUserRequest.password" formControlName="password" placeholder="Password" [class.invalid]="passwordR.invalid && (passwordR.dirty || passwordR.touched)" required (focus)="isPasswordFocusedRegister = true" (blur)="isPasswordFocusedRegister = false">
-                <div *ngIf="passwordR.invalid && (passwordR.dirty || passwordR.touched) && !isPasswordFocusedRegister" class="error">
+                <input type="password" [(ngModel)]="registerUserRequest.password" formControlName="password" placeholder="Password" [class.invalid]="passwordR.invalid" required>
+                <div *ngIf="passwordR.invalid && registerSubmitted" class="error">
                     Enter a valid password.
                 </div>
-                <button type="submit" [disabled]="registerForm.invalid">Register</button>
+                <button type="submit">Register</button>
             </form>
         </div>
     </div>

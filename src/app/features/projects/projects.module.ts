@@ -18,6 +18,8 @@ import { ChipsModule } from 'primeng/chips';
 import { ChipModule } from 'primeng/chip';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { RouterModule, Routes } from '@angular/router';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
 
 @NgModule({
     declarations: [
@@ -36,10 +38,12 @@ import { RouterModule, Routes } from '@angular/router';
         DividerModule,
         DataViewModule, 
         TagModule,
+        ToastModule,
         DropdownModule,
         FloatLabelModule,
         BrowserModule,
         BrowserAnimationsModule,
+        ConfirmDialogModule,
         InputTextModule, 
         ChipsModule,
         ChipModule,

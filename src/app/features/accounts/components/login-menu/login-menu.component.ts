@@ -5,16 +5,26 @@ import { FormBuilder, FormGroup, FormsModule, Validators, ReactiveFormsModule, F
 import { StorageService } from '../../services/authentication/storage.service';
 import { NgIf } from '@angular/common';
 import { LoginUserRequest, RegisterUserRequest } from '../../models/accounts-models';
-import { Message, MessageService } from 'primeng/api';
+import { ConfirmationService, Message, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { ButtonModule } from 'primeng/button';
+import { Router, RouterModule } from '@angular/router';
+import {ConfirmDialogModule} from 'primeng/confirmdialog';
 
 @Component({
   selector: 'app-login-menu',
   standalone: true,
-  imports: [InputTextModule, FormsModule, NgIf, ReactiveFormsModule, ToastModule],
+  imports: [InputTextModule, 
+    FormsModule, 
+    NgIf, 
+    ReactiveFormsModule, 
+    ToastModule,
+    ButtonModule,
+    RouterModule,
+    ConfirmDialogModule],
   templateUrl: './login-menu.component.html',
   styleUrl: './login-menu.component.css',
-  providers: [MessageService]
+  providers: [MessageService, ConfirmationService]
 })
 
 export class LoginMenuComponent implements OnInit {
@@ -57,6 +67,9 @@ export class LoginMenuComponent implements OnInit {
   isLogInFailed = false;
   errorMessage = '';
 
+  loginSubmitted = false;
+  registerSubmitted = false;
+
   isUsernameFocusedLogin = false;
   isPasswordFocusedLogin = false;
   isUsernameFocusedRegister = false;
@@ -68,7 +81,8 @@ export class LoginMenuComponent implements OnInit {
   constructor(private fb: FormBuilder, 
     private storageService: StorageService, 
     private authenticationService: AuthenticationService,
-    private messageService: MessageService) {}
+    private messageService: MessageService,
+    private readonly router: Router) {}
 
   ngOnInit(): void {
     if(this.storageService.dateExpired()) {
@@ -90,36 +104,39 @@ export class LoginMenuComponent implements OnInit {
   }
 
   login() {
-    this.authenticationService.login(this.loginUserRequest).subscribe({
-      next: date => {
-
-        if(date && this.loginUserRequest.username) {
-          this.storageService.saveDate(date);
-          this.storageService.saveUser(this.loginUserRequest.username);
-        }
-        else {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Something went wrong when logging in.' });
+    this.loginSubmitted = true;
+    if(this.loginForm.valid) {
+      this.authenticationService.login(this.loginUserRequest).subscribe({
+        next: date => {
+  
+          if(date && this.loginUserRequest.username) {
+            this.storageService.saveDate(date);
+            this.storageService.saveUser(this.loginUserRequest.username);
+          }
+          else {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Something went wrong when logging in.' });
+            return;
+          }
+  
+          this.isLoggedIn = true;
+          this.isLogInFailed = false;
+          this.loginForm.reset();
+          this.loginSubmitted = false;
+          this.router.navigateByUrl('');
           return;
+        },
+        error: err => {
+          if(err.status === 400) {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Username or password are incorrect.' });
+            return;
+          }
+          else if(err.status === 403) {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Already logged in.' });
+            return;
+          }
         }
-
-        this.isLoggedIn = true;
-        this.isLogInFailed = false;
-        this.loginForm.reset();
-        
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Log in successfully completed.' });
-        return;
-      },
-      error: err => {
-        if(err.status === 400) {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Username or password are incorrect.' });
-          return;
-        }
-        else if(err.status === 403) {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Already logged in.' });
-          return;
-        }
-      }
-    });
+      });
+    }
   }
 
   reloadPage(): void {
@@ -127,40 +144,26 @@ export class LoginMenuComponent implements OnInit {
   }
 
   register() {
-
-    this.authenticationService.register(this.registerUserRequest).subscribe({
-      next: () => {
-        this.registerForm.reset();
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Registration successfully completed.' });
-        return;
-      },
-      error: (err) => {
-        if(err.status === 409) {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Username already exists.' });
+    this.registerSubmitted = true;
+    if(this.registerForm.valid) {
+      this.authenticationService.register(this.registerUserRequest).subscribe({
+        next: () => {
+          this.registerForm.reset();
+          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Registration successfully completed.' });
+          this.registerSubmitted = false;
           return;
+        },
+        error: (err) => {
+          if(err.status === 409) {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Username already exists.' });
+            return;
+          }
+          else if(err.status === 400) {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Credentials are not correctly chosen.' });
+            return;
+          }
         }
-        else if(err.status === 400) {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Credentials are not correctly chosen.' });
-          return;
-        }
-      }
-    })
-  }
-
-  logout() {
-    this.authenticationService.logout().subscribe({
-      next: data => {
-        this.storageService.removeUser();
-        this.isLoggedIn = false;
-        this.storageService.clean();
-        this.loginForm.reset();
-
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Logged out successfully.' });
-      },
-      error: err => {
-        alert(err.errorMessage);
-        this.loginForm.reset();
-      }
-    })
+      })
+    }
   }
 }

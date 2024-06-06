@@ -5,7 +5,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ProjectsModule } from './features/projects/projects.module';
-import { AuthInterceptor } from './core/auth.interceptor';
+import { authInterceptorProviders } from './core/auth.interceptor';
 @NgModule({ declarations: [
         AppComponent
     ],
@@ -16,7 +16,7 @@ import { AuthInterceptor } from './core/auth.interceptor';
     HttpClientModule], 
     providers: [
         provideHttpClient(withInterceptorsFromDi()),
-        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+        authInterceptorProviders
       ]})
 export class AppModule { }
 

@@ -12,14 +12,32 @@
 <body>
 
   <div class="grid">
-    <div class="col-1"></div>
+    <p-toast />
 
-    <div class="col-10">
-      <h1 style="text-align: center;">Project portfolio management system</h1>
+    <div class="col-12" style="text-align: right;">
+      <div *ngIf="!isLoggedIn" class="button-container">
+        <a [routerLink]="['/login']">
+          <p-button label="Login"></p-button>
+        </a>
+      </div>
+    
+      <div *ngIf="isLoggedIn" class="button-container">
+        <div class="container-logged-in">
+          <h4><i>You are logged in as {{username}}.</i></h4>
+          <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
+          <button class="logout-button" (click)="logout()">Logout</button>
+        </div>
+      </div>
     </div>
 
     <div class="col-1"></div>
-  </div>
+
+    <div class="col-10">
+        <h1 style="text-align: center;">Project portfolio management system</h1>
+    </div>
+
+    <div class="col-1"></div>
+</div>
 
   <div class="grid">
     <div class="col-1"></div>
@@ -63,10 +81,14 @@
                 <p-dataViewLayoutOptions styleClass="flex relative" />
               </div>
 
-              <div class="card relative justify-content-center col-6 md:col-6 lg:col-1">
+              <div *ngIf="isLoggedIn" class="card relative justify-content-center col-6 md:col-6 lg:col-1">
                 <a [routerLink]="['/add-project']">
                   <p-button icon="pi pi-plus" label="Add" rounded severity="info"></p-button>
                 </a>
+              </div>
+
+              <div *ngIf="!isLoggedIn" class="card relative justify-content-center col-6 md:col-6 lg:col-1">
+                  <p-button label="Search" rounded severity="info"></p-button>
               </div>
             </div>
 

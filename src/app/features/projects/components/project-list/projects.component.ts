@@ -7,10 +7,15 @@ import { CollaboratorService } from '../../services/collaborator/collaborator.se
 import { firstValueFrom, map } from 'rxjs';
 import { TagService } from '../../services/tag/tag.service';
 import {MediaService} from "../../services/media/media.service";
+import { StorageService } from 'src/app/features/accounts/services/authentication/storage.service';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { AuthenticationService } from 'src/app/features/accounts/services/authentication/authentication.service';
+
 @Component({
   selector: 'app-projects',
   templateUrl: './projects.component.html',
-  styleUrls: ['./projects.component.css']
+  styleUrls: ['./projects.component.css'],
+  providers: [ConfirmationService, MessageService]
 })
 export class ProjectsComponent implements OnInit {
   data: Project[] = [];
@@ -20,15 +25,26 @@ export class ProjectsComponent implements OnInit {
   projectCollaborator: string = ''
   tagNames: string[] = []
   selectedTagNames: string[] = []
+  isLoggedIn: boolean = false;
+  username: string = '';
 
   constructor(
     private readonly projectService: ProjectService,
     private readonly collaboratorService: CollaboratorService,
     private tagService: TagService,
-    private mediaService: MediaService
+    private mediaService: MediaService,
+    private storageService: StorageService,
+    private confirmationService: ConfirmationService,
+    private authenticationService: AuthenticationService,
+    private messageService: MessageService
   ) {}
 
   async ngOnInit(): Promise<void> {
+
+    if(this.storageService.isLoggedIn()) {
+      this.isLoggedIn = true;
+      this.username = this.storageService.getUser();
+    }
 
       this.projectService.getAllProjects().subscribe((response: Project[]) => {
         this.data = response;
@@ -140,4 +156,25 @@ export class ProjectsComponent implements OnInit {
          return 'https://as2.ftcdn.net/v2/jpg/01/25/64/11/1000_F_125641180_KxdtmpD15Ar5h8jXXrE5vQLcusX8z809.jpg'
       return `data:${project.tmb.a};base64,${project.tmb.b}`;
     }
- }
+
+
+
+    logout() {
+      this.confirmationService.confirm({
+        message: "Are you sure you want to log out of the account " + this.storageService.getUser() + "?",
+        accept: () => {
+          this.authenticationService.logout().subscribe({
+            next: () => {
+              this.isLoggedIn = false;
+              this.storageService.clean();
+              this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Logged out successfully.' });
+              return;
+            },
+            error: err => {
+              this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not be logged out.' });
+            }
+          })
+        }
+      })
+    }
+  }
