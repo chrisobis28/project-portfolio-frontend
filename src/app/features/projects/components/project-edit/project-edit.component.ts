@@ -12,7 +12,7 @@ import {RatingModule} from 'primeng/rating';
 import {CommonModule} from '@angular/common';
 import {ButtonModule} from 'primeng/button';
 import {ProjectService} from '../../services/project/project.service';
-import {FileUploadEvent, FileUploadModule} from 'primeng/fileupload';
+import {FileUpload, FileUploadEvent, FileUploadHandlerEvent, FileUploadModule} from 'primeng/fileupload';
 import {MessageService} from 'primeng/api';
 import {ToastModule} from 'primeng/toast';
 import {MediaService} from "../../services/media/media.service";
@@ -24,7 +24,6 @@ import {TemplateService} from '../../services/template/template.service';
 import {TagService} from '../../services/tag/tag.service';
 import {AutoCompleteCompleteEvent, AutoCompleteModule} from "primeng/autocomplete";
 import {DataViewModule} from "primeng/dataview";
-
 @Component({
   selector: 'app-project-edit',
   templateUrl: './project-edit.component.html',
@@ -57,7 +56,6 @@ export class ProjectEditComponent implements OnInit {
   filteredTags: Tag[] = [];
   addTags:Tag[] =[]
   removeTags:Tag[] =[]
-
   links: Link[] = [];
   templates!: Template[];
   templateNames: string[] = [];
@@ -305,7 +303,7 @@ export class ProjectEditComponent implements OnInit {
       }
     })
   }
-  async uploadFile(event: FileUploadEvent) {
+  async uploadFile(event: FileUploadHandlerEvent, form: FileUpload) {
     const file = event.files[0];
     const formData = new FormData();
     formData.append('file', file);
@@ -324,5 +322,6 @@ export class ProjectEditComponent implements OnInit {
       requestMediaProjects: []
     }
     this.mediaFiles.push(newMedia)
+    form.clear()
   }
 }

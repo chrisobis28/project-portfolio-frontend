@@ -119,7 +119,7 @@
         </p-dataView>
       </div>
       <div class="flex justify-content-center">
-        <p-button icon="pi pi-plus-circle" (click)="addLink()" label="Add Link"/>
+        <p-button (click)="addLink()" icon="pi pi-plus-circle" label="Add Link"/>
       </div>
     </div>
     <div class="mediaUpload">
@@ -157,13 +157,19 @@
       </div>
       <div class="flex justify-content-center">
         <p-fileUpload
-          (onUpload)="uploadFile($event)"
+          #form
+          (uploadHandler)="uploadFile($event, form)"
           [auto]="true"
+          [multiple]="true"
           chooseIcon="pi pi-upload"
-          chooseLabel="Add File"
+          chooseLabel="Upload File"
+          customUpload="true"
           maxFileSize="1000000"
           mode="basic"
-          name="demo[]"/>
+          multiple="multiple"
+          name="demo[]">
+          <ng-template pTemplate="empty"></ng-template>
+        </p-fileUpload>
       </div>
     </div>
     <div class="card">
