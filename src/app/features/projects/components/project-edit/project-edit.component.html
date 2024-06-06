@@ -1,174 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-  </head>
-  <body>
-    <div class="grid">
-      <div class="col-1"></div>
-      <div class="col-10">
-        <div class="introduction">
-          <h1 id="title">Edit project page:</h1>
+<head>
+  <meta charset="UTF-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Document</title>
+</head>
+<body>
+<div class="grid">
+  <div class="col-1"></div>
+  <div class="col-10">
+    <div class="introduction">
+      <div class="grid">
+        <div class="col-1 center" style="align-items: center;">
+          <a href="http://localhost:4200">
+            <p-button [outlined]="true" icon="pi pi-arrow-left" severity="contrast"/>
+          </a>
+        </div>
+        <div class="col-9">
+          <h1 id="title" style="text-align: center;">Edit project page:</h1>
+        </div>
+        <div class="col-3"></div>
+        <div class="col-12">
           <p id="subtitle">Edit your project with respect to the template*.</p>
         </div>
-        <div class="card flex justify-content-start ">
-          <p-floatLabel id="templatecomponent" class="min-w-screen">
-            <p-dropdown
-              [options]="templateNames"
-              [(ngModel)]="selectedTemplateName"
-              [showClear]="true"
-              inputId="float-label"
-              (onClear)="removeTemplate()"
-            />
-            <label for="float-label">Select a Template</label>
-          </p-floatLabel>
-        </div>
-        <div>
-          <p-floatLabel>
-            <input
-              pInputText
-              id="projecttitle"
-              [(ngModel)]="title"
-              style="width: 81vw"
-            />
-            <label for="username">Project Title</label>
-          </p-floatLabel>
-        </div>
-        <div class="card flex justify-content-start min-w-full">
-          <p-floatLabel>
+      </div>
+    </div>
+    <div class="card flex justify-content-start ">
+      <p-floatLabel class="min-w-screen" id="templatecomponent">
+        <p-dropdown
+          (onClear)="removeTemplate()"
+          [(ngModel)]="selectedTemplateName"
+          [options]="templateNames"
+          [showClear]="true"
+          inputId="float-label"
+        />
+        <label for="float-label">Select a Template</label>
+      </p-floatLabel>
+    </div>
+    <div>
+      <p-floatLabel>
+        <input
+          [(ngModel)]="title"
+          id="projecttitle"
+          pInputText
+          style="width: 81vw"
+        />
+        <label for="username">Project Title</label>
+      </p-floatLabel>
+    </div>
+    <div class="card flex justify-content-start min-w-full">
+      <p-floatLabel>
             <textarea
-              id="float-input"
-              rows="5"
-              pInputTextarea
-              style="width: 81vw"
               [(ngModel)]="description"
               [autoResize]="true"
+              id="float-input"
+              pInputTextarea
+              rows="5"
+              style="width: 81vw"
             >
             </textarea>
-            <label for="float-input">Description</label>
-          </p-floatLabel>
-        </div>
-        <div class="card p-fluid">
-          <p-floatLabel>
-            <p-chips id="chips" [(ngModel)]="tagnames">
-              <ng-template let-item pTemplate="item">
-                {{ item }} - (Tag) <i class="pi pi-user ml-2"></i>
-              </ng-template>
-            </p-chips>
-            <label for="chips">Tags</label>
-          </p-floatLabel>
-        </div>
-        <div class="card p-fluid">
-          <p-floatLabel>
-            <p-chips id="chips" [(ngModel)]="collaboratornames" separator=",">
-              <ng-template let-item pTemplate="item">
-                {{ item }} - (User) <i class="pi pi-user ml-2"></i>
-              </ng-template>
-            </p-chips>
-            <label for="chips">Colaborators</label>
-          </p-floatLabel>
-        </div>
-        <div class="card">
-          <div class="flex justify-content-between">
-            <h3>Links</h3>
-            <p-button label="Add Link" (click)="addLink()"/>
-          </div>
-          <p-table
-            id="linktable"
-            [value]="links"
-            [tableStyle]="{ 'min-width': '50rem' }"
-          >
-            <ng-template pTemplate="header">
-              <tr>
-                <th>Name</th>
-                <th>Url</th>
-                <th>Delete Link</th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-link let-rowIndex="rowIndex">
-              <tr>
-                <td><input pInputText [(ngModel)]="links[rowIndex].name" [ngClass]="{'error': !links[rowIndex].name}"/></td>
-                <td><input pInputText [(ngModel)]="links[rowIndex].url" [ngClass]="{'error': !links[rowIndex].url}"/></td>
-                <td><p-button icon="pi pi-trash" (click)="removeLink(rowIndex)" severity="danger"></p-button></td>
-              </tr>
-            </ng-template>
-          </p-table>
-        </div>
-        <div class="card">
-          <div class="flex justify-content-between">
-            <h3>Media</h3>
-            <p-toast />
-            <p-fileUpload
-              mode="basic"
-              name="demo[]"
-              chooseIcon="pi pi-upload"
-              url="https://www.primefaces.org/cdn/api/upload.php"
-              maxFileSize="1000000"
-              (onUpload)="uploadFile($event)"
-              [auto]="true"
-              chooseLabel="Upload File" />
-          </div>
-          <p-table
-            id="mediatable"
-            [value]="media"
-            [tableStyle]="{ 'min-width': '50rem' }"
-          >
-            <ng-template  pTemplate="header">
-              <tr>
-                <th>Name</th>
-                <th>Download File</th>
-<!--                <th>Change File</th>-->
-                <th>Delete File</th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
-              <tr>
-<!--                <td><input pInputText [(ngModel)]="media[rowIndex].path" [ngClass]="{'error': !media[rowIndex].name}" /></td>
--->            <td><h5>{{media[rowIndex].path}}</h5></td>
-                <td>
-                  <p-button (onClick)="downloadDocument(media[rowIndex].mediaId)" label="Download" icon="pi pi-download"/>
-                </td>
-<!--                <td>-->
-<!--                  <p-fileUpload-->
-<!--                    mode="basic"-->
-<!--                    chooseLabel="Change"-->
-<!--                    chooseIcon="pi pi-sync"-->
-<!--                    name="demo[]"-->
-<!--                    url="https://www.primefaces.org/cdn/api/upload.php"-->
-<!--                    maxFileSize="1000000"-->
-<!--                    (onUpload)="onBasicUploadAuto($event)"-->
-<!--                  />-->
-<!--                </td>-->
-                <td><p-button (click)="removeMedia(rowIndex)" severity="danger" icon="pi pi-trash" /></td>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="summary">
-              <div class="flex align-items-center justify-content-between font-normal text-sm">
-                  *Maximum file size is 10MB
-              </div>
-          </ng-template>
-          </p-table>
-        </div>
-        <div class="card">
-          <div class="flex justify-content-end">
-            <p-button label="Cancel" class="p-button-secondary" severity="danger" (click)="cancel()"></p-button>
-            <a [routerLink]="['/project-detail', project.projectId]">
-            <button
-                id="saveButton"
-                pButton
-                pRipple
-                label="Save"
-                class="p-button-success"
-                type="submit"
-                (click)="saveProject()">
-            </button>
-            </a>
-          </div>
-        </div>
-      </div>
-      <div class="col-2"></div>
+        <label for="float-input">Description</label>
+      </p-floatLabel>
     </div>
-  </body>
+    <div class="card p-fluid">
+      <p-floatLabel>
+        <p-autoComplete (completeMethod)="filterTags($event)" [(ngModel)]="selectedTagNames"
+                        [forceSelection]="true" [multiple]="true" [suggestions]="getNamesForTags(filteredTags)">
+        </p-autoComplete>
+
+        <label>Tags</label>
+      </p-floatLabel>
+
+    </div>
+    <div class="card p-fluid">
+      <p-floatLabel>
+
+        <p-autoComplete (completeMethod)="filterCollaborators($event)"
+                        [(ngModel)]="selectedCollaboratorNames"
+                        [forceSelection]="true" [multiple]="true"
+                        [suggestions]="getNamesForCollaborators(filteredCollaborators)">
+        </p-autoComplete>
+
+        <label for="chips">Collaborators</label>
+      </p-floatLabel>
+    </div>
+    <div class="linkUpload">
+      <div class=" grid flex">
+        <h3 class="col-2">Links</h3>
+        <div class="col-10"></div>
+      </div>
+      <div class="card">
+        <p-dataView #dv [value]="links">
+          <ng-template let-links pTemplate="list">
+            <div *ngFor="let link of links;let i = index" class="col-12" class="col-12">
+              <div class="grid row-gap-2">
+                <div class="col-12 md:col-6 lg:col-5">
+                  <p-floatLabel>
+                    <input [(ngModel)]="link.name" [ngClass]="{'error': !link.name}" pInputText
+                           style="width: 85%;"/>
+                    <label for="input">Link display name</label>
+                  </p-floatLabel>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                  <p-floatLabel>
+                    <input [(ngModel)]="link.url" [ngClass]="{'error': !link.url}" pInputText
+                           style="width: 85%;"/>
+                    <label for="input">Link address(URL)</label>
+                  </p-floatLabel>
+                </div>
+                <div class="flex justify-content-center col-12 md:col-6 lg:col-3">
+                  <p-button (click)="removeLink(i)" icon="pi pi-trash" label="Delete" severity="danger">
+                  </p-button>
+                </div>
+              </div>
+            </div>
+
+          </ng-template>
+        </p-dataView>
+      </div>
+      <div class="flex justify-content-center">
+        <p-button icon="pi pi-plus-circle" (click)="addLink()" label="Add Link"/>
+      </div>
+    </div>
+    <div class="mediaUpload">
+      <div class=" grid flex">
+        <div class="col-2">
+          <h3>Media</h3>
+        </div>
+        <div class="col-10"></div>
+      </div>
+      <div class="card">
+        <p-dataView #dv [value]="mediaFiles">
+          <ng-template let-mediaFiles pTemplate="list">
+            <div *ngFor="let media of mediaFiles; let i = index" class="col-12" class="col-12">
+              <div class="grid">
+                <div class="col-12 md:col-6 lg:col-3 ">
+                  <h4>{{ media.path }}</h4>
+                </div>
+                <div class="col-12 md:col-6 lg:col-3 ">
+                  <p-floatLabel>
+                    <input [(ngModel)]="media.name" [ngClass]="{'error': !media.name}" pInputText style="width: 100%;"/>
+                    <label for="input">Media display name</label>
+                  </p-floatLabel>
+                </div>
+                <div class="col-6 md:col-6 lg:col-3 flex justify-content-center">
+                  <p-button (onClick)="downloadDocument(media.mediaId)" icon="pi pi-download" label="Download"/>
+                </div>
+                <div class="col-6 md:col-6 lg:col-3 flex justify-content-center">
+                  <p-button (click)="removeMedia(i)" icon="pi pi-trash" label="Delete" severity="danger"/>
+                </div>
+              </div>
+            </div>
+
+          </ng-template>
+        </p-dataView>
+      </div>
+      <div class="flex justify-content-center">
+        <p-fileUpload
+          (onUpload)="uploadFile($event)"
+          [auto]="true"
+          chooseIcon="pi pi-upload"
+          chooseLabel="Add File"
+          maxFileSize="1000000"
+          mode="basic"
+          name="demo[]"/>
+      </div>
+    </div>
+    <div class="card">
+      <div class="flex justify-content-end">
+        <p-button (click)="cancel()" class="p-button-secondary" label="Cancel" severity="danger"></p-button>
+        <a [routerLink]="['/project-detail', projectId]">
+          <button
+            (click)="saveProject()"
+            class="p-button-success"
+            id="saveButton"
+            label="Save"
+            pButton
+            pRipple
+            type="submit">
+          </button>
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="col-2"></div>
+</div>
+</body>
 </html>
