@@ -1,4 +1,4 @@
-import { Component , OnInit } from '@angular/core';
+import { Component , OnDestroy, OnInit } from '@angular/core';
 import { InputTextModule } from 'primeng/inputtext';
 import { AbstractControl, FormControl, FormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { FloatLabelModule } from 'primeng/floatlabel';
@@ -44,7 +44,7 @@ import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
   providers: [ProjectService, MessageService]
 
 })
-export class ProjectAddComponent implements OnInit{
+export class ProjectAddComponent implements OnInit, OnDestroy{
 
   media: Media[] = [];
   project!: Project;
@@ -94,6 +94,13 @@ export class ProjectAddComponent implements OnInit{
     private tagService: TagService
     ) {}
 
+    ngOnDestroy(): void {
+      if(this.wsTagsSubscription)
+        this.wsTagsSubscription.unsubscribe()
+      if(this.wsCollaboratorsSubscription)
+        this.wsCollaboratorsSubscription.unsubscribe()
+    }
+
   async ngOnInit() {
     
     await this.initializeFields()
@@ -101,6 +108,11 @@ export class ProjectAddComponent implements OnInit{
     this.wsTagsSubscription = this.tagsWebSocket.subscribe(
       async msg => {
         const words = msg.split(" ")
+        if(words[0] == "deleted") {
+        const tagName = this.tags.filter(x => x.tagId == words[1])[0].name
+        if(this.selectedTags.includes(tagName))
+          this.selectedTags.splice(this.selectedTags.indexOf(tagName), 1)
+        }
         const newTags = await this.getAllTags();
         this.tags = newTags
         this.tagnames = newTags.map(x => x.name)
@@ -110,6 +122,12 @@ export class ProjectAddComponent implements OnInit{
 
     this.wsCollaboratorsSubscription = this.collaboratorsWebSocket.subscribe(
       async msg => {
+        const words = msg.split(" ")
+        if(words[0] == "deleted") {
+          const collabName = this.colaborators.filter(x => x.collaboratorId == words[1])[0].name
+          if(this.selectedCollaborators.includes(collabName))
+            this.selectedCollaborators.splice(this.selectedCollaborators.indexOf(collabName), 1)
+        }
         const newCollaborators = await this.getAllCollaborators()
         this.colaborators = newCollaborators
       }
