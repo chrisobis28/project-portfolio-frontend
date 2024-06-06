@@ -121,6 +121,7 @@ export class LoginMenuComponent implements OnInit {
           this.isLoggedIn = true;
           this.isLogInFailed = false;
           this.loginForm.reset();
+          this.loginSubmitted = false;
           this.router.navigateByUrl('');
           return;
         },
@@ -149,6 +150,7 @@ export class LoginMenuComponent implements OnInit {
         next: () => {
           this.registerForm.reset();
           this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Registration successfully completed.' });
+          this.registerSubmitted = false;
           return;
         },
         error: (err) => {
