@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 
 const USER_KEY = 'auth-user';
 const COOKIE_DATE = 'auth-date';
+const ROLE = 'auth-role';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +13,7 @@ export class StorageService {
   clean(): void {
     window.sessionStorage.removeItem(USER_KEY);
     window.sessionStorage.removeItem(COOKIE_DATE);
+    window.sessionStorage.removeItem(ROLE);
   }
 
   public saveUser(username: string): void {
@@ -24,8 +26,9 @@ export class StorageService {
     window.sessionStorage.setItem(COOKIE_DATE, date);
   }
 
-  public removeUser(): void {
-    window.sessionStorage.removeItem(USER_KEY);
+  public saveRole(role: string): void {
+    window.sessionStorage.removeItem(ROLE);
+    window.sessionStorage.setItem(ROLE, role);
   }
 
   public getUser(): string {
@@ -40,6 +43,14 @@ export class StorageService {
     const expirationDate = window.sessionStorage.getItem(COOKIE_DATE);
     if (expirationDate) {
       return expirationDate;
+    }
+    return null;
+  }
+
+  public getRole(): string | null {
+    const role = window.sessionStorage.getItem(ROLE);
+    if (role) {
+      return role;
     }
     return null;
   }

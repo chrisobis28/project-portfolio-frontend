@@ -91,6 +91,10 @@ export class LoginMenuComponent implements OnInit {
     }
     else if(this.storageService.isLoggedIn()) {
       this.isLoggedIn = true;
+      const role = this.storageService.getRole();
+      if(role) {
+        this.storageService.saveRole(role);
+      }
     }
     this.loginForm = this.fb.group({
       username: this.usernameL,
@@ -112,6 +116,15 @@ export class LoginMenuComponent implements OnInit {
           if(date && this.loginUserRequest.username) {
             this.storageService.saveDate(date);
             this.storageService.saveUser(this.loginUserRequest.username);
+
+            this.authenticationService.getRole(this.loginUserRequest.username).subscribe({
+              next: role => {
+                this.storageService.saveRole(role);
+              },
+              error: () => {
+                this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not get role.' });
+              }
+            });
           }
           else {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Something went wrong when logging in.' });

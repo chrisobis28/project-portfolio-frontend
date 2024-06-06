@@ -10,6 +10,7 @@ import {MediaService} from "../../services/media/media.service";
 import { StorageService } from 'src/app/features/accounts/services/authentication/storage.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { AuthenticationService } from 'src/app/features/accounts/services/authentication/authentication.service';
+import { Nullable } from 'primeng/ts-helpers';
 
 @Component({
   selector: 'app-projects',
@@ -27,6 +28,7 @@ export class ProjectsComponent implements OnInit {
   selectedTagNames: string[] = []
   isLoggedIn: boolean = false;
   username: string = '';
+  role: Nullable<string> = '';
 
   constructor(
     private readonly projectService: ProjectService,
@@ -44,6 +46,7 @@ export class ProjectsComponent implements OnInit {
     if(this.storageService.isLoggedIn()) {
       this.isLoggedIn = true;
       this.username = this.storageService.getUser();
+      this.role = this.storageService.getRole();
     }
 
       this.projectService.getAllProjects().subscribe((response: Project[]) => {

@@ -23,7 +23,7 @@
     
       <div *ngIf="isLoggedIn" class="button-container">
         <div class="container-logged-in">
-          <h4><i>You are logged in as {{username}}.</i></h4>
+          <h4><i>You are logged in as {{username}} ({{role}}).</i></h4>
           <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
           <button class="logout-button" (click)="logout()">Logout</button>
         </div>
