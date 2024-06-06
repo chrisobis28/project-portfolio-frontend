@@ -46,7 +46,18 @@ export class ProjectsComponent implements OnInit {
     if(this.storageService.isLoggedIn()) {
       this.isLoggedIn = true;
       this.username = this.storageService.getUser();
-      this.role = this.storageService.getRole();
+      try {
+        const role = await this.authenticationService.getRole(this.username).toPromise();
+        if (role) {
+          this.storageService.saveRole(role);
+          this.role = role;
+        } else {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Role is undefined.' });
+        }
+      } catch (error) {
+        console.error('Error fetching role:', error);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not get role.' });
+      }
     }
 
       this.projectService.getAllProjects().subscribe((response: Project[]) => {
