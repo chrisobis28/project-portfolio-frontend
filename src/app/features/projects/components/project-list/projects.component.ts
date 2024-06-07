@@ -216,6 +216,8 @@ export class ProjectsComponent implements OnInit, OnDestroy {
   }
 
   filterByTitle(dataToFilter: Project[]): Project[] {
+    if(this.projectName == '')
+      return dataToFilter
     return dataToFilter.filter(x => x.title.toLocaleLowerCase().includes(this.projectName.toLocaleLowerCase()))
   }
 
@@ -226,6 +228,8 @@ export class ProjectsComponent implements OnInit, OnDestroy {
   }
 
   filterByCollaborator(dataToFilter: Project[]): Project[] {
+    if(this.projectCollaborator == '')
+      return dataToFilter
     return dataToFilter.filter(project =>
       project.collaboratorNames.some(collaborator =>
         collaborator.toLocaleLowerCase().includes(this.projectCollaborator.toLocaleLowerCase())
@@ -238,6 +242,8 @@ export class ProjectsComponent implements OnInit, OnDestroy {
   }
 
   filterByTags(dataToFilter: Project[]) {
+    if(this.selectedTagNames.length == 0)
+      return dataToFilter
     return dataToFilter.filter(project => this.selectedTagNames.every(name => project.tagNames.includes(name)))
   }
 
