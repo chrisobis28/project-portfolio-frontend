@@ -80,3 +80,16 @@
 .container-logged-in {
   display: flex;
 }
+.bottom-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 1rem;
+  position: relative;
+}
+.left-bottom {
+  text-align: left;
+}
+.right-bottom {
+  text-align: right;
+}

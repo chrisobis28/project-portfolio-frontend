@@ -57,9 +57,10 @@ export class StorageService {
 
   public isLoggedIn(): boolean {
     const username = window.sessionStorage.getItem(USER_KEY);
-    if (username) {
+    if (username && !this.dateExpired()) {
       return true;
     }
+    this.clean();
     return false;
   }
 
