@@ -19,6 +19,9 @@ import {CollaboratorService} from "../../services/collaborator/collaborator.serv
 import {TagService} from "../../services/tag/tag.service";
 import {DialogModule} from "primeng/dialog";
 import { Router } from '@angular/router'
+import { StorageService } from 'src/app/features/accounts/services/authentication/storage.service';
+import { AccountService } from 'src/app/features/accounts/services/accounts/account.service';
+import { AuthenticationService } from 'src/app/features/accounts/services/authentication/authentication.service';
 @Component({
   selector: 'app-project-detail',
   standalone: true,
@@ -76,7 +79,19 @@ export class ProjectDetailComponent implements OnInit {
   links: Link[] = [];
   tags: Tag[] = [];
   isMobile: boolean;
-  constructor(private readonly router:Router, readonly projectService: ProjectService,private readonly tagService: TagService, private readonly linkService: LinkService,private readonly mediaService: MediaService,private readonly collaboratorService: CollaboratorService,private route: ActivatedRoute) {
+  role_on_project: string = '';
+  username: string = '';
+  isLoggedIn: boolean = false;
+  constructor(private readonly router:Router, 
+    readonly projectService: ProjectService, 
+    private readonly tagService: TagService, 
+    private readonly linkService: LinkService, 
+    private readonly mediaService: MediaService, 
+    private readonly collaboratorService: CollaboratorService, 
+    private route: ActivatedRoute, 
+    private storageService: StorageService,
+    private accountService: AccountService,
+    private authenticationService: AuthenticationService) {
     this.isMobile = window.innerWidth <= 767;
   }
 
@@ -84,7 +99,7 @@ export class ProjectDetailComponent implements OnInit {
     return this.collaborators.map(obj => obj.name).join(', ');
   }
 
-   ngOnInit() {
+async ngOnInit() {
      this.route.params.subscribe(params => {
        this.projectId = (params['id']);
        this.projectService.getProjectById(params['id']).subscribe((responseProject: Project) => {
@@ -122,6 +137,34 @@ export class ProjectDetailComponent implements OnInit {
           }
         }
       );
+      this.isLoggedIn = this.storageService.isLoggedIn();
+      if(this.isLoggedIn) {
+
+        this.username = this.storageService.getUser();
+        try {
+          const role = await this.authenticationService.getRole(this.username).toPromise();
+          if(role && role != this.storageService.getRole()) {
+            this.storageService.saveRole(role);
+          }
+
+          if(this.storageService.getRole() === "ROLE_ADMIN") {
+            this.role_on_project = "ADMIN";
+            return;
+          }
+
+          this.accountService.getRoleOnProject(this.username, this.projectId).subscribe({
+            next: (role: string) => {
+              this.role_on_project = role;
+            },
+            error: (err) => {
+              console.error('Error fetching the role of the user from the database', err);
+            },
+          });
+        }
+        catch (error) {
+          console.error('Error fetching role, waiting took too long', error);
+        }
+      }
     }
   @HostListener('window:resize', ['$event'])
   onResize() {

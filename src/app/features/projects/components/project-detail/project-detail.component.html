@@ -9,6 +9,16 @@
 </head>
 <body>
 <div class="grid">
+
+  <div class="col-12" style="text-align: right;">
+    <div *ngIf="isLoggedIn" class="button-container">
+        <div class="container-logged-in">
+            <h4><i>You ({{username}}) are viewing this as {{this.role_on_project}}.</i></h4>
+            <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
+        </div>
+    </div>
+</div>
+
   <ng-container *ngIf=!isMobile>
     <div class="col-1">
     </div>
@@ -20,14 +30,16 @@
         <p-button icon="pi pi-arrow-left" [outlined]="true"  severity="contrast"/>
         </a>
       </div>
-      <div class="col-12 md:col-10 lg:col-10">
+      <div class="col-12 md:col-11 lg:col-11">
         <h1>{{project.title}}</h1>
       </div>
-      <div class="flex align-items-center justify-content-center gap-2">
-        <a [routerLink]="['/project', 'edit', project.projectId]">
+      <div class="col-12 md:col-12 lg:col-12 flex align-items gap-2">
+        <a *ngIf="isLoggedIn && (role_on_project === 'ADMIN' || role_on_project === 'PM' || role_on_project === 'CONTENT_CREATOR' || role_on_project === 'EDITOR')"
+                        [routerLink]="['/project', 'edit', project.projectId]">
           <p-button icon="pi pi-pencil" label="Edit" rounded severity="info"></p-button>
         </a>
-        <p-button (click)="showDeleteDialog()" icon="pi pi-trash" label="Delete" [rounded]="true" severity="danger"></p-button>
+        <p-button *ngIf="isLoggedIn && (role_on_project === 'ADMIN' || role_on_project === 'PM')" 
+                        (click)="showDeleteDialog()" icon="pi pi-trash" label="Delete" [rounded]="true" severity="danger"></p-button>
         <p-dialog header="Delete project" [modal]="true" [(visible)]="visible" [style]="{ width: '25rem' }">
           <span class="p-text-secondary block mb-5">You are about to delete this project. Please be careful as this action cannot be undone. Please confirm your action.</span>
           <div class="flex justify-content-end gap-2">

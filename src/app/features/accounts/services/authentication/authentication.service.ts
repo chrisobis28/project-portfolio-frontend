@@ -32,4 +32,9 @@ export class AuthenticationService {
     return this.httpClient.post(url, {}, { responseType: 'text' });
   }
 
+  getRole(username: string): Observable<string> {
+    const url = AUTH_API + '/role/' + username;
+    return this.httpClient.get(url, { responseType: 'text' });
+  }
+
 }
