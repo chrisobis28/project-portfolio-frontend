@@ -1,4 +1,4 @@
-import {Component, CUSTOM_ELEMENTS_SCHEMA, HostListener, NO_ERRORS_SCHEMA, OnInit} from '@angular/core';
+import {Component, CUSTOM_ELEMENTS_SCHEMA, HostListener, NO_ERRORS_SCHEMA, OnDestroy, OnInit} from '@angular/core';
 import {AccordionModule} from 'primeng/accordion';
 import {BadgeModule} from 'primeng/badge';
 import {AvatarModule} from 'primeng/avatar';
@@ -22,6 +22,8 @@ import { Router } from '@angular/router'
 import { StorageService } from 'src/app/features/accounts/services/authentication/storage.service';
 import { AccountService } from 'src/app/features/accounts/services/accounts/account.service';
 import { AuthenticationService } from 'src/app/features/accounts/services/authentication/authentication.service';
+import { firstValueFrom, Subscription } from 'rxjs';
+import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 @Component({
   selector: 'app-project-detail',
   standalone: true,
@@ -30,7 +32,7 @@ import { AuthenticationService } from 'src/app/features/accounts/services/authen
   schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
   styleUrls: ['./project-detail.component.css']
 })
-export class ProjectDetailComponent implements OnInit {
+export class ProjectDetailComponent implements OnInit, OnDestroy {
   images: MediaFile[] = [];
   documents: Media[] = [];
   bibTeX: MediaFile | undefined = {
@@ -79,9 +81,39 @@ export class ProjectDetailComponent implements OnInit {
   links: Link[] = [];
   tags: Tag[] = [];
   isMobile: boolean;
+
   role_on_project: string = '';
   username: string = '';
   isLoggedIn: boolean = false;
+
+
+  wsProjectsSubscription: Subscription = new Subscription()
+  wsCollaboratorsProjectSubscription: Subscription = new Subscription()
+  wsTagsProjectSubscription: Subscription = new Subscription()
+  wsLinksProjectSubscription: Subscription = new Subscription()
+  wsMediaProjectSubscription: Subscription = new Subscription()
+
+
+  projectsWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/projects",
+    deserializer: msg => String(msg.data)
+  })
+  collaboratorsProjectWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/collaborators/project",
+    deserializer: msg => String(msg.data)
+  })
+  tagsProjectWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/tags/project",
+    deserializer: msg => String(msg.data)
+  })
+  linksProjectWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/link/project",
+    deserializer: msg => String(msg.data)
+  })
+  mediaProjectWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/media/project",
+    deserializer: msg => String(msg.data)
+  })
   constructor(private readonly router:Router, 
     readonly projectService: ProjectService, 
     private readonly tagService: TagService, 
@@ -99,45 +131,68 @@ export class ProjectDetailComponent implements OnInit {
     return this.collaborators.map(obj => obj.name).join(', ');
   }
 
-async ngOnInit() {
-     this.route.params.subscribe(params => {
-       this.projectId = (params['id']);
-       this.projectService.getProjectById(params['id']).subscribe((responseProject: Project) => {
-         this.project = responseProject;
-         this.projectDescription = this.project.description.split(/\r?\n|\r|\n/g);
-       });
-       this.linkService.getLinksByProjectId(params['id']).subscribe((responseLinks: Link[]) => {
-         this.links = responseLinks;
-       });
-       this.collaboratorService.getCollaboratorsByProjectId(params['id']).subscribe((responseCollaborators: Collaborator[]) => {
-         this.collaborators = responseCollaborators;
-       });
-       this.tagService.getTagsByProjectId(params['id']).subscribe((responseTags: Tag[]) => {
-         this.tags = responseTags;
-       });
-     });
-     this.mediaService.getMediasContentByProjectId(this.projectId).subscribe({
-        next: (data: MediaFile[]) => {
-          this.images = data.filter(media => media.a && (media.a.endsWith(".jpg") || media.a.endsWith(".png")));
-          this.bibTeX = data.find(media => media.a && media.a.endsWith(".bib"));
-        },
-        error: (err: any) => {
-          console.error('Error fetching media files', err);
-        }
-      })
-      this.mediaService.getDocumentsByProjectId(this.projectId).subscribe({
-          next: (data: Media[]) => {
-            this.documents = data.filter(media => media.path && !(
-              media.path.endsWith(".jpg") ||
-              media.path.endsWith(".png")
-            ));
-          },
-          error: (err: any) => {
-            console.error('Error fetching media files', err);
-          }
-        }
-      );
-      this.isLoggedIn = this.storageService.isLoggedIn();
+   async ngOnInit() {
+    
+    this.initializeProject()
+
+    this.wsProjectsSubscription = this.projectsWebSocket.subscribe(
+     async msg => {
+       const words = msg.split(" ")
+       if(words[1] == this.projectId) {
+         switch (words[0]) {
+           case "edited" : {
+             const newProject = await this.getProjectById(this.projectId)
+             this.project.title = newProject.title
+             this.projectDescription = newProject.description.split(/\r?\n|\r|\n/g);
+             return
+           }
+           case "deleted" : {
+             this.router.navigate(['/'])
+             return
+           }
+         }
+       }
+     }
+    )
+
+    this.wsCollaboratorsProjectSubscription = this.collaboratorsProjectWebSocket.subscribe(
+     async msg => {
+       if(msg == "all" || msg == this.projectId) {
+         this.collaborators = await this.getCollaboratorsByProjectId(this.projectId)
+       }
+     }
+    )
+    this.wsTagsProjectSubscription = this.tagsProjectWebSocket.subscribe(
+     async msg => {
+       if(msg == "all" || msg == this.projectId) {
+         this.tags = await this.getTagsByProjectId(this.projectId)
+       }
+     }
+    )
+    this.wsLinksProjectSubscription = this.linksProjectWebSocket.subscribe(
+     async msg => {
+       if(msg == "all" || msg == this.projectId) {
+         this.links = await this.getLinksByProjectId(this.projectId)
+       }
+     }
+    )
+    this.wsMediaProjectSubscription = this.mediaProjectWebSocket.subscribe(
+     async msg => {
+       if(msg == this.projectId) {
+         const mediaFileData = await this.getMediaContentByProjectId(this.projectId)
+         this.images = mediaFileData.filter(media => media.a && (media.a.endsWith(".jpg") || media.a.endsWith(".png")));
+         this.bibTeX = mediaFileData.find(media => media.a && media.a.endsWith(".bib"));
+
+         const documentData = await this.getDocumentsByProjectId(this.projectId)
+         this.documents = documentData.filter(media => media.path && !(
+           media.path.endsWith(".jpg") ||
+           media.path.endsWith(".png")
+         ));
+       }
+     }
+    )
+
+    this.isLoggedIn = this.storageService.isLoggedIn();
       if(this.isLoggedIn) {
 
         this.username = this.storageService.getUser();
@@ -169,6 +224,84 @@ async ngOnInit() {
   @HostListener('window:resize', ['$event'])
   onResize() {
     this.isMobile = window.innerWidth <= 767;
+  }
+
+  ngOnDestroy(): void {
+    if(this.wsProjectsSubscription)
+      this.wsProjectsSubscription.unsubscribe()
+    if(this.wsTagsProjectSubscription)
+      this.wsTagsProjectSubscription.unsubscribe()
+    if(this.wsCollaboratorsProjectSubscription)
+      this.wsCollaboratorsProjectSubscription.unsubscribe()
+    if(this.wsMediaProjectSubscription)
+      this.wsMediaProjectSubscription.unsubscribe()
+    if(this.wsLinksProjectSubscription)
+      this.wsLinksProjectSubscription.unsubscribe()
+  }
+
+  initializeProject(): void {
+    console.log("Whole project is initialized")
+    this.route.params.subscribe(params => {
+      this.projectId = (params['id']);
+      this.projectService.getProjectById(params['id']).subscribe((responseProject: Project) => {
+        this.project = responseProject;
+        this.projectDescription = this.project.description.split(/\r?\n|\r|\n/g);
+      });
+      this.linkService.getLinksByProjectId(params['id']).subscribe((responseLinks: Link[]) => {
+        this.links = responseLinks;
+      });
+      this.collaboratorService.getCollaboratorsByProjectId(params['id']).subscribe((responseCollaborators: Collaborator[]) => {
+        this.collaborators = responseCollaborators;
+      });
+      this.tagService.getTagsByProjectId(params['id']).subscribe((responseTags: Tag[]) => {
+        this.tags = responseTags;
+      });
+    });
+    this.mediaService.getMediasContentByProjectId(this.projectId).subscribe({
+       next: (data: MediaFile[]) => {
+         this.images = data.filter(media => media.a && (media.a.endsWith(".jpg") || media.a.endsWith(".png")));
+         this.bibTeX = data.find(media => media.a && media.a.endsWith(".bib"));
+       },
+       error: (err: any) => {
+         console.error('Error fetching media files', err);
+       }
+     })
+     this.mediaService.getDocumentsByProjectId(this.projectId).subscribe({
+         next: (data: Media[]) => {
+           this.documents = data.filter(media => media.path && !(
+             media.path.endsWith(".jpg") ||
+             media.path.endsWith(".png")
+           ));
+         },
+         error: (err: any) => {
+           console.error('Error fetching media files', err);
+         }
+       }
+     );
+  }
+
+  async getProjectById(id: string): Promise<Project> {
+    return firstValueFrom(this.projectService.getProjectById(id))
+  }
+
+  async getCollaboratorsByProjectId(id: string): Promise<Collaborator[]> {
+    return firstValueFrom(this.collaboratorService.getCollaboratorsByProjectId(id))
+  }
+
+  async getTagsByProjectId(id: string): Promise<Tag[]> {
+    return firstValueFrom(this.tagService.getTagsByProjectId(id))
+  }
+
+  async getLinksByProjectId(id: string): Promise<Link[]> {
+    return firstValueFrom(this.linkService.getLinksByProjectId(id))
+  }
+
+  async getMediaContentByProjectId(id: string): Promise<MediaFile[]> {
+    return firstValueFrom(this.mediaService.getMediasContentByProjectId(this.projectId))
+  }
+
+  async getDocumentsByProjectId(id: string): Promise<Media[]> {
+    return firstValueFrom(this.mediaService.getDocumentsByProjectId(id))
   }
 
   getImageSrc(media: MediaFile): string {

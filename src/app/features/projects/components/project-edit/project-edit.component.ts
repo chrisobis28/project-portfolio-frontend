@@ -1,5 +1,5 @@
 import { Component , OnInit } from '@angular/core';
-import {ActivatedRoute, RouterLink} from '@angular/router';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { FloatLabelModule } from 'primeng/floatlabel';
@@ -17,11 +17,13 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import{ MediaService} from "../../services/media/media.service";
 import { DropdownModule } from 'primeng/dropdown';
-import { firstValueFrom, map } from 'rxjs';
+import { Subscription, firstValueFrom, map } from 'rxjs';
 import { LinkService } from '../../services/link/link.service';
 import { CollaboratorService } from '../../services/collaborator/collaborator.service';
 import { TemplateService } from '../../services/template/template.service';
 import { TagService } from '../../services/tag/tag.service';
+import { Serializer } from '@angular/compiler';
+import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 @Component({
   selector: 'app-project-edit',
   templateUrl: './project-edit.component.html',
@@ -53,13 +55,132 @@ export class ProjectEditComponent implements OnInit {
   deletedMediaList:Media[] =[];
   addedMediaList:FormData[]=[];
 
+  wsProjectsSubscription: Subscription = new Subscription()
+  wsCollaboratorsProjectSubscription: Subscription = new Subscription()
+  wsCollaboratorsSubscription: Subscription = new Subscription()
+  wsTagsProjectSubscription: Subscription = new Subscription()
+  wsTagsSubscription: Subscription = new Subscription()
+  wsLinksProjectSubscription: Subscription = new Subscription()
+  wsMediaProjectSubscription: Subscription = new Subscription()
+
+  projectsWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/projects",
+    deserializer: msg => String(msg.data)
+  })
+  collaboratorsProjectWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/collaborators/project",
+    deserializer: msg => String(msg.data)
+  })
+  collaboratorsWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/collaborators",
+    deserializer: msg => String(msg.data)
+  })
+  tagsProjectWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/tags/project",
+    deserializer: msg => String(msg.data)
+  })
+  tagsWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/tags",
+    deserializer: msg => String(msg.data)
+  })
+  linksProjectWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/link/project",
+    deserializer: msg => String(msg.data)
+  })
+  mediaProjectWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/media/project",
+    deserializer: msg => String(msg.data)
+  })
+
   constructor(private route: ActivatedRoute,
      private projectService: ProjectService, private messageService: MessageService,private mediaService: MediaService,
      private linkService: LinkService, private collaboratorService: CollaboratorService, private templateService: TemplateService,
-     private tagService: TagService
+     private tagService: TagService,
+     private readonly router: Router
     ) {}
 
   async ngOnInit() {
+    await this.initializeFields()
+
+    this.wsProjectsSubscription = this.projectsWebSocket.subscribe(
+      async msg => {
+        const words = msg.split(" ")
+        if(words[1] == this.projectId) {
+          switch (words[0]) {
+            case "edited" : {
+              if(this.projectId){
+                const newProject = await this.getProjectById(this.projectId)
+                this.title = newProject.title
+                this.description = newProject.description}
+              return
+            }
+            case "deleted" : {
+              this.router.navigate(['/'])
+              return
+            }
+          }
+        }
+      }
+    )
+
+    this.wsCollaboratorsProjectSubscription = this.collaboratorsProjectWebSocket.subscribe(
+      async msg => {
+        if(msg == "all" || msg == this.projectId) {
+          if(this.projectId){
+            const newCollaborators = await this.getCollaboratorsByProjectId(this.projectId)
+            this.colaborators = newCollaborators
+            this.collaboratornames = newCollaborators.map(x => x.name)
+          }
+        }
+      }
+     )
+
+     this.wsTagsProjectSubscription = this.tagsProjectWebSocket.subscribe(
+      async msg => {
+        if(msg == "all" || msg == this.projectId) {
+          if(this.projectId){
+            const newTags  = await this.getTagsByProjectId(this.projectId)
+            this.tags = newTags
+            this.tagnames = newTags.map(x => x.name);
+          }
+        }
+      }
+     )
+
+     this.wsMediaProjectSubscription = this.mediaProjectWebSocket.subscribe(
+      async msg => {
+        if(msg == "all" || msg == this.projectId) {
+          if(this.projectId){
+          const newMedia = await this.getDocumentsByProjectId(this.projectId)
+          this.media = newMedia
+        }
+        } 
+      }
+     )
+
+     this.wsLinksProjectSubscription = this.linksProjectWebSocket.subscribe(
+      async msg => {
+        if(msg == "all" || msg == this.projectId) {
+          if(this.projectId){
+            const newLinks = await this.getLinksByProjectId(this.projectId)
+            this.links = newLinks
+          }
+        }
+      }
+     )
+
+     
+
+     //should define here the collaborators and tags websocket such that it updates autocomplete
+     //as in project-add components. The autocomplete is done on dev, we do it after we merge this with dev
+     
+     
+    
+
+
+  }
+
+  async initializeFields() {
     this.projectId = this.route.snapshot.paramMap.get('id');
     this.templates = await this.getAllTemplates()
     this.templateNames = await this.getAllTemplateNames()
@@ -89,6 +210,26 @@ export class ProjectEditComponent implements OnInit {
     } else {
       console.error('Project ID is null');
     }
+  }
+
+  async getProjectById(id: string): Promise<Project> {
+    return firstValueFrom(this.projectService.getProjectById(id))
+  }
+
+  async getCollaboratorsByProjectId(id: string): Promise<Collaborator[]> {
+    return firstValueFrom(this.collaboratorService.getCollaboratorsByProjectId(id))
+  }
+
+  async getTagsByProjectId(id: string): Promise<Tag[]> {
+    return firstValueFrom(this.tagService.getTagsByProjectId(id))
+  }
+
+  async getLinksByProjectId(id: string): Promise<Link[]> {
+    return firstValueFrom(this.linkService.getLinksByProjectId(id))
+  }
+
+  async getDocumentsByProjectId(id: string): Promise<Media[]> {
+    return firstValueFrom(this.mediaService.getDocumentsByProjectId(id))
   }
 
   async uploadFile(event: FileUploadEvent) {
@@ -184,11 +325,13 @@ export class ProjectEditComponent implements OnInit {
       this.addedMediaList = []
       for (const media of this.deletedMediaList) {
           if(media.mediaId!='')
-          {await firstValueFrom(this.mediaService.deleteMedia(media.mediaId));
+          {const res = await firstValueFrom(this.mediaService.deleteMedia(media.mediaId).pipe(map(x => x as String)));
           console.log('Media deleted successfully', media);
           }
       }
       this.deletedMediaList = []
+      this.router.navigate(['/project-detail/', this.projectId])
+      
 
     } catch (error) {
       console.error('Error saving project,media or links', error);

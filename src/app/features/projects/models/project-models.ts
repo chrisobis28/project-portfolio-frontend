@@ -13,7 +13,7 @@ export interface Project {
     collaboratorNames: string[]
     tagNames: string[]
     tags: Tag[]
-    tmb:MediaFileContent
+    tmb:MediaFileContent | undefined
 
 }
 
@@ -118,5 +118,9 @@ export interface TemplateAddition {
     templateAdditionName: string
     media: boolean
     template: Template
+}
+
+export interface WebSocketStringMessage {
+    message: string
 }
 
