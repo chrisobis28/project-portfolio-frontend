@@ -7,12 +7,18 @@ import { CollaboratorService } from '../../services/collaborator/collaborator.se
 import { Subscription, firstValueFrom, map } from 'rxjs';
 import { TagService } from '../../services/tag/tag.service';
 import {MediaService} from "../../services/media/media.service";
+import { StorageService } from 'src/app/features/accounts/services/authentication/storage.service';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { AuthenticationService } from 'src/app/features/accounts/services/authentication/authentication.service';
+import { Nullable } from 'primeng/ts-helpers';
+
 import { WebsocketService } from '../../services/websocket/websocket.service';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 @Component({
   selector: 'app-projects',
   templateUrl: './projects.component.html',
-  styleUrls: ['./projects.component.css']
+  styleUrls: ['./projects.component.css'],
+  providers: [ConfirmationService, MessageService]
 })
 export class ProjectsComponent implements OnInit, OnDestroy {
   data: Project[] = [];
@@ -22,6 +28,9 @@ export class ProjectsComponent implements OnInit, OnDestroy {
   projectCollaborator: string = ''
   tagNames: string[] = []
   selectedTagNames: string[] = []
+  isLoggedIn: boolean = false;
+  username: string = '';
+  role: Nullable<string> = '';
 
 
   wsProjectsSubscription: Subscription = new Subscription();
@@ -57,9 +66,29 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     private readonly collaboratorService: CollaboratorService,
     private tagService: TagService,
     private mediaService: MediaService,
+    private storageService: StorageService,
+    private confirmationService: ConfirmationService,
+    private authenticationService: AuthenticationService,
+    private messageService: MessageService
   ) {}
 
   async ngOnInit(): Promise<void> {
+    if(this.storageService.isLoggedIn()) {
+      this.isLoggedIn = true;
+      this.username = this.storageService.getUser();
+      try {
+        const role = await this.authenticationService.getRole(this.username).toPromise();
+        if (role) {
+          this.storageService.saveRole(role);
+          this.role = role;
+        } else {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Role is undefined.' });
+        }
+      } catch (error) {
+        console.error('Error fetching role:', error);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not get role.' });
+      }
+    }
     await this.initProjects()
     console.log("OnInit called")
 
@@ -126,7 +155,6 @@ export class ProjectsComponent implements OnInit, OnDestroy {
               })   
       }
     )
-  
     }
 
     ngOnDestroy() {
@@ -281,4 +309,23 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     }
 
 
- }
+
+    logout() {
+      this.confirmationService.confirm({
+        message: "Are you sure you want to log out of the account " + this.storageService.getUser() + "?",
+        accept: () => {
+          this.authenticationService.logout().subscribe({
+            next: () => {
+              this.isLoggedIn = false;
+              this.storageService.clean();
+              this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Logged out successfully.' });
+              return;
+            },
+            error: err => {
+              this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not be logged out.' });
+            }
+          })
+        }
+      })
+    }
+  }

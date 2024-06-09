@@ -38,15 +38,6 @@ export interface MediaFileContent {
   a: string;
   b: string;
 }
-export interface Account {
-    username: string
-    name: string
-    password: string
-    isAdministrator: boolean
-    isPM: boolean
-    projectstoAccounts: ProjectsToAccounts[]
-    requests: Request[]
-}
 
 export interface ProjectsToCollaborators {
     ptcId: string

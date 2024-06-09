@@ -19,6 +19,9 @@ import {CollaboratorService} from "../../services/collaborator/collaborator.serv
 import {TagService} from "../../services/tag/tag.service";
 import {DialogModule} from "primeng/dialog";
 import { Router } from '@angular/router'
+import { StorageService } from 'src/app/features/accounts/services/authentication/storage.service';
+import { AccountService } from 'src/app/features/accounts/services/accounts/account.service';
+import { AuthenticationService } from 'src/app/features/accounts/services/authentication/authentication.service';
 import { firstValueFrom, Subscription } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 @Component({
@@ -79,6 +82,11 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   tags: Tag[] = [];
   isMobile: boolean;
 
+  role_on_project: string = '';
+  username: string = '';
+  isLoggedIn: boolean = false;
+
+
   wsProjectsSubscription: Subscription = new Subscription()
   wsCollaboratorsProjectSubscription: Subscription = new Subscription()
   wsTagsProjectSubscription: Subscription = new Subscription()
@@ -106,19 +114,16 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     url: "ws://localhost:8080/topic/media/project",
     deserializer: msg => String(msg.data)
   })
-
-
-
-
-  constructor(
-    private readonly router:Router, 
+  constructor(private readonly router:Router, 
     readonly projectService: ProjectService, 
     private readonly tagService: TagService, 
     private readonly linkService: LinkService, 
     private readonly mediaService: MediaService, 
-    private readonly collaboratorService: CollaboratorService,
-    private route: ActivatedRoute
-  ) {
+    private readonly collaboratorService: CollaboratorService, 
+    private route: ActivatedRoute, 
+    private storageService: StorageService,
+    private accountService: AccountService,
+    private authenticationService: AuthenticationService) {
     this.isMobile = window.innerWidth <= 767;
   }
 
@@ -126,84 +131,112 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     return this.collaborators.map(obj => obj.name).join(', ');
   }
 
-   ngOnInit() {
-     this.initializeProject()
+   async ngOnInit() {
+    
+    this.initializeProject()
 
-     this.wsProjectsSubscription = this.projectsWebSocket.subscribe(
-      async msg => {
-        const words = msg.split(" ")
-        if(words[1] == this.projectId) {
-          switch (words[0]) {
-            case "edited" : {
-              const newProject = await this.getProjectById(this.projectId)
-              this.project.title = newProject.title
-              this.projectDescription = newProject.description.split(/\r?\n|\r|\n/g);
-              return
-            }
-            case "deleted" : {
-              this.router.navigate(['/'])
-              return
-            }
+    this.wsProjectsSubscription = this.projectsWebSocket.subscribe(
+     async msg => {
+       const words = msg.split(" ")
+       if(words[1] == this.projectId) {
+         switch (words[0]) {
+           case "edited" : {
+             const newProject = await this.getProjectById(this.projectId)
+             this.project.title = newProject.title
+             this.projectDescription = newProject.description.split(/\r?\n|\r|\n/g);
+             return
+           }
+           case "deleted" : {
+             this.router.navigate(['/'])
+             return
+           }
+         }
+       }
+     }
+    )
+
+    this.wsCollaboratorsProjectSubscription = this.collaboratorsProjectWebSocket.subscribe(
+     async msg => {
+       if(msg == "all" || msg == this.projectId) {
+         this.collaborators = await this.getCollaboratorsByProjectId(this.projectId)
+       }
+     }
+    )
+    this.wsTagsProjectSubscription = this.tagsProjectWebSocket.subscribe(
+     async msg => {
+       if(msg == "all" || msg == this.projectId) {
+         this.tags = await this.getTagsByProjectId(this.projectId)
+       }
+     }
+    )
+    this.wsLinksProjectSubscription = this.linksProjectWebSocket.subscribe(
+     async msg => {
+       if(msg == "all" || msg == this.projectId) {
+         this.links = await this.getLinksByProjectId(this.projectId)
+       }
+     }
+    )
+    this.wsMediaProjectSubscription = this.mediaProjectWebSocket.subscribe(
+     async msg => {
+       if(msg == this.projectId) {
+         const mediaFileData = await this.getMediaContentByProjectId(this.projectId)
+         this.images = mediaFileData.filter(media => media.a && (media.a.endsWith(".jpg") || media.a.endsWith(".png")));
+         this.bibTeX = mediaFileData.find(media => media.a && media.a.endsWith(".bib"));
+
+         const documentData = await this.getDocumentsByProjectId(this.projectId)
+         this.documents = documentData.filter(media => media.path && !(
+           media.path.endsWith(".jpg") ||
+           media.path.endsWith(".png")
+         ));
+       }
+     }
+    )
+
+    this.isLoggedIn = this.storageService.isLoggedIn();
+      if(this.isLoggedIn) {
+
+        this.username = this.storageService.getUser();
+        try {
+          const role = await this.authenticationService.getRole(this.username).toPromise();
+          if(role && role != this.storageService.getRole()) {
+            this.storageService.saveRole(role);
           }
-        }
-      }
-     )
 
-     this.wsCollaboratorsProjectSubscription = this.collaboratorsProjectWebSocket.subscribe(
-      async msg => {
-        if(msg == "all" || msg == this.projectId) {
-          this.collaborators = await this.getCollaboratorsByProjectId(this.projectId)
-        }
-      }
-     )
-     this.wsTagsProjectSubscription = this.tagsProjectWebSocket.subscribe(
-      async msg => {
-        if(msg == "all" || msg == this.projectId) {
-          this.tags = await this.getTagsByProjectId(this.projectId)
-        }
-      }
-     )
-     this.wsLinksProjectSubscription = this.linksProjectWebSocket.subscribe(
-      async msg => {
-        if(msg == "all" || msg == this.projectId) {
-          this.links = await this.getLinksByProjectId(this.projectId)
-        }
-      }
-     )
-     this.wsMediaProjectSubscription = this.mediaProjectWebSocket.subscribe(
-      async msg => {
-        if(msg == this.projectId) {
-          const mediaFileData = await this.getMediaContentByProjectId(this.projectId)
-          this.images = mediaFileData.filter(media => media.a && (media.a.endsWith(".jpg") || media.a.endsWith(".png")));
-          this.bibTeX = mediaFileData.find(media => media.a && media.a.endsWith(".bib"));
+          if(this.storageService.getRole() === "ROLE_ADMIN") {
+            this.role_on_project = "ADMIN";
+            return;
+          }
 
-          const documentData = await this.getDocumentsByProjectId(this.projectId)
-          this.documents = documentData.filter(media => media.path && !(
-            media.path.endsWith(".jpg") ||
-            media.path.endsWith(".png")
-          ));
+          this.accountService.getRoleOnProject(this.username, this.projectId).subscribe({
+            next: (role: string) => {
+              this.role_on_project = role;
+            },
+            error: (err) => {
+              console.error('Error fetching the role of the user from the database', err);
+            },
+          });
+        }
+        catch (error) {
+          console.error('Error fetching role, waiting took too long', error);
         }
       }
-     )
     }
-
-    ngOnDestroy(): void {
-      if(this.wsProjectsSubscription)
-        this.wsProjectsSubscription.unsubscribe()
-      if(this.wsTagsProjectSubscription)
-        this.wsTagsProjectSubscription.unsubscribe()
-      if(this.wsCollaboratorsProjectSubscription)
-        this.wsCollaboratorsProjectSubscription.unsubscribe()
-      if(this.wsMediaProjectSubscription)
-        this.wsMediaProjectSubscription.unsubscribe()
-      if(this.wsLinksProjectSubscription)
-        this.wsLinksProjectSubscription.unsubscribe()
-    }
-
-
   @HostListener('window:resize', ['$event'])
   onResize() {
     this.isMobile = window.innerWidth <= 767;
+  }
+
+  ngOnDestroy(): void {
+    if(this.wsProjectsSubscription)
+      this.wsProjectsSubscription.unsubscribe()
+    if(this.wsTagsProjectSubscription)
+      this.wsTagsProjectSubscription.unsubscribe()
+    if(this.wsCollaboratorsProjectSubscription)
+      this.wsCollaboratorsProjectSubscription.unsubscribe()
+    if(this.wsMediaProjectSubscription)
+      this.wsMediaProjectSubscription.unsubscribe()
+    if(this.wsLinksProjectSubscription)
+      this.wsLinksProjectSubscription.unsubscribe()
   }
 
   initializeProject(): void {
