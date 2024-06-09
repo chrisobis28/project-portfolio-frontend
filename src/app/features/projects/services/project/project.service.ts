@@ -14,12 +14,12 @@ export class ProjectService {
   ) { }
 
   getAllProjects(): Observable<Project[]> {
-    return this.httpClient.get<Project[]>(this.API_URL);
+    return this.httpClient.get<Project[]>(this.API_URL + 'public/');
   }
   
 
   getProjectById(id: string): Observable<Project> {
-    return this.httpClient.get<Project>(this.API_URL+ `${id}`);
+    return this.httpClient.get<Project>(this.API_URL+ `public/${id}`);
   }
 
   createProject(body: Project): Observable<Project> {

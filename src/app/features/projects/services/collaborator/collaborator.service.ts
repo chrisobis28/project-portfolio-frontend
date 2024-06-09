@@ -14,11 +14,11 @@ export class CollaboratorService {
   ) { }
 
   getCollaboratorsByProjectId(id: string): Observable<Collaborator[]> {
-    return this.httpClient.get<Collaborator[]>(this.API_URL + `${id}`);
+    return this.httpClient.get<Collaborator[]>(this.API_URL + `public/${id}`);
   }
 
   getAllCollaborators(): Observable<Collaborator[]> {
-    return this.httpClient.get<Collaborator[]>(this.API_URL)
+    return this.httpClient.get<Collaborator[]>(this.API_URL + 'public/');
   }
 
   addCollaboratorToProject(collaborator: Collaborator, projectId: string): Observable<Collaborator> {

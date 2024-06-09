@@ -35,7 +35,7 @@ export class AccountService {
   }
 
   getAccount(username: string): Observable<any> {
-    const url = API_URL + `/${username}`;
+    const url = API_URL + `/public/${username}`;
     return this.httpClient.get<Observable<any>>(url, httpOptions);
   }
 
@@ -62,7 +62,7 @@ export class AccountService {
   }
 
   getRoleOnProject(username: string, projectId: string): Observable<string> {
-    const url = API_URL + `/role/${username}/${projectId}`;
+    const url = API_URL + `/public/role/${username}/${projectId}`;
     return this.httpClient.get<string>(url, httpOptionsGet);
   }
 
