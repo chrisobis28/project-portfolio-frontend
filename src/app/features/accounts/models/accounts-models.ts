@@ -2,10 +2,8 @@ import { Nullable } from "primeng/ts-helpers"
 
 export interface Account {
     username: string
-    name: string
-    password: string
-    isAdministrator: boolean
-    isPM: boolean
+    role: string
+    projects: string[]
 }
 
 export interface RegisterUserRequest {

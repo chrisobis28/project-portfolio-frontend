@@ -1,0 +1,77 @@
+.first-container {
+    display: flex;
+    justify-content: flex-end;
+}
+
+  .home-button {
+    background-color: #3b82f6;
+    font-weight: bold;
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 18px;
+    margin: 10px 2px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition-duration: 0.4s;
+    margin-left: 20px;
+  }
+  
+  .home-button:hover {
+    background-color: #2563EB;
+  }
+
+  .responsive-input {
+    width: 50%;
+    padding: 0.5em;
+    box-sizing: border-box;
+  }
+  
+  .container-style {
+    background-color: #f9fafb;
+    border-top: 2px solid #ECECEC;
+    border-bottom: 2px solid #ECECEC;
+    padding: 10px;
+  }
+
+@media (max-width: 768px) { 
+  .container-style {
+      flex-direction: column;
+      align-items: flex-start;
+  }
+}
+
+.button-container {
+  width: 100%;
+  text-align: right;
+  max-width: 140px;
+  max-height: 140px;
+}
+
+.container-user {
+  background-color: #f9fafb;
+  border-top: 2px solid #ECECEC;
+  border-bottom: 2px solid #ECECEC;
+  margin-top: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  width: 48%;
+}
+
+.container-user h3 {
+  display: inline-block;
+  margin-left: 10px;
+  width: 15%;
+}
+
+.container-user p-checkbox {
+  display: inline-block;
+  padding: 10px;
+  align-items: center;
+}

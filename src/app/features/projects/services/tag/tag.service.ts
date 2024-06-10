@@ -14,11 +14,11 @@ export class TagService {
   ) { }
 
   getTagsByProjectId(id: string): Observable<Tag[]> {
-    return this.httpClient.get<Tag[]>(this.API_URL + `${id}`);
+    return this.httpClient.get<Tag[]>(this.API_URL + `public/${id}`);
   }
 
   getAllTags(): Observable<Tag[]> {
-    return this.httpClient.get<Tag[]>(this.API_URL);
+    return this.httpClient.get<Tag[]>(this.API_URL + 'public/');
   }
 
   addTagToProject(tag: Tag, projectId: string): Observable<Tag> {

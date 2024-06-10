@@ -7,6 +7,7 @@ import { ProjectCardComponent } from './features/projects/components/project-car
 import { ProjectEditComponent } from './features/projects/components/project-edit/project-edit.component';
 import { LoginMenuComponent } from './features/accounts/components/login-menu/login-menu.component';
 import { AuthGuard } from './core/auth.guard';
+import { RolesMenuComponent } from './features/accounts/components/roles-menu/roles-menu/roles-menu.component';
 
 const routes: Routes = [
   { path: '', component: ProjectsComponent },
@@ -15,7 +16,8 @@ const routes: Routes = [
   { path: 'project-detail/:id', component: ProjectDetailComponent },
   { path: 'project/edit/:id', component: ProjectEditComponent },
   { path: 'login', component: LoginMenuComponent, canActivate: [AuthGuard] },
-  { path: '', redirectTo: '/projects', pathMatch: 'full' }
+  { path: 'roles-menu', component: RolesMenuComponent },
+  { path: '**', redirectTo: '' }
 ];
 
 @NgModule({

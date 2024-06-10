@@ -36,7 +36,7 @@ export class StorageService {
     if (username) {
       return username;
     }
-    throw new Error('No username could be found')
+    return '';
   }
 
   public getDate(): string | null {

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin View</title>
+</head>
+
+<body>
+
+    <div class="grid">
+        <div class="col-12 right-align">
+            <div class="first-container">
+                <h4><i>You ({{username}}) can edit the permissions of accounts on the platform.</i></h4>
+                <a [routerLink]="['']">
+                    <button class="home-button">Home</button>
+                </a>
+            </div>
+        </div>
+    
+        <div class="col-1"></div>
+    
+        <div class="col-10" style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <h1 style="margin-bottom: 5px; margin-left: 10px; font-style: italic; text-align: left;">Admin view of the roles of every account on the platform</h1>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="col-1"></div>
+        <div class="col-10 container-style" style="display: flex; justify-content: space-between;">
+            <div class="card relative col-12 md:col-5 lg:col-2" style="display: flex; align-items: center; flex-grow: 1;">
+                <!-- (input)="onTitleFilterChange($event) -->
+                <input type="text" pInputText [(ngModel)]="search" placeholder="Username" class="responsive-input" style="margin-right: 10px;"/>
+                <p-checkbox 
+                    [(ngModel)]="isPM"
+                    label="Project Manager" 
+                    name="isPM" 
+                    value="isPM" />
+            </div>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="col-1"></div>
+        <div class="col-10" style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+            <ng-container *ngFor="let account of filteredAccounts">
+                <div class="card relative col-12 md:col-5 lg:col-2 container-user">
+                    <!-- Display account details here -->
+                    <h3>{{ account.username }}</h3>
+                    <p-checkbox 
+                        *ngIf="account.role != 'ROLE_ADMIN'"
+                        [(ngModel)]="isPM"
+                        label="Project Manager" 
+                        name="isPM" 
+                        value="isPM" />
+                    <!-- Add more details as needed -->
+                    <!-- <p-multiSelect 
+                        (onClick)="getProjectsDirect(account)"
+                        [options]="projectsUsername"
+                        [(ngModel)]="selectedProjectId[filteredAccounts.indexOf(account)]" 
+                        optionLabel="name" 
+                        placeholder="Project" /> -->
+
+                    <div class="button-container" style="text-align: right; justify-content: flex-end;">
+                        <a [routerLink]="['/add-project']">
+                            <button pButton type="button" icon="pi pi-check" label="Apply" class="p-button-success p-button-rounded apply-button"></button>
+                        </a>
+                    </div>
+                </div>
+            </ng-container>
+        </div>
+    </div>
+</body>
