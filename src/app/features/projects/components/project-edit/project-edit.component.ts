@@ -201,6 +201,7 @@ export class ProjectEditComponent implements OnInit {
       }
       this.deleteLinkList = []
       for (const media of this.addedMediaList) {
+        media.append('name', "new-name");
         await firstValueFrom(this.mediaService.addDocumentToProject(this.project.projectId, media));
         console.log('Media added successfully', media);
       }
@@ -307,7 +308,7 @@ export class ProjectEditComponent implements OnInit {
     const file = event.files[0];
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('name', file.name);
+    //formData.append('name', file.name);
     this.addedMediaList.push(formData);
     this.messageService.add({
       severity: 'info',

@@ -12,7 +12,7 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProjectService } from '../../services/project/project.service';
 import { TemplateService } from '../../services/template/template.service';
-import { FileUploadModule, UploadEvent } from 'primeng/fileupload';
+import {FileUpload, FileUploadHandlerEvent, FileUploadModule, UploadEvent} from 'primeng/fileupload';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { DropdownModule } from 'primeng/dropdown';
@@ -38,7 +38,7 @@ import { TagService } from '../../services/tag/tag.service';
   imports: [FormsModule, InputTextModule, FloatLabelModule,
      InputTextareaModule, ChipsModule, TableModule, TagModule,
       RatingModule, ButtonModule, CommonModule, FileUploadModule,
-      DropdownModule, ToastModule, AutoCompleteModule, ChipModule, ReactiveFormsModule, DataViewModule, 
+      DropdownModule, ToastModule, AutoCompleteModule, ChipModule, ReactiveFormsModule, DataViewModule,
       ],
   providers: [ProjectService, MessageService]
 
@@ -65,15 +65,15 @@ export class ProjectAddComponent implements OnInit{
   descriptionInput = new FormControl('', [Validators.required]);
   addedMediaList:FormData[]=[];
   deletedMediaList:Media[] =[];
-  
+
 
   invalidTitle: boolean = false
   invalidDescription: boolean = false
   invalidMedia: boolean = false
-  
+
   constructor(
      private projectService: ProjectService, private messageService: MessageService,
-    private mediaService: MediaService, private templateService: TemplateService, 
+    private mediaService: MediaService, private templateService: TemplateService,
     private linkService: LinkService, private collaboratorService: CollaboratorService,
     private tagService: TagService
     ) {}
@@ -91,7 +91,7 @@ export class ProjectAddComponent implements OnInit{
     this.selectedCollaborators = []
     this.titleInput.setValue("")
     this.descriptionInput.setValue("")
-    
+
 
   }
 
@@ -104,7 +104,7 @@ export class ProjectAddComponent implements OnInit{
     .pipe(
       map(x => x.map(y => y.templateName))
     ))
-    
+
   }
 
   filterTags(event: any) {
@@ -187,7 +187,7 @@ export class ProjectAddComponent implements OnInit{
         tmb: tmb
 
       };
-  
+
       const createdProject = await firstValueFrom(this.projectService.createProject(project));
       console.log('Project created successfully', createdProject);
 
@@ -220,7 +220,7 @@ export class ProjectAddComponent implements OnInit{
         await firstValueFrom(this.mediaService.addDocumentToProject(createdProject.projectId, media));
         console.log('Media added successfully', media);
       }
-      
+
       this.addedMediaList = []
       this.media = []
 
@@ -249,13 +249,9 @@ export class ProjectAddComponent implements OnInit{
     this.links.push(link);
   }
 
-  removeLink(linkToRemove: Link): void {
-    let index = this.links.findIndex(obj => obj === linkToRemove);
-
-    if (index !== -1) {
+  removeLink(index: number): void {
     this.links.splice(index, 1);
   }
-}
 
   titleValidator(control: AbstractControl): ValidationErrors | null {
     if(this.invalidTitle)
@@ -263,7 +259,7 @@ export class ProjectAddComponent implements OnInit{
     else return { customError: true };
 }
 
-  
+
   getColorCode(color: string): string {
     switch(color) {
       case "red":
@@ -298,7 +294,7 @@ getAllCollaborators(): Promise<Collaborator[]> {
 }
 
 isTitleDescriptionAndMediaValid(): boolean{
-  return this.title.length > 0 && this.description.length > 0 
+  return this.title.length > 0 && this.description.length > 0
   && this.media.length > 0
 }
 
@@ -306,7 +302,7 @@ getInvalidTitle(): boolean {
   return this.invalidTitle
 }
 
-async uploadFile(event: FileUploadEvent) {
+async uploadFile(event: FileUploadHandlerEvent, form: FileUpload) {
   const file = event.files[0];
   const formData = new FormData();
   formData.append('file', file);
@@ -321,6 +317,7 @@ async uploadFile(event: FileUploadEvent) {
     requestMediaProjects:[]
   }
   this.media.push(newMedia)
+  form.clear();
 }
 
 downloadDocument(mediaId: string){
