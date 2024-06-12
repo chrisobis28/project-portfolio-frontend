@@ -4,7 +4,7 @@ import {BadgeModule} from 'primeng/badge';
 import {AvatarModule} from 'primeng/avatar';
 import {CardModule} from 'primeng/card';
 import {SplitterModule} from 'primeng/splitter';
-import {CommonModule} from '@angular/common';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
 import {TagModule} from 'primeng/tag';
 import {ButtonModule} from 'primeng/button';
 import {CarouselModule} from 'primeng/carousel';
@@ -29,7 +29,7 @@ import {ConfirmationService, MessageService} from "primeng/api";
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [DividerModule, ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule, DialogModule, RouterLink, ConfirmDialogModule],
+  imports: [DividerModule, ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule, DialogModule, RouterLink, ConfirmDialogModule, NgOptimizedImage],
   templateUrl: './project-detail.component.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
   styleUrls: ['./project-detail.component.css'],
@@ -264,7 +264,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     this.mediaService.getMediasContentByProjectId(this.projectId).subscribe({
        next: (data: MediaFileContent[]) => {
          this.images = data.filter(media => media.filePath && (media.filePath.endsWith(".jpg") || media.filePath.endsWith(".png")));
-         console.log(data[0].fileContent)
+         console.log(data[0])
          this.bibTeX = data.find(media => media.filePath && media.filePath.endsWith(".bib"));
        },
        error: (err: any) => {
@@ -371,24 +371,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     this.router.navigateByUrl('');
   }
   getColorCode(color: string): string {
-    switch(color) {
-      case "red":
-        return "rgba(255, 93, 70, 0.45)"
-      case "green":
-        return "rgba(10, 118, 77, 0.45)"
-      case "blue":
-        return "rgba(10, 118, 255, 0.45)"
-      case "yellow":
-        return "rgba(255, 255, 0, 0.45)"
-      case "orange":
-        return "rgba(255, 190, 61, 0.45)"
-      case "purple":
-        return "rgba(106, 0, 255, 0.45)"
-      case "black":
-        return "rgba(0, 0, 0, 0.4)"
-      default:
-        return "rgba(111, 118, 133, 0.45)"
-    }
+    return this.tagService.getColorCode(color);
   }
   logout() {
     this.confirmationService.confirm({

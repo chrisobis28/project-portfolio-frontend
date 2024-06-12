@@ -306,7 +306,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
       this.selectedTags = []
 
       for (const [index, media] of this.addedMediaList.entries()) {
-        media.append('name', this.mediaNames[index]);
+        media.append('name', this.media[index].name);
         await firstValueFrom(this.mediaService.addDocumentToProject(createdProject.projectId, media));
       }
 
@@ -346,27 +346,6 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     else return { customError: true };
 }
 
-
-  getColorCode(color: string): string {
-    switch(color) {
-      case "red":
-        return "rgba(255, 93, 70, 0.45)"
-      case "green":
-        return "rgba(10, 118, 77, 0.45)"
-      case "blue":
-        return "rgba(10, 118, 255, 0.45)"
-      case "yellow":
-        return "rgba(255, 255, 0, 0.45)"
-      case "orange":
-        return "rgba(255, 190, 61, 0.45)"
-      case "purple":
-        return "rgba(106, 0, 255, 0.45)"
-      case "black":
-        return "rgba(0, 0, 0, 0.45)"
-      default:
-        return "rgba(111, 118, 133, 0.45)"
-    }
-}
 
 getNamesForTags(tags: Tag[]): string[] {
   return tags.map(x => x.name)

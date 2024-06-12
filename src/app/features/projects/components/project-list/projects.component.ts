@@ -156,6 +156,9 @@ export class ProjectsComponent implements OnInit, OnDestroy {
       }
     )
     }
+  getColorCode(color:string):string{
+    return this.tagService.getColorCode(color);
+  }
 
     ngOnDestroy() {
 
@@ -282,26 +285,6 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     this.filteredData = this.filterByTags(this.filteredData)
   }
 
-  getColorCode(color: string): string {
-      switch(color) {
-        case "red":
-          return "rgba(255, 93, 70, 0.45)"
-        case "green":
-          return "rgba(10, 118, 77, 0.45)"
-        case "blue":
-          return "rgba(10, 118, 255, 0.45)"
-        case "yellow":
-          return "rgba(255, 255, 0, 0.45)"
-        case "orange":
-          return "rgba(255, 190, 61, 0.45)"
-        case "purple":
-          return "rgba(106, 0, 255, 0.45)"
-        case "black":
-          return "rgba(0, 0, 0, 0.4)"
-        default:
-          return "rgba(111, 118, 133, 0.45)"
-      }
-  }
      getImageSrc(project:Project): string {
        if(project.thumbnail == undefined)
          return 'https://as2.ftcdn.net/v2/jpg/01/25/64/11/1000_F_125641180_KxdtmpD15Ar5h8jXXrE5vQLcusX8z809.jpg'
