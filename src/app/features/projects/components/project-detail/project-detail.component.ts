@@ -9,7 +9,7 @@ import {TagModule} from 'primeng/tag';
 import {ButtonModule} from 'primeng/button';
 import {CarouselModule} from 'primeng/carousel';
 import {ChipModule} from 'primeng/chip';
-import {Collaborator, Link, Media, MediaFile, MediaFileContent, Project, Tag} from "../../models/project-models";
+import {Collaborator, Link, Media, MediaFileContent, Project, Tag} from "../../models/project-models";
 import {ActivatedRoute, RouterLink} from '@angular/router';
 import {DividerModule} from 'primeng/divider';
 import {ProjectService} from "../../services/project/project.service";
@@ -26,7 +26,6 @@ import { firstValueFrom, Subscription } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import {ConfirmDialogModule} from "primeng/confirmdialog";
 import {ConfirmationService, MessageService} from "primeng/api";
-import {Nullable} from "primeng/ts-helpers";
 @Component({
   selector: 'app-project-detail',
   standalone: true,
@@ -37,13 +36,12 @@ import {Nullable} from "primeng/ts-helpers";
   providers: [ConfirmationService, MessageService]
 })
 export class ProjectDetailComponent implements OnInit, OnDestroy {
-  role: Nullable<string> = '';
-  images: MediaFile[] = [];
+  images: MediaFileContent[] = [];
   documents: Media[] = [];
-  bibTeX: MediaFile | undefined = {
-    a: '',
-    b: '',
-    c: ''
+  bibTeX: MediaFileContent | undefined = {
+    fileName: '',
+    filePath: '',
+    fileContent: ''
   };
   projectId: string = "";
   visible: boolean = false;
@@ -62,7 +60,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     collaboratorNames: [],
     tagNames: [],
     tags: [],
-     thumbnail: { a: '', b: '' },
+     thumbnail: { fileName: '', filePath: '' ,fileContent:''},
     template: null
   };
   responsiveOptions = [
@@ -187,8 +185,8 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
      async msg => {
        if(msg == this.projectId) {
          const mediaFileData = await this.getMediaContentByProjectId(this.projectId)
-         this.images = mediaFileData.filter(media => media.a && (media.a.endsWith(".jpg") || media.a.endsWith(".png")));
-         this.bibTeX = mediaFileData.find(media => media.a && media.a.endsWith(".bib"));
+         this.images = mediaFileData.filter(media => media.filePath && (media.filePath.endsWith(".jpg") || media.filePath.endsWith(".png")));
+         this.bibTeX = mediaFileData.find(media => media.filePath && media.filePath.endsWith(".bib"));
 
          const documentData = await this.getDocumentsByProjectId(this.projectId)
          this.documents = documentData.filter(media => media.path && !(
@@ -247,7 +245,6 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   }
 
   initializeProject(): void {
-    console.log("Whole project is initialized")
     this.route.params.subscribe(params => {
       this.projectId = (params['id']);
       this.projectService.getProjectById(params['id']).subscribe((responseProject: Project) => {
@@ -265,9 +262,10 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       });
     });
     this.mediaService.getMediasContentByProjectId(this.projectId).subscribe({
-       next: (data: MediaFile[]) => {
-         this.images = data.filter(media => media.a && (media.a.endsWith(".jpg") || media.a.endsWith(".png")));
-         this.bibTeX = data.find(media => media.a && media.a.endsWith(".bib"));
+       next: (data: MediaFileContent[]) => {
+         this.images = data.filter(media => media.filePath && (media.filePath.endsWith(".jpg") || media.filePath.endsWith(".png")));
+         console.log(data[0].fileContent)
+         this.bibTeX = data.find(media => media.filePath && media.filePath.endsWith(".bib"));
        },
        error: (err: any) => {
          console.error('Error fetching media files', err);
@@ -303,7 +301,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     return firstValueFrom(this.linkService.getLinksByProjectId(id))
   }
 
-  async getMediaContentByProjectId(id: string): Promise<MediaFile[]> {
+  async getMediaContentByProjectId(id: string): Promise<MediaFileContent[]> {
     return firstValueFrom(this.mediaService.getMediasContentByProjectId(this.projectId))
   }
 
@@ -311,23 +309,11 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     return firstValueFrom(this.mediaService.getDocumentsByProjectId(id))
   }
 
-  getImageSrc(media: MediaFile): string {
-    return `data:${media.a};base64,${media.b}`;
+  getImageSrc(media: MediaFileContent): string {
+    return `data:${media.filePath};base64,${media.fileContent}`;
   }
   downloadFile(media: MediaFileContent) {
-    console.log(media);
-    const mimeType = 'application/octet-stream'
-    const byteArray = new Uint8Array(atob(media.b).split('').map(char => char.charCodeAt(0)));
-    const file = new Blob([byteArray], {type: mimeType});
-    const fileUrl = URL.createObjectURL(file);
-    const fileName = media.a;
-    let link = document.createElement("a");
-    link.download = fileName;
-    link.href = fileUrl;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(fileUrl);
+    this.mediaService.downloadFile(media);
   }
 
   isAbsoluteUrl(url: string): boolean {
@@ -338,7 +324,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     if (this.bibTeX == undefined) {
       return undefined;
     }
-    const decodedStr = atob(this.bibTeX.b);
+    const decodedStr = atob(this.bibTeX.fileContent);
     const utf8Str = decodeURIComponent(escape(decodedStr));
     const lines = utf8Str.split('\n');
     let maxIndex = 0;
@@ -363,10 +349,10 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   }
   downloadDocument(mediaId: string){
     let mediaFile : MediaFileContent = {
-      a:"",
-      b:"",
+      fileName:"",
+      filePath:"",
+      fileContent:""
     };
-    console.log(mediaId);
     this.mediaService.getDocumentContent(mediaId).subscribe({
        next: (data: MediaFileContent) => {
         mediaFile = data;

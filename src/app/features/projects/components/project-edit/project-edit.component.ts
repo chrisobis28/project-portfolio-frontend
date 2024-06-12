@@ -1,7 +1,7 @@
 import { Component , OnInit } from '@angular/core';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
-import { FormsModule } from '@angular/forms';
+import {FormControl, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ChipsModule } from 'primeng/chips';
@@ -26,6 +26,7 @@ import { Serializer } from '@angular/compiler';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 import {AutoCompleteCompleteEvent, AutoCompleteModule} from "primeng/autocomplete";
 import {DataViewModule} from "primeng/dataview";
+import {DialogModule} from "primeng/dialog";
 @Component({
   selector: 'app-project-edit',
   templateUrl: './project-edit.component.html',
@@ -34,7 +35,7 @@ import {DataViewModule} from "primeng/dataview";
   imports: [FormsModule, InputTextModule, FloatLabelModule,
     InputTextareaModule, ChipsModule, TableModule, TagModule,
     RatingModule, ButtonModule, CommonModule, FileUploadModule,
-    DropdownModule, ToastModule, RouterLink, AutoCompleteModule, DataViewModule],
+    DropdownModule, ToastModule, RouterLink, AutoCompleteModule, DataViewModule, DialogModule, ReactiveFormsModule],
   providers: [ProjectService, MessageService]
 })
 
@@ -44,7 +45,9 @@ export class ProjectEditComponent implements OnInit {
   project!: Project;
   title!: string;
   description!: string;
-
+  newTagName: string = "";
+  newTagColor: string = "";
+  addTagVisible: boolean = false;
   platformCollaborators: Collaborator[] = [];
   selectedCollaborators: Collaborator[] = []
   selectedCollaboratorNames: string[] = []
@@ -72,7 +75,8 @@ export class ProjectEditComponent implements OnInit {
   colaborators: Collaborator[] | undefined;
   tagnames: string[] | undefined;
   collaboratornames: string[] | undefined;
-
+  tagColorInput = new FormControl('', [Validators.required]);
+  tagNameInput = new FormControl('', [Validators.required]);
   wsProjectsSubscription: Subscription = new Subscription()
   wsCollaboratorsProjectSubscription: Subscription = new Subscription()
   wsCollaboratorsSubscription: Subscription = new Subscription()
@@ -218,7 +222,6 @@ export class ProjectEditComponent implements OnInit {
         this.description = this.project.description;
         this.selectedTemplate = this.project.template;
         this.selectedTemplateName = this.project.template?.templateName;
-        console.log(this.selectedTemplateName)
       });
       this.tagService.getTagsByProjectId(this.projectId).subscribe((response: Tag[]) => {
         this.selectedTags = response;
@@ -296,9 +299,10 @@ export class ProjectEditComponent implements OnInit {
     }
 
     try {
-      const tmb: MediaFileContent = {
-        a: '',
-        b: ''
+      const thumbnail: MediaFileContent = {
+        filePath: '',
+        fileContent: '',
+        fileName:''
       }
 
       const foundTemplate = this.templates.find(x => x.templateName === this.selectedTemplateName);
@@ -319,7 +323,7 @@ export class ProjectEditComponent implements OnInit {
         collaboratorNames: [],
         tagNames: [],
         tags: [],
-        thumbnail: tmb
+        thumbnail: thumbnail
       };
 
       this.removeTags = this.selectedTags.filter(x=>!this.selectedTagNames.includes(x.name));
@@ -329,7 +333,6 @@ export class ProjectEditComponent implements OnInit {
       this.addCollaborators = this.platformCollaborators.filter(x=>this.selectedCollaboratorNames.includes(x.name) && !this.selectedCollaborators.flatMap(x=>x.name).includes(x.name));
 
       const createdProject = await firstValueFrom(this.projectService.editProject(this.projectId, prj));
-      console.log('Project edited successfully', createdProject);
 
       for (const collaborator of this.removeCollaborators) {
         await firstValueFrom(this.collaboratorService.deleteCollaboratorFromProject(collaborator,this.projectId))
@@ -348,28 +351,22 @@ export class ProjectEditComponent implements OnInit {
       for (const link of this.links) {
         if(link.linkId == '') {
           await firstValueFrom(this.linkService.addLinkToProject(link, createdProject.projectId))
-          console.log('Links added successfully in project', createdProject);
         } else {
-          console.log(link)
           await firstValueFrom(this.linkService.editLinkOfProject(link))
-          console.log('Links updated successfully in project', createdProject);
         }
       }
 
       for (const link of this.deleteLinkList) {
         await firstValueFrom(this.linkService.deleteLinkById(link.linkId));
-        console.log('Link deleted successfully', link);
       }
       this.deleteLinkList = []
       for (const media of this.addedMediaList) {
         await firstValueFrom(this.mediaService.addDocumentToProject(this.project.projectId, media));
-        console.log('Media added successfully', media);
       }
       this.addedMediaList = []
       for (const media of this.deletedMediaList) {
           if(media.mediaId!='')
           {const res = await firstValueFrom(this.mediaService.deleteMedia(media.mediaId).pipe(map(x => x as String)));
-          console.log('Media deleted successfully', media);
           }
       }
       this.deletedMediaList = []
@@ -383,7 +380,6 @@ export class ProjectEditComponent implements OnInit {
   }
 
   cancel(): void {
-    console.log('Operation cancelled');
   }
 
   isAnyLinkFieldEmpty(): boolean {
@@ -402,7 +398,6 @@ export class ProjectEditComponent implements OnInit {
   removeMedia(index: number): void {
     this.deletedMediaList.push(this.media[index])
     this.addedMediaList = this.addedMediaList.filter(x=>x.get('name')!=this.media[index].path);
-    console.log(this.media[index].path);
     this.media.splice(index, 1);
   }
 
@@ -411,27 +406,15 @@ export class ProjectEditComponent implements OnInit {
     this.selectedTemplate = null;}
 
   downloadFile(media: MediaFileContent) {
-    console.log(media);
-    const mimeType = 'application/octet-stream'
-    const byteArray = new Uint8Array(atob(media.b).split('').map(char => char.charCodeAt(0)));
-    const file = new Blob([byteArray], {type: mimeType});
-    const fileUrl = URL.createObjectURL(file);
-    const fileName = media.a;
-    let link = document.createElement("a");
-    link.download = fileName;
-    link.href = fileUrl;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(fileUrl);
+   this.mediaService.downloadFile(media);
   }
 
   downloadDocument(mediaId: string) {
     let mediaFile: MediaFileContent = {
-      a: "",
-      b: "",
+      fileName: "",
+      filePath: "",
+      fileContent:""
     };
-    console.log(mediaId);
     this.mediaService.getDocumentContent(mediaId).subscribe({
       next: (data: MediaFileContent) => {
         mediaFile = data;
@@ -464,5 +447,36 @@ export class ProjectEditComponent implements OnInit {
     this.mediaFiles.push(newMedia)
     form.clear()
   }
+  showAddTagDialog() {
+    this.addTagVisible = true;
+  }
+  async saveNewTag(): Promise<void> {
+    if (this.newTagName.length == 0) {
+      this.messageService.add({severity: 'error', summary: 'Error', detail: 'The Tag Name cannot be empty'});
+      return;
+    }
+    if (this.newTagColor.length == 0) {
+      this.messageService.add({severity: 'error', summary: 'Error', detail: 'The Tag Color cannot be empty'});
+      return;
+    }
+    try {
+      const newTag:Tag = {
+        tagId: "",
+        color: "",
+        name: "",
+        requestTagProjects: [],
+        tagsToProjects: []
+      }
 
+      newTag.name = this.newTagName;
+      newTag.color = this.newTagColor;
+      await firstValueFrom(this.tagService.createTag(newTag));
+      this.addTagVisible=false
+      this.messageService.add({ severity: 'success', summary: 'Success', detail:"The tag was successfully added" });
+    }
+    catch (error) {
+      console.error('Error saving the new tag', error);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: (error as Error).message });
+    }
+  }
 }
