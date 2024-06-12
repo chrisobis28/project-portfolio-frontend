@@ -169,16 +169,17 @@
         <div class="col-10"></div>
       </div>
       <div class="card">
-        <p-dataView #dv [value]="mediaFiles">
-          <ng-template let-mediaFiles pTemplate="list">
-            <div *ngFor="let media of mediaFiles; let i = index" class="col-12" class="col-12">
+        <p-dataView #dv [value]="editMediaList">
+          <ng-template let-editMediaList pTemplate="list">
+            <div *ngFor="let media of editMediaList; let i = index" class="col-12" class="col-12">
+              <div *ngIf="media.delete==false">
               <div class="grid">
                 <div class="col-12 md:col-6 lg:col-3 ">
-                  <h4>{{ media.path }}</h4>
+                  <h4>{{ media.media.path }}</h4>
                 </div>
                 <div class="col-12 md:col-6 lg:col-3 ">
                   <p-floatLabel>
-                    <input [(ngModel)]="media.name" [ngClass]="{'error': !media.name}" pInputText style="width: 100%;"/>
+                    <input [(ngModel)]="media.media.name" [ngClass]="{'error': !media.name}" pInputText style="width: 100%;"/>
                     <label>Media display name</label>
                   </p-floatLabel>
                 </div>
@@ -188,6 +189,7 @@
                 <div class="col-6 md:col-6 lg:col-3 flex justify-content-center">
                   <p-button (click)="removeMedia(i)" icon="pi pi-trash" label="Delete" severity="danger"/>
                 </div>
+              </div>
               </div>
             </div>
 

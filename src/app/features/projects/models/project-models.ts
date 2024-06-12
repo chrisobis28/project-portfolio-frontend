@@ -24,6 +24,12 @@ export interface Media {
     project: Project
     requestMediaProjects: RequestMediaProject[]
 }
+export interface EditMedia {
+  media:Media|null
+  mediaFileContent:MediaFileContent|null
+  file:File|null
+  delete:boolean
+}
 
 export interface ProjectsToAccounts {
     ptaId: string

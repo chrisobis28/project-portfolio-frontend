@@ -5,7 +5,16 @@ import {FormControl, FormsModule, ReactiveFormsModule, Validators} from '@angula
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ChipsModule } from 'primeng/chips';
-import { Collaborator, Link, Media, MediaFileContent, Project, Tag, Template } from '../../models/project-models';
+import {
+  Collaborator,
+  EditMedia,
+  Link,
+  Media,
+  MediaFileContent,
+  Project,
+  Tag,
+  Template
+} from '../../models/project-models';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { RatingModule } from 'primeng/rating';
@@ -40,7 +49,6 @@ import {DialogModule} from "primeng/dialog";
 })
 
 export class ProjectEditComponent implements OnInit {
-  mediaFiles!: Media[];
   projectId: string | null = null;
   project!: Project;
   title!: string;
@@ -67,10 +75,9 @@ export class ProjectEditComponent implements OnInit {
   selectedTemplateName: string | undefined;
   selectedTemplate: Template | null = null;
   deleteLinkList: Link[] = [];
-  deletedMediaList: Media[] = [];
-  addedMediaList: FormData[] = [];
 
-  media!: Media[];
+  editMediaList: EditMedia[] = []
+
   tags: Tag[] | undefined;
   colaborators: Collaborator[] | undefined;
   tagnames: string[] | undefined;
@@ -174,8 +181,18 @@ export class ProjectEditComponent implements OnInit {
         if(msg == "all" || msg == this.projectId) {
           if(this.projectId){
           const newMedia = await this.getDocumentsByProjectId(this.projectId)
-          this.media = newMedia
+            for (const mediaObject of newMedia) {
+            {
+              const editMedia:EditMedia = {
+                media:mediaObject,
+                mediaFileContent:null,
+                file:null,
+                delete:false
+              }
+              this.editMediaList.push(editMedia)
+            }
         }
+          }
         }
       }
      )
@@ -214,7 +231,17 @@ export class ProjectEditComponent implements OnInit {
         this.links = response
       });
       this.mediaService.getDocumentsByProjectId(this.projectId).subscribe((response: Media[]) => {
-        this.mediaFiles = response;
+        for (const mediaObject of response) {
+          {
+            const editMedia:EditMedia = {
+              media:mediaObject,
+              mediaFileContent:null,
+              file:null,
+              delete:false
+            }
+            this.editMediaList.push(editMedia)
+          }
+        }
       });
       this.projectService.getProjectById(this.projectId).subscribe((response: Project) => {
         this.project = response;
@@ -314,7 +341,7 @@ export class ProjectEditComponent implements OnInit {
         description: this.description,
         archived: false,
         template: this.selectedTemplate,
-        media: this.media,
+        media: [],
         projectsToAccounts: [],
         projectsToCollaborators: [],
         tagsToProjects: [],
@@ -360,16 +387,20 @@ export class ProjectEditComponent implements OnInit {
         await firstValueFrom(this.linkService.deleteLinkById(link.linkId));
       }
       this.deleteLinkList = []
-      for (const media of this.addedMediaList) {
-        await firstValueFrom(this.mediaService.addDocumentToProject(this.project.projectId, media));
-      }
-      this.addedMediaList = []
-      for (const media of this.deletedMediaList) {
-          if(media.mediaId!='')
-          {const res = await firstValueFrom(this.mediaService.deleteMedia(media.mediaId).pipe(map(x => x as String)));
+      for (const editMedia of this.editMediaList) {
+          if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
+          {
+            await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as String)));
+          }
+          if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
+          {
+            const formData = new FormData();
+            formData.append('file', editMedia.file);
+            formData.append('name', editMedia.media.name);
+            await firstValueFrom(this.mediaService.addDocumentToProject(this.project.projectId, formData));
           }
       }
-      this.deletedMediaList = []
+      this.editMediaList = []
       this.router.navigate(['/project-detail/', this.projectId])
 
 
@@ -395,11 +426,9 @@ export class ProjectEditComponent implements OnInit {
     this.links.splice(index, 1);
   }
 
-  removeMedia(index: number): void {
-    this.deletedMediaList.push(this.media[index])
-    this.addedMediaList = this.addedMediaList.filter(x=>x.get('name')!=this.media[index].path);
-    this.media.splice(index, 1);
-  }
+   removeMedia(index: number): void {
+     this.editMediaList[index].delete=true
+   }
 
   removeTemplate(): void {
     this.selectedTemplateName = ''
@@ -428,10 +457,6 @@ export class ProjectEditComponent implements OnInit {
 
   async uploadFile(event: FileUploadHandlerEvent, form: FileUpload) {
     const file = event.files[0];
-    const formData = new FormData();
-    formData.append('file', file);
-    //formData.append('name', file.name);
-    this.addedMediaList.push(formData);
     this.messageService.add({
       severity: 'info',
       summary: 'Success',
@@ -444,7 +469,13 @@ export class ProjectEditComponent implements OnInit {
       project: this.project,
       requestMediaProjects: []
     }
-    this.mediaFiles.push(newMedia)
+    const newEditMedia:EditMedia={
+      media:newMedia,
+      mediaFileContent:null,
+      file:file,
+      delete:false
+    }
+    this.editMediaList.push(newEditMedia);
     form.clear()
   }
   showAddTagDialog() {

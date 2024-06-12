@@ -21,8 +21,8 @@ export class MediaService {
   addDocumentToProject(projectId:string,document:FormData){
     return this.httpClient.post<Media>(this.API_URL + `${projectId}`, document)
   }
-  deleteMedia(mediaId:string): Observable<string> {
-    return this.httpClient.delete<string>(this.API_URL + `${mediaId}`, { responseType: 'text' as 'json'});
+  deleteMedia(projectId:string,mediaId:string): Observable<string> {
+    return this.httpClient.delete<string>(this.API_URL +`${projectId}`+'/'+`${mediaId}`, { responseType: 'text' as 'json'});
   }
   downloadFile(media: MediaFileContent) {
     const mimeType = 'application/octet-stream'
