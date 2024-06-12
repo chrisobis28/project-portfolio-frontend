@@ -12,7 +12,7 @@ import { RatingModule } from 'primeng/rating';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProjectService } from '../../services/project/project.service';
-import {FileUploadEvent, FileUploadModule} from 'primeng/fileupload';
+import {FileUpload, FileUploadEvent, FileUploadHandlerEvent, FileUploadModule} from 'primeng/fileupload';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import{ MediaService} from "../../services/media/media.service";
@@ -24,6 +24,8 @@ import { TemplateService } from '../../services/template/template.service';
 import { TagService } from '../../services/tag/tag.service';
 import { Serializer } from '@angular/compiler';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
+import {AutoCompleteCompleteEvent, AutoCompleteModule} from "primeng/autocomplete";
+import {DataViewModule} from "primeng/dataview";
 @Component({
   selector: 'app-project-edit',
   templateUrl: './project-edit.component.html',
@@ -32,28 +34,44 @@ import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
   imports: [FormsModule, InputTextModule, FloatLabelModule,
     InputTextareaModule, ChipsModule, TableModule, TagModule,
     RatingModule, ButtonModule, CommonModule, FileUploadModule,
-    DropdownModule, ToastModule, RouterLink],
+    DropdownModule, ToastModule, RouterLink, AutoCompleteModule, DataViewModule],
   providers: [ProjectService, MessageService]
 })
 
 export class ProjectEditComponent implements OnInit {
-  media!: Media[];
+  mediaFiles!: Media[];
   projectId: string | null = null;
   project!: Project;
   title!: string;
   description!: string;
-  tags: Tag[] | undefined;
-  colaborators: Collaborator[] | undefined;
-  tagnames: string[] | undefined;
-  collaboratornames: string[] | undefined;
+
+  platformCollaborators: Collaborator[] = [];
+  selectedCollaborators: Collaborator[] = []
+  selectedCollaboratorNames: string[] = []
+  filteredCollaborators: Collaborator[] = []
+  addCollaborators: Collaborator[] = []
+  removeCollaborators: Collaborator[] = []
+
+  platformTags: Tag[] = [];
+  selectedTags: Tag[] = []
+  selectedTagNames: string[] = []
+  filteredTags: Tag[] = [];
+  addTags:Tag[] =[]
+  removeTags:Tag[] =[]
   links: Link[] = [];
   templates!: Template[];
   templateNames: string[] = [];
   selectedTemplateName: string | undefined;
   selectedTemplate: Template | null = null;
   deleteLinkList: Link[] = [];
-  deletedMediaList:Media[] =[];
-  addedMediaList:FormData[]=[];
+  deletedMediaList: Media[] = [];
+  addedMediaList: FormData[] = [];
+
+  media!: Media[];
+  tags: Tag[] | undefined;
+  colaborators: Collaborator[] | undefined;
+  tagnames: string[] | undefined;
+  collaboratornames: string[] | undefined;
 
   wsProjectsSubscription: Subscription = new Subscription()
   wsCollaboratorsProjectSubscription: Subscription = new Subscription()
@@ -154,7 +172,7 @@ export class ProjectEditComponent implements OnInit {
           const newMedia = await this.getDocumentsByProjectId(this.projectId)
           this.media = newMedia
         }
-        } 
+        }
       }
      )
 
@@ -169,13 +187,13 @@ export class ProjectEditComponent implements OnInit {
       }
      )
 
-     
+
 
      //should define here the collaborators and tags websocket such that it updates autocomplete
      //as in project-add components. The autocomplete is done on dev, we do it after we merge this with dev
-     
-     
-    
+
+
+
 
 
   }
@@ -184,12 +202,15 @@ export class ProjectEditComponent implements OnInit {
     this.projectId = this.route.snapshot.paramMap.get('id');
     this.templates = await this.getAllTemplates()
     this.templateNames = await this.getAllTemplateNames()
+    this.platformTags = await this.getAllTags();
+    this.platformCollaborators = await this.getAllCollaborators()
+
     if (this.projectId) {
       this.linkService.getLinksByProjectId(this.projectId).subscribe((response: Link[]) => {
         this.links = response
       });
       this.mediaService.getDocumentsByProjectId(this.projectId).subscribe((response: Media[]) => {
-        this.media = response;
+        this.mediaFiles = response;
       });
       this.projectService.getProjectById(this.projectId).subscribe((response: Project) => {
         this.project = response;
@@ -200,26 +221,45 @@ export class ProjectEditComponent implements OnInit {
         console.log(this.selectedTemplateName)
       });
       this.tagService.getTagsByProjectId(this.projectId).subscribe((response: Tag[]) => {
-        this.tags = response;
-        this.tagnames = this.tags.map(x => x.name);
+        this.selectedTags = response;
+        this.selectedTagNames = this.selectedTags.map(x => x.name)
       });
       this.collaboratorService.getCollaboratorsByProjectId(this.projectId).subscribe((response: Collaborator[]) => {
-        this.colaborators = response;
-        this.collaboratornames = this.colaborators.map(x => x.name)
+        this.selectedCollaborators = response
+        this.selectedCollaboratorNames = this.selectedCollaborators.map(x => x.name)
       });
     } else {
       console.error('Project ID is null');
     }
   }
+  async getAllTags(): Promise<Tag[]> {
+    return firstValueFrom(this.tagService.getAllTags());
+  }
+  getAllCollaborators(): Promise<Collaborator[]> {
+    return firstValueFrom(this.collaboratorService.getAllCollaborators())
+  }
 
   async getProjectById(id: string): Promise<Project> {
     return firstValueFrom(this.projectService.getProjectById(id))
+  }
+  getNamesForCollaborators(collaborators: Collaborator[]): string[] {
+    return collaborators.map(x => x.name)
   }
 
   async getCollaboratorsByProjectId(id: string): Promise<Collaborator[]> {
     return firstValueFrom(this.collaboratorService.getCollaboratorsByProjectId(id))
   }
-
+  filterCollaborators(event: any) {
+    const query = (event as AutoCompleteCompleteEvent).query
+    this.filteredCollaborators = this.platformCollaborators.filter(collaborator => collaborator.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
+  }
+  getNamesForTags(tags: Tag[]): string[] {
+    return tags.map(x => x.name)
+  }
+  filterTags(event: any) {
+    const query = (event as AutoCompleteCompleteEvent).query
+    this.filteredTags = this.platformTags.filter(tag => tag.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
+  }
   async getTagsByProjectId(id: string): Promise<Tag[]> {
     return firstValueFrom(this.tagService.getTagsByProjectId(id))
   }
@@ -230,23 +270,6 @@ export class ProjectEditComponent implements OnInit {
 
   async getDocumentsByProjectId(id: string): Promise<Media[]> {
     return firstValueFrom(this.mediaService.getDocumentsByProjectId(id))
-  }
-
-  async uploadFile(event: FileUploadEvent) {
-    const file = event.files[0];
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('name', file.name);
-    this.addedMediaList.push(formData);
-    this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media added! The media will be uploaded when the edit will be saved!'});
-    let newMedia:Media = {
-      mediaId:'',
-      name:file.name,
-      path:file.name,
-      project:this.project,
-      requestMediaProjects:[]
-    }
-    this.media.push(newMedia)
   }
 
   async getAllTemplates(): Promise<Template[]> {
@@ -296,11 +319,31 @@ export class ProjectEditComponent implements OnInit {
         collaboratorNames: [],
         tagNames: [],
         tags: [],
-        tmb: tmb
+        thumbnail: tmb
       };
+
+      this.removeTags = this.selectedTags.filter(x=>!this.selectedTagNames.includes(x.name));
+      this.addTags = this.platformTags.filter(x=>this.selectedTagNames.includes(x.name) && !this.selectedTags.flatMap(x=>x.name).includes(x.name));
+
+      this.removeCollaborators = this.selectedCollaborators.filter(x=>!this.selectedCollaboratorNames.includes(x.name));
+      this.addCollaborators = this.platformCollaborators.filter(x=>this.selectedCollaboratorNames.includes(x.name) && !this.selectedCollaborators.flatMap(x=>x.name).includes(x.name));
 
       const createdProject = await firstValueFrom(this.projectService.editProject(this.projectId, prj));
       console.log('Project edited successfully', createdProject);
+
+      for (const collaborator of this.removeCollaborators) {
+        await firstValueFrom(this.collaboratorService.deleteCollaboratorFromProject(collaborator,this.projectId))
+      }
+      for (const collaborator of this.addCollaborators) {
+        await firstValueFrom(this.collaboratorService.addCollaboratorToProject(collaborator,this.projectId))
+      }
+      for (const tag of this.removeTags) {
+        await firstValueFrom(this.tagService.removeTagFromProject(tag,this.projectId))
+      }
+      for (const tag of this.addTags) {
+        await firstValueFrom(this.tagService.addTagToProject(tag,this.projectId));
+      }
+
 
       for (const link of this.links) {
         if(link.linkId == '') {
@@ -331,7 +374,7 @@ export class ProjectEditComponent implements OnInit {
       }
       this.deletedMediaList = []
       this.router.navigate(['/project-detail/', this.projectId])
-      
+
 
     } catch (error) {
       console.error('Error saving project,media or links', error);
@@ -382,10 +425,11 @@ export class ProjectEditComponent implements OnInit {
     document.body.removeChild(link);
     URL.revokeObjectURL(fileUrl);
   }
-  downloadDocument(mediaId: string){
-    let mediaFile : MediaFileContent = {
-      a:"",
-      b:"",
+
+  downloadDocument(mediaId: string) {
+    let mediaFile: MediaFileContent = {
+      a: "",
+      b: "",
     };
     console.log(mediaId);
     this.mediaService.getDocumentContent(mediaId).subscribe({
@@ -393,9 +437,32 @@ export class ProjectEditComponent implements OnInit {
         mediaFile = data;
         this.downloadFile(mediaFile);
       },
-      error: (err:any) => {
+      error: (err: any) => {
         console.error('Error fetching media files', err);
       }
     })
   }
+
+  async uploadFile(event: FileUploadHandlerEvent, form: FileUpload) {
+    const file = event.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    //formData.append('name', file.name);
+    this.addedMediaList.push(formData);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Success',
+      detail: 'Media added! The media will be uploaded when the edit will be saved!'
+    });
+    let newMedia: Media = {
+      mediaId: '',
+      name: file.name,
+      path: file.name,
+      project: this.project,
+      requestMediaProjects: []
+    }
+    this.mediaFiles.push(newMedia)
+    form.clear()
+  }
+
 }

@@ -24,15 +24,20 @@ import { AccountService } from 'src/app/features/accounts/services/accounts/acco
 import { AuthenticationService } from 'src/app/features/accounts/services/authentication/authentication.service';
 import { firstValueFrom, Subscription } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
+import {ConfirmDialogModule} from "primeng/confirmdialog";
+import {ConfirmationService, MessageService} from "primeng/api";
+import {Nullable} from "primeng/ts-helpers";
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [DividerModule, ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule, DialogModule, RouterLink],
+  imports: [DividerModule, ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule, DialogModule, RouterLink, ConfirmDialogModule],
   templateUrl: './project-detail.component.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
-  styleUrls: ['./project-detail.component.css']
+  styleUrls: ['./project-detail.component.css'],
+  providers: [ConfirmationService, MessageService]
 })
 export class ProjectDetailComponent implements OnInit, OnDestroy {
+  role: Nullable<string> = '';
   images: MediaFile[] = [];
   documents: Media[] = [];
   bibTeX: MediaFile | undefined = {
@@ -57,7 +62,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     collaboratorNames: [],
     tagNames: [],
     tags: [],
-    tmb: { a: '', b: '' },
+     thumbnail: { a: '', b: '' },
     template: null
   };
   responsiveOptions = [
@@ -114,13 +119,15 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     url: "ws://localhost:8080/topic/media/project",
     deserializer: msg => String(msg.data)
   })
-  constructor(private readonly router:Router, 
-    readonly projectService: ProjectService, 
-    private readonly tagService: TagService, 
-    private readonly linkService: LinkService, 
-    private readonly mediaService: MediaService, 
-    private readonly collaboratorService: CollaboratorService, 
-    private route: ActivatedRoute, 
+  constructor(private readonly router:Router,
+    readonly projectService: ProjectService,
+    private readonly tagService: TagService,
+    private readonly linkService: LinkService,
+    private readonly mediaService: MediaService,
+    private readonly collaboratorService: CollaboratorService,
+              private confirmationService: ConfirmationService,
+              private messageService: MessageService,
+    private route: ActivatedRoute,
     private storageService: StorageService,
     private accountService: AccountService,
     private authenticationService: AuthenticationService) {
@@ -132,7 +139,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   }
 
    async ngOnInit() {
-    
+
     this.initializeProject()
 
     this.wsProjectsSubscription = this.projectsWebSocket.subscribe(
@@ -396,5 +403,23 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       default:
         return "rgba(111, 118, 133, 0.45)"
     }
+  }
+  logout() {
+    this.confirmationService.confirm({
+      message: "Are you sure you want to log out of the account " + this.storageService.getUser() + "?",
+      accept: () => {
+        this.authenticationService.logout().subscribe({
+          next: () => {
+            this.isLoggedIn = false;
+            this.storageService.clean();
+            this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Logged out successfully.' });
+            return;
+          },
+          error: err => {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not be logged out.' });
+          }
+        })
+      }
+    })
   }
 }

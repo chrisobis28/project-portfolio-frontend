@@ -60,7 +60,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     url: "ws://localhost:8080/topic/media/project",
     deserializer: msg => String(msg.data)
   })
-  
+
   constructor(
     private readonly projectService: ProjectService,
     private readonly collaboratorService: CollaboratorService,
@@ -104,9 +104,9 @@ export class ProjectsComponent implements OnInit, OnDestroy {
              x.archived = project.archived
             })
         }
-        else 
+        else
         {
-        console.log("refreshing all projects"); 
+        console.log("refreshing all projects");
         await this.initProjects()
       }
       }
@@ -117,7 +117,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
             console.log("refreshing only collaborators for project: " + msg)
             switch(msg) {
               case "all" : return this.data.forEach(async x => x.collaboratorNames = await this.getCollaboratorsForId(x.projectId))
-              default : return this.data.filter(x => x.projectId == msg).forEach(async x => x.collaboratorNames = await this.getCollaboratorsForId(x.projectId)) 
+              default : return this.data.filter(x => x.projectId == msg).forEach(async x => x.collaboratorNames = await this.getCollaboratorsForId(x.projectId))
           }}
     )
 
@@ -132,9 +132,9 @@ export class ProjectsComponent implements OnInit, OnDestroy {
       async msg => {
             console.log("refreshing only tags for project: " + msg)
             switch(msg) {
-              case "all" : return this.data.forEach(async x => {x.tagNames = await this.getTagNamesForId(x.projectId); 
+              case "all" : return this.data.forEach(async x => {x.tagNames = await this.getTagNamesForId(x.projectId);
                                                                 x.tags = await this.getTagsForId(x.projectId)})
-              default : return this.data.filter(x => x.projectId == msg).forEach(async x => {x.tagNames = await this.getTagNamesForId(x.projectId); 
+              default : return this.data.filter(x => x.projectId == msg).forEach(async x => {x.tagNames = await this.getTagNamesForId(x.projectId);
                                                                                              x.tags = await this.getTagsForId(x.projectId)})
             }
       }
@@ -142,17 +142,17 @@ export class ProjectsComponent implements OnInit, OnDestroy {
 
     this.wsMediaProjectSubscription = this.mediaProjectWebSocket.subscribe(
       async msg => {
-            console.log("refreshing media for project: " + msg) 
+            console.log("refreshing media for project: " + msg)
               this.data.filter(x => x.projectId == msg).forEach(async x => {
                 const newMedia = await this.getMediaForId(x.projectId)
                 x.media = newMedia
                 console.log(x.media)
                 if (newMedia && newMedia.length > 0) {
-                  x.tmb = await this.getImageForId(newMedia[0].mediaId);
+                  x.thumbnail = await this.getImageForId(newMedia[0].mediaId);
                 }
-                else 
-                  x.tmb = undefined
-              })   
+                else
+                  x.thumbnail = undefined
+              })
       }
     )
     }
@@ -193,7 +193,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
         this.data.forEach(async (x) => {
           x.media = await this.getMediaForId(x.projectId);
           if (x.media && x.media.length > 0) {
-            x.tmb = await this.getImageForId(x.media[0].mediaId);
+            x.thumbnail = await this.getImageForId(x.media[0].mediaId);
           }
         });
         this.filteredData = this.data
@@ -303,9 +303,9 @@ export class ProjectsComponent implements OnInit, OnDestroy {
       }
   }
      getImageSrc(project:Project): string {
-       if(project.tmb == undefined)
+       if(project.thumbnail == undefined)
          return 'https://as2.ftcdn.net/v2/jpg/01/25/64/11/1000_F_125641180_KxdtmpD15Ar5h8jXXrE5vQLcusX8z809.jpg'
-      return `data:${project.tmb.a};base64,${project.tmb.b}`;
+      return `data:${project.thumbnail.a};base64,${project.thumbnail.b}`;
     }
 
 

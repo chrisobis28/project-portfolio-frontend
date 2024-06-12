@@ -8,6 +8,7 @@
 </head>
 
 <body>
+<p-toast></p-toast>
   <div class="grid">
     <div class="col-1"></div>
     <div class="col-10">
@@ -71,105 +72,97 @@
           <label for="chips">Colaborators</label>
         </p-floatLabel>
       </div>
-      <div class="card">
 
-        <div class=" grid flex">
-
-          <h3 class="col-2">Links</h3>
-          <div class="col-6"></div>
-          <div class="col-2">
-            <p-button label="Add Link" (click)="addLink()" />
+        <div class="linkUpload">
+          <div class=" grid flex">
+            <h3 class="col-2">Links</h3>
+            <div class="col-10"></div>
           </div>
-        </div>
-
-
-
-        <div class="card">
-          <p-dataView #dv [value]="links">
-            <ng-template pTemplate="list" let-links>
-              <div class="grid grid-nogutter">
-                <div class="col-12" *ngFor="let item of links" class="col-12">
-
-                  <div class="grid">
-                    <div class="card relative justify-content-center lg:col-4 md:col-8 sm:col-12">
-                      <p-floatLabel styleClass="flex relative">
-                        <input pInputText [(ngModel)]="item.name" [ngClass]="{'error': !item.name}"
-                          style="width: 100%;" />
-                        <label for="input">Name</label>
+          <div class="card">
+            <p-dataView #dv [value]="links">
+              <ng-template let-links pTemplate="list">
+                <div *ngFor="let link of links;let i = index" class="col-12" class="col-12">
+                  <div class="grid row-gap-2">
+                    <div class="col-12 md:col-6 lg:col-5">
+                      <p-floatLabel>
+                        <input [(ngModel)]="link.name" [ngClass]="{'error': !link.name}" pInputText
+                               style="width: 85%;"/>
+                        <label for="input">Link display name</label>
                       </p-floatLabel>
                     </div>
-                    <div class="card relative  lg:col-4 md:col-8 sm:col-12">
-                      <p-floatLabel styleClass="flex relative">
-                        <input pInputText [(ngModel)]="item.url" [ngClass]="{'error': !item.url}"
-                          style="width: 100%;" />
-                        <label for="input">Url</label>
+                    <div class="col-12 md:col-6 lg:col-4">
+                      <p-floatLabel>
+                        <input [(ngModel)]="link.url" [ngClass]="{'error': !link.url}" pInputText
+                               style="width: 85%;"/>
+                        <label for="input">Link address(URL)</label>
                       </p-floatLabel>
                     </div>
-                    <div class="card relative lg:col-2 md:col-4 sm:col-12">
-                      <p-button icon="pi" (click)="removeLink(item)" severity="danger" styleClass="flex relative">
-                        <div class="font-bold">X</div>
+                    <div class="flex justify-content-center col-12 md:col-6 lg:col-3">
+                      <p-button (click)="removeLink(i)" icon="pi pi-trash" label="Delete" severity="danger">
                       </p-button>
                     </div>
                   </div>
                 </div>
-              </div>
 
-            </ng-template>
-          </p-dataView>
+              </ng-template>
+            </p-dataView>
+          </div>
+          <div class="flex justify-content-center">
+            <p-button (click)="addLink()" icon="pi pi-plus-circle" label="Add Link"/>
+          </div>
         </div>
 
-      </div>
-      <div class="card">
-        <div class="flex justify-content-between">
-          <h3>Media</h3>
-          <p-toast />
-          <p-fileUpload mode="basic" name="demo[]" chooseIcon="pi pi-upload"
-            url="https://www.primefaces.org/cdn/api/upload.php" maxFileSize="1000000" (onUpload)="uploadFile($event)"
-            [auto]="true" chooseLabel="Upload File" />
-        </div>
-        <p-table id="mediatable" [value]="media" [tableStyle]="{ 'min-width': '50rem' }">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Name</th>
-              <th>Download File</th>
-              <!--                <th>Change File</th>-->
-              <th>Delete File</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
-            <tr>
-              <!--                <td><input pInputText [(ngModel)]="media[rowIndex].path" [ngClass]="{'error': !media[rowIndex].name}" /></td>
--->
-              <td>
-                <h5>{{media[rowIndex].path}}</h5>
-              </td>
-              <td>
-                <p-button (onClick)="downloadDocument(media[rowIndex].mediaId)" label="Download"
-                  icon="pi pi-download" />
-              </td>
-              <!--                <td>-->
-              <!--                  <p-fileUpload-->
-              <!--                    mode="basic"-->
-              <!--                    chooseLabel="Change"-->
-              <!--                    chooseIcon="pi pi-sync"-->
-              <!--                    name="demo[]"-->
-              <!--                    url="https://www.primefaces.org/cdn/api/upload.php"-->
-              <!--                    maxFileSize="1000000"-->
-              <!--                    (onUpload)="onBasicUploadAuto($event)"-->
-              <!--                  />-->
-              <!--                </td>-->
-              <td><p-button (click)="removeMedia(rowIndex)" severity="danger" icon="pi pi-trash" /></td>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="summary">
-            <div class="flex align-items-center justify-content-between font-normal text-sm">
-              *Maximum file size is 10MB
+        <div class="mediaUpload">
+          <div class=" grid flex">
+            <div class="col-2">
+              <h3>Media</h3>
             </div>
-          </ng-template>
-        </p-table>
-      </div>
+            <div class="col-10"></div>
+          </div>
+          <div class="card">
+            <p-dataView #dv [value]="media">
+              <ng-template let-mediaFiles pTemplate="list">
+                <div *ngFor="let media of mediaFiles; let i = index" class="col-12" class="col-12">
+                  <div class="grid">
+                    <div class="col-12 md:col-6 lg:col-3 ">
+                      <h4>{{ media.path }}</h4>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-3 ">
+                      <p-floatLabel>
+                        <input [(ngModel)]="media.name" [ngClass]="{'error': !media.name}" pInputText style="width: 100%;"/>
+                        <label for="input">Media display name</label>
+                      </p-floatLabel>
+                    </div>
+                    <div class="col-6 md:col-6 lg:col-3 flex justify-content-center">
+                      <p-button (onClick)="downloadDocument(media.mediaId)" icon="pi pi-download" label="Download"/>
+                    </div>
+                    <div class="col-6 md:col-6 lg:col-3 flex justify-content-center">
+                      <p-button (click)="removeMedia(i)" icon="pi pi-trash" label="Delete" severity="danger"/>
+                    </div>
+                  </div>
+                </div>
 
-      <div class="card">
+              </ng-template>
+            </p-dataView>
+          </div>
+          <div class="flex justify-content-center">
+            <p-fileUpload
+              #form
+              (uploadHandler)="uploadFile($event, form)"
+              [auto]="true"
+              [multiple]="true"
+              chooseIcon="pi pi-upload"
+              chooseLabel="Upload File"
+              customUpload="true"
+              maxFileSize="1000000"
+              mode="basic"
+              multiple="multiple"
+              name="demo[]">
+              <ng-template pTemplate="empty"></ng-template>
+            </p-fileUpload>
+          </div>
+        </div>
+          <div class="card">
         <div class="flex justify-content-end">
           <p-button label="Cancel" class="p-button-secondary" severity="danger" (click)="cancel()"></p-button>
           <button id="saveButton" pButton pRipple label="Save" class="p-button-success" type="submit"

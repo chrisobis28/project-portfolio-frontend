@@ -12,7 +12,7 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProjectService } from '../../services/project/project.service';
 import { TemplateService } from '../../services/template/template.service';
-import { FileUploadModule, UploadEvent } from 'primeng/fileupload';
+import {FileUpload, FileUploadHandlerEvent, FileUploadModule, UploadEvent} from 'primeng/fileupload';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { DropdownModule } from 'primeng/dropdown';
@@ -39,7 +39,7 @@ import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
   imports: [FormsModule, InputTextModule, FloatLabelModule,
      InputTextareaModule, ChipsModule, TableModule, TagModule,
       RatingModule, ButtonModule, CommonModule, FileUploadModule,
-      DropdownModule, ToastModule, AutoCompleteModule, ChipModule, ReactiveFormsModule, DataViewModule, 
+      DropdownModule, ToastModule, AutoCompleteModule, ChipModule, ReactiveFormsModule, DataViewModule,
       ],
   providers: [ProjectService, MessageService]
 
@@ -78,18 +78,18 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
     url: "ws://localhost:8080/topic/collaborators",
     deserializer: msg => String(msg.data)
   })
-  
+
 
   invalidTitle: boolean = false
   invalidDescription: boolean = false
   invalidMedia: boolean = false
-  
+
   constructor(
-    private projectService: ProjectService, 
+    private projectService: ProjectService,
     private messageService: MessageService,
-    private mediaService: MediaService, 
-    private templateService: TemplateService, 
-    private linkService: LinkService, 
+    private mediaService: MediaService,
+    private templateService: TemplateService,
+    private linkService: LinkService,
     private collaboratorService: CollaboratorService,
     private tagService: TagService
     ) {}
@@ -102,7 +102,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
     }
 
   async ngOnInit() {
-    
+
     await this.initializeFields()
 
     this.wsTagsSubscription = this.tagsWebSocket.subscribe(
@@ -159,7 +159,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
     .pipe(
       map(x => x.map(y => y.templateName))
     ))
-    
+
   }
 
   filterTags(event: any) {
@@ -220,10 +220,6 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
     try {
       this.titleInput.setErrors({ invalid: false });
       this.descriptionInput.setErrors({ invalid: false });
-      const tmb: MediaFileContent = {
-        a: '',
-        b: ''
-      }
       const project: Project = {
         projectId: "",
         title: this.title,
@@ -239,10 +235,9 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
         collaboratorNames: [],
         tagNames: [],
         tags: [],
-        tmb: tmb
-
+        thumbnail:undefined
       };
-  
+
       const createdProject = await firstValueFrom(this.projectService.createProject(project));
       console.log('Project created successfully', createdProject);
 
@@ -275,7 +270,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
         await firstValueFrom(this.mediaService.addDocumentToProject(createdProject.projectId, media));
         console.log('Media added successfully', media);
       }
-      
+
       this.addedMediaList = []
       this.media = []
 
@@ -304,13 +299,9 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
     this.links.push(link);
   }
 
-  removeLink(linkToRemove: Link): void {
-    let index = this.links.findIndex(obj => obj === linkToRemove);
-
-    if (index !== -1) {
+  removeLink(index: number): void {
     this.links.splice(index, 1);
   }
-}
 
   titleValidator(control: AbstractControl): ValidationErrors | null {
     if(this.invalidTitle)
@@ -318,7 +309,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
     else return { customError: true };
 }
 
-  
+
   getColorCode(color: string): string {
     switch(color) {
       case "red":
@@ -353,7 +344,7 @@ getAllCollaborators(): Promise<Collaborator[]> {
 }
 
 isTitleDescriptionAndMediaValid(): boolean{
-  return this.title.length > 0 && this.description.length > 0 
+  return this.title.length > 0 && this.description.length > 0
   && this.media.length > 0
 }
 
@@ -361,22 +352,24 @@ getInvalidTitle(): boolean {
   return this.invalidTitle
 }
 
-async uploadFile(event: FileUploadEvent) {
-  const file = event.files[0];
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('name', file.name);
-  this.addedMediaList.push(formData);
-  this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media added! The media will be uploaded when the edit will be saved!'});
-  let newMedia:Media = {
-    mediaId:'',
-    name:file.name,
-    path:file.name,
-    project:this.project,
-    requestMediaProjects:[]
+  async uploadFile(event: FileUploadHandlerEvent, form: FileUpload) {
+    const file = event.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('name', file.name);
+    this.addedMediaList.push(formData);
+    this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media added! The media will be uploaded when the edit will be saved!'});
+    let newMedia:Media = {
+      mediaId:'',
+      name:file.name,
+      path:file.name,
+      project:this.project,
+      requestMediaProjects:[]
+    }
+    this.media.push(newMedia)
+    form.clear();
   }
-  this.media.push(newMedia)
-}
+
 
 downloadDocument(mediaId: string){
   let mediaFile : MediaFileContent = {
