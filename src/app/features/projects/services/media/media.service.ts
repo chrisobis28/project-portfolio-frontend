@@ -25,14 +25,12 @@ export class MediaService {
     return this.httpClient.delete<string>(this.API_URL + `${mediaId}`, { responseType: 'text' as 'json'});
   }
   downloadFile(media: MediaFileContent) {
-    console.log(media);
     const mimeType = 'application/octet-stream'
     const byteArray = new Uint8Array(atob(media.fileContent).split('').map(char => char.charCodeAt(0)));
     const file = new Blob([byteArray], {type: mimeType});
     const fileUrl = URL.createObjectURL(file);
-    const fileName = media.filePath;
     let link = document.createElement("a");
-    link.download = fileName;
+    link.download = media.filePath;
     link.href = fileUrl;
     document.body.appendChild(link);
     link.click();

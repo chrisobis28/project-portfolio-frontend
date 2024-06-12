@@ -59,7 +59,6 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   selectedTags: string[] = []
   collaborators: Collaborator[] = []
   tagNames: string[] = [];
-  collaboratorNames: string[] = []
   selectedCollaborators: string[] = []
   links: Link[] = [];
   templates!: Template[];
@@ -72,7 +71,6 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   tagNameInput = new FormControl('', [Validators.required]);
   descriptionInput = new FormControl('', [Validators.required]);
   addedMediaList: FormData[] = [];
-  deletedMediaList: Media[] = [];
 
   wsTagsSubscription: Subscription = new Subscription()
   wsCollaboratorsSubscription: Subscription = new Subscription()
@@ -85,11 +83,6 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     url: "ws://localhost:8080/topic/collaborators",
     deserializer: msg => String(msg.data)
   })
-
-
-  invalidTitle: boolean = false
-  invalidDescription: boolean = false
-  invalidMedia: boolean = false
 
   constructor(
     private projectService: ProjectService,
@@ -340,13 +333,6 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     this.links.splice(index, 1);
   }
 
-  titleValidator(control: AbstractControl): ValidationErrors | null {
-    if(this.invalidTitle)
-      return null
-    else return { customError: true };
-}
-
-
 getNamesForTags(tags: Tag[]): string[] {
   return tags.map(x => x.name)
 }
@@ -362,10 +348,6 @@ getAllCollaborators(): Promise<Collaborator[]> {
 isTitleDescriptionAndMediaValid(): boolean{
   return this.title.length > 0 && this.description.length > 0
   && this.media.length > 0
-}
-
-getInvalidTitle(): boolean {
-  return this.invalidTitle
 }
 
   async uploadFile(event: FileUploadHandlerEvent, form: FileUpload) {
@@ -386,30 +368,15 @@ getInvalidTitle(): boolean {
     form.clear();
   }
 
-
-downloadDocument(mediaId: string){
-  let mediaFile : MediaFileContent = {
-    fileName:"",
-    filePath:"",
-    fileContent:""
-  };
-  this.mediaService.getDocumentContent(mediaId).subscribe({
-    next: (data: MediaFileContent) => {
-      mediaFile = data;
-      this.downloadFile(mediaFile);
-    },
-    error: (err:any) => {
-      console.error('Error fetching media files', err);
-    }
-  })
-}
-
-downloadFile(media: MediaFileContent) {
-  this.mediaService.downloadFile(media);
-}
+downloadDocument(index: number){
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(<File>this.addedMediaList[index].get('file'));
+    link.download = this.media[index].path; // Adjust filename based on actual file type
+    link.click();
+    document.body.removeChild(link);
+  }
 
 removeMedia(index: number): void {
-  this.deletedMediaList.push(this.media[index])
   this.mediaNames.splice(index)
   this.addedMediaList = this.addedMediaList.filter(x=>x.get('name')!=this.media[index].path);
   this.media.splice(index, 1);
