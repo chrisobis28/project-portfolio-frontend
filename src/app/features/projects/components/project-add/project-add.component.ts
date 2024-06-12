@@ -47,6 +47,7 @@ import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 export class ProjectAddComponent implements OnInit, OnDestroy{
 
   media: Media[] = [];
+  mediaNames:string[] = [];
   project!: Project;
   title: string = '';
   description: string = '';
@@ -204,6 +205,12 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not be empty' });
         return
       }
+      for (const medianName of this.mediaNames) {
+        if(medianName.length < 1) {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not have an empty display name' });
+          return
+        }
+      }
       for (const link of this.links) {
         if(link.name.length < 1) {
           this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Links can not have an empty title' });
@@ -266,7 +273,8 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
 
       this.selectedTags = []
 
-      for (const media of this.addedMediaList) {
+      for (const [index, media] of this.addedMediaList.entries()) {
+        media.append('name', this.mediaNames[index]);
         await firstValueFrom(this.mediaService.addDocumentToProject(createdProject.projectId, media));
         console.log('Media added successfully', media);
       }
@@ -356,7 +364,7 @@ getInvalidTitle(): boolean {
     const file = event.files[0];
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('name', file.name);
+    this.mediaNames.push("");
     this.addedMediaList.push(formData);
     this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media added! The media will be uploaded when the edit will be saved!'});
     let newMedia:Media = {

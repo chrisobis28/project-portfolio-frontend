@@ -32,7 +32,7 @@
         <p-floatLabel id="templatecomponent">
           <p-dropdown [options]="templateNames" [(ngModel)]="selectedTemplate" [showClear]="true"
             inputId="float-label" />
-          <label for="float-label">Select a Template</label>
+          <label>Select a Template</label>
         </p-floatLabel>
         <p-button id="addtemplate" label="Add Template" />
       </div>
@@ -40,7 +40,7 @@
         <p-floatLabel>
           <input pInputText id="projectTitle" [(ngModel)]="title" [ngClass]="{'error': !title}"
             [formControl]="titleInput" style="width: 81vw" />
-          <label for="username">Project Title</label>
+          <label>Project Title</label>
         </p-floatLabel>
       </div>
       <div class="card flex justify-content-start min-w-full">
@@ -69,7 +69,7 @@
             (completeMethod)="filterCollaborators($event)" [multiple]="true" [forceSelection]="true">
           </p-autoComplete>
 
-          <label for="chips">Colaborators</label>
+          <label>Collaborators</label>
         </p-floatLabel>
       </div>
 
@@ -87,14 +87,14 @@
                       <p-floatLabel>
                         <input [(ngModel)]="link.name" [ngClass]="{'error': !link.name}" pInputText
                                style="width: 85%;"/>
-                        <label for="input">Link display name</label>
+                        <label >Link display name</label>
                       </p-floatLabel>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                       <p-floatLabel>
                         <input [(ngModel)]="link.url" [ngClass]="{'error': !link.url}" pInputText
                                style="width: 85%;"/>
-                        <label for="input">Link address(URL)</label>
+                        <label>Link address(URL)</label>
                       </p-floatLabel>
                     </div>
                     <div class="flex justify-content-center col-12 md:col-6 lg:col-3">
@@ -129,8 +129,8 @@
                     </div>
                     <div class="col-12 md:col-6 lg:col-3 ">
                       <p-floatLabel>
-                        <input [(ngModel)]="media.name" [ngClass]="{'error': !media.name}" pInputText style="width: 100%;"/>
-                        <label for="input">Media display name</label>
+                        <input [(ngModel)]="mediaNames[i]" [ngClass]="{'error': !media.name}" pInputText style="width: 100%;"/>
+                        <label>Media display name</label>
                       </p-floatLabel>
                     </div>
                     <div class="col-6 md:col-6 lg:col-3 flex justify-content-center">
