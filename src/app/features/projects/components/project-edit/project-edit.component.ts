@@ -392,17 +392,20 @@ export class ProjectEditComponent implements OnInit {
           {
             await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as String)));
           }
-          if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
+          else if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
           {
             const formData = new FormData();
             formData.append('file', editMedia.file);
             formData.append('name', editMedia.media.name);
             await firstValueFrom(this.mediaService.addDocumentToProject(this.project.projectId, formData));
           }
+          else if(editMedia.media != null && editMedia.media.mediaId!='')
+        {
+          await firstValueFrom(this.mediaService.editMedia(editMedia.media));
+        }
       }
       this.editMediaList = []
-      this.router.navigate(['/project-detail/', this.projectId])
-
+      await this.router.navigate(['/project-detail/', this.projectId])
 
     } catch (error) {
       console.error('Error saving project,media or links', error);

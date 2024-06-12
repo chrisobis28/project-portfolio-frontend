@@ -24,6 +24,9 @@ export class MediaService {
   deleteMedia(projectId:string,mediaId:string): Observable<string> {
     return this.httpClient.delete<string>(this.API_URL +`${projectId}`+'/'+`${mediaId}`, { responseType: 'text' as 'json'});
   }
+  editMedia(media:Media){
+    return this.httpClient.put<Media>(this.API_URL,media);
+  }
   downloadFile(media: MediaFileContent) {
     const mimeType = 'application/octet-stream'
     const byteArray = new Uint8Array(atob(media.fileContent).split('').map(char => char.charCodeAt(0)));

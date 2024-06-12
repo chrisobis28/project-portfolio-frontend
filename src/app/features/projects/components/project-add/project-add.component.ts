@@ -29,6 +29,7 @@ import { CollaboratorService } from '../../services/collaborator/collaborator.se
 import { TagService } from '../../services/tag/tag.service';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 import {DialogModule} from "primeng/dialog";
+import {Router} from "@angular/router";
 
 
 
@@ -91,7 +92,8 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     private templateService: TemplateService,
     private linkService: LinkService,
     private collaboratorService: CollaboratorService,
-    private tagService: TagService
+    private tagService: TagService,
+    private readonly router: Router
   ) {
   }
 
@@ -306,6 +308,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
       this.addedMediaList = []
       this.media = []
       this.messageService.add({ severity: 'Success', summary: 'Success', detail: "The project was successfully saved!"});
+      await this.router.navigate(['/project-detail/', createdProject.projectId])
     } catch (error) {
       console.error('Error saving project or links', error);
       this.messageService.add({ severity: 'error', summary: 'Error', detail: (error as Error).message });
