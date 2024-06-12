@@ -305,7 +305,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
   }
 
   removeLink(linkToRemove: Link): void {
-    let index = this.links.findIndex(obj => obj === linkToRemove);
+    const index = this.links.findIndex(obj => obj === linkToRemove);
 
     if (index !== -1) {
     this.links.splice(index, 1);
@@ -368,7 +368,7 @@ async uploadFile(event: FileUploadEvent) {
   formData.append('name', file.name);
   this.addedMediaList.push(formData);
   this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media added! The media will be uploaded when the edit will be saved!'});
-  let newMedia:Media = {
+  const newMedia:Media = {
     mediaId:'',
     name:file.name,
     path:file.name,
@@ -402,7 +402,7 @@ downloadFile(media: MediaFileContent) {
   const file = new Blob([byteArray], {type: mimeType});
   const fileUrl = URL.createObjectURL(file);
   const fileName = media.a;
-  let link = document.createElement("a");
+  const link = document.createElement("a");
   link.download = fileName;
   link.href = fileUrl;
   document.body.appendChild(link);

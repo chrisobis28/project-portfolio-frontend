@@ -314,7 +314,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     const file = new Blob([byteArray], {type: mimeType});
     const fileUrl = URL.createObjectURL(file);
     const fileName = media.a;
-    let link = document.createElement("a");
+    const link = document.createElement("a");
     link.download = fileName;
     link.href = fileUrl;
     document.body.appendChild(link);
