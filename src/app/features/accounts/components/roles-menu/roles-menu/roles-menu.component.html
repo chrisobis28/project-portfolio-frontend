@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin View</title>
+</head>
+
+<body>
+
+    <div class="grid">
+        <div class="col-12 right-align">
+            <div class="first-container">
+                <h4><i>You ({{username}}) can edit the permissions of accounts on the platform.</i></h4>
+                <a [routerLink]="['']">
+                    <button class="home-button">Home</button>
+                </a>
+            </div>
+        </div>
+    
+        <div class="col-1"></div>
+    
+        <div class="col-10" style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <h1 style="margin-bottom: 5px; margin-left: 10px; font-style: italic; text-align: left;">Admin view of the roles of every account on the platform</h1>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="col-1"></div>
+        <div class="col-10 container-style" style="display: flex; justify-content: space-between;">
+            <div class="card relative col-12 md:col-5 lg:col-2" style="display: flex; align-items: center; flex-grow: 1;">
+                <!-- (input)="onTitleFilterChange($event) -->
+                <input type="text" class="role-on-project" [(ngModel)]="search" placeholder="Username" style="margin-right: 10px; width: 25%"/>
+                <p-checkbox 
+                    [(ngModel)]="isPM"
+                    label="Project Manager" 
+                    name="isPM" 
+                    value="isPM" />
+            </div>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="col-1"></div>
+        <div class="col-10" style="display: flex; justify-content: space-between; flex-wrap: wrap; align-items: flex-start;">
+            <ng-container *ngFor="let account of accounts; let i = index">
+                <div
+                class="card relative col-12 md:col-5 lg:col-2 container-user"
+                [ngClass]="{'container-user-expanded': selectedProject[i] && selectedProject[i].projectId != 'null'}">
+                    <h3 *ngIf="!(selectedProject[i] && selectedProject[i].projectId != 'null')" style="width: 11%; word-wrap: break-word;">{{ account.username }}</h3>
+                    <h3 *ngIf="selectedProject[i] && selectedProject[i].projectId != 'null'" style="width: 8%; word-wrap: break-word;">{{ account.username }}</h3>
+                    <p-checkbox 
+                        *ngIf="account.role != 'ROLE_ADMIN'"
+                        [(ngModel)]="isPM[i]"
+                        label="Project Manager" 
+                        name="isPM" 
+                        value="isPM" />
+                    <p-dropdown 
+                        *ngIf="account.role != 'ROLE_ADMIN'"
+                        [options]="account.projects"
+                        optionLabel="name"
+                        [(ngModel)]="selectedProject[i]"
+                        placeholder="Select a Project"
+                        [style]="{'width': '200px'}" />
+                    <div *ngIf="account.role != 'ROLE_ADMIN' && selectedProject[i] != null && selectedProject[i].projectId != 'null'" style="width: 49%;"> 
+                        <div class="text-role" style="width: 100%; align-items: center;">The user has the role of
+                            <input type="text" class="role-on-project" [(ngModel)]="selectedProject[i].roleInProject" />
+                            on <i><b>"{{selectedProject[i].name}}"</b></i>.</div>
+                    </div>
+                    <div *ngIf="account.role != 'ROLE_ADMIN'" class="button-container" style="text-align: right; justify-content: flex-end; width: 30%;">
+                        <a [routerLink]="['/add-project']">
+                            <button pButton type="button" icon="pi pi-check" label="Apply" class="p-button-success p-button-rounded apply-button"></button>
+                        </a>
+                    </div>
+                    <h3 class="col-10" *ngIf="account.role == 'ROLE_ADMIN'" style="width:90%; font-style: italic; font-weight: 500; font-size: medium;">This user has admin permissions therefore you are not allowed to modify them.</h3>
+                </div>
+            </ng-container>
+        </div>
+    </div>
+</body>
