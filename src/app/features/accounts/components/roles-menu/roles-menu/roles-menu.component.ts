@@ -1,4 +1,4 @@
-import { Component, ElementRef } from '@angular/core';
+import { Component, ElementRef, HostListener } from '@angular/core';
 import { StorageService } from '../../../services/authentication/storage.service';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -32,6 +32,7 @@ export class RolesMenuComponent {
   filteredAccounts: AccountTransfer[] = [];
   selectedProject: ProjectTransfer[] = [];
   replace: string[] = [];
+  innerWidth: number = 0;
   // projectsUsername: string[] = [];
   isPM: boolean[] = [];
   isPMfilter: boolean = false;
@@ -42,7 +43,8 @@ export class RolesMenuComponent {
       this.router.navigateByUrl('');
       return;
     }
-
+    this.onResize();
+    this.innerWidth = window.innerWidth;
     this.username = this.storageService.getUser();
     this.accountService.getAccounts().subscribe({
       next: (data: AccountTransfer[]) => {
@@ -57,6 +59,11 @@ export class RolesMenuComponent {
         console.error('Error fetching media files', err);
       }
     })
+  }
+
+  @HostListener('window:resize', ['$even'])
+  onResize() {
+    this.innerWidth = window.innerWidth;
   }
 
   async getProjects(username: string): Promise<ProjectTransfer[]> {

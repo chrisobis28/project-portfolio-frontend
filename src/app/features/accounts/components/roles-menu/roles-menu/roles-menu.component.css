@@ -47,6 +47,7 @@
 
 .button-container {
   text-align: right;
+  justify-content: flex-end;
   max-width: 140px;
   max-height: 140px;
 }
@@ -65,8 +66,9 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   outline: none;
   text-align: center;
-
+  width: auto;
 }
+
 .role-on-project:focus {
   border-color: #007BFF;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
