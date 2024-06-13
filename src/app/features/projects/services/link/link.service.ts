@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs";
 import {Link} from "../../models/project-models";
+import { NONE_TYPE } from '@angular/compiler';
 
 @Injectable({
   providedIn: 'root'
@@ -24,5 +25,13 @@ export class LinkService {
 
   editLinkOfProject(link: Link): Observable<Link> {
     return this.httpClient.put<Link>(this.API_URL, link)
+  }
+
+  addRemovedLinkToRequest(requestId: string, linkId: string): Observable<Link> {
+    return this.httpClient.put<Link>(this.API_URL + "request/remove/" + `${requestId}` + "/" + `${linkId}`, null)
+  }
+
+  addAddedLinkToRequest(requestId: string, link: Link): Observable<Link> {
+    return this.httpClient.put<Link>(this.API_URL + "request/add/" + `${requestId}`, link)
   }
 }

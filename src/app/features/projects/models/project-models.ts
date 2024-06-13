@@ -58,11 +58,15 @@ export interface Link {
 export interface RequestMediaProject {
     requestMediaProjectId: string
     isRemove: boolean
+    media: Media
+    request: Request
 }
 
 export interface RequestLinkProject {
     requestLinkProjectId: string
     isRemove: boolean
+    link: Link
+    request: Request
 
 }
 
@@ -77,23 +81,22 @@ export interface Request {
     requestId: string
     newTitle: string
     newDescription: string
-    newBibtex: string
     isCounterOffer: boolean
-    requestTagProjects: RequestTagProject[]
-    requestMediaProjects: RequestMediaProject[]
-    requestLinkProjects: RequestLinkProject[]
-    requestCollaboratorsProjects: RequestCollaboratorsProjects[]
+    project: Project
 }
 
 export interface RequestCollaboratorsProjects {
     id: string
     isRemove: boolean
+    collaborator: Collaborator
+    request: Request
 }
 
 export interface RequestTagProject {
     requestTagProjectID: string
     isRemove: boolean
-
+    request: Request
+    tag: Tag
 }
 
 export interface Tag {
@@ -123,4 +126,5 @@ export interface TemplateAddition {
 export interface WebSocketStringMessage {
     message: string
 }
+
 

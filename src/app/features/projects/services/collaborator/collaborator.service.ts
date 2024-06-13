@@ -26,4 +26,8 @@ export class CollaboratorService {
     return this.httpClient.post<Collaborator>(this.API_URL + `${projectId}` + "/" + `${collaborator.collaboratorId}`, body);
   }
 
+  addCollaboratorToRequest(requestId: string, collaboratorId: string, isRemove: boolean): Observable<Collaborator> {
+    return this.httpClient.post<Collaborator>(this.API_URL + "request/" + `${requestId}` + "/" + `${collaboratorId}`, isRemove)
+  }
+
 }

@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ChipsModule } from 'primeng/chips';
-import { Collaborator, Link, Media, MediaFileContent, Project, Tag, Template } from '../../models/project-models';
+import { Collaborator, Link, Media, MediaFileContent, Project, Request, Tag, Template } from '../../models/project-models';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { RatingModule } from 'primeng/rating';
@@ -24,6 +24,10 @@ import { TemplateService } from '../../services/template/template.service';
 import { TagService } from '../../services/tag/tag.service';
 import { Serializer } from '@angular/compiler';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
+import { AccountService } from 'src/app/features/accounts/services/accounts/account.service';
+import { StorageService } from 'src/app/features/accounts/services/authentication/storage.service';
+import { AuthenticationService } from 'src/app/features/accounts/services/authentication/authentication.service';
+import { RequestService } from '../../services/request/request.service';
 @Component({
   selector: 'app-project-edit',
   templateUrl: './project-edit.component.html',
@@ -54,6 +58,10 @@ export class ProjectEditComponent implements OnInit {
   deleteLinkList: Link[] = [];
   deletedMediaList:Media[] =[];
   addedMediaList:FormData[]=[];
+
+  role_on_project: string = '';
+  username: string = '';
+  isLoggedIn: boolean = false;
 
   wsProjectsSubscription: Subscription = new Subscription()
   wsCollaboratorsProjectSubscription: Subscription = new Subscription()
@@ -93,10 +101,18 @@ export class ProjectEditComponent implements OnInit {
   })
 
   constructor(private route: ActivatedRoute,
-     private projectService: ProjectService, private messageService: MessageService,private mediaService: MediaService,
-     private linkService: LinkService, private collaboratorService: CollaboratorService, private templateService: TemplateService,
-     private tagService: TagService,
-     private readonly router: Router
+    private projectService: ProjectService,
+    private messageService: MessageService,
+    private mediaService: MediaService,
+    private linkService: LinkService, 
+    private collaboratorService: CollaboratorService, 
+    private templateService: TemplateService,
+    private tagService: TagService, 
+    private accountService: AccountService, 
+    private storageService: StorageService,
+    private authenticationService: AuthenticationService,
+    private requestService: RequestService,
+    private readonly router: Router
     ) {}
 
   async ngOnInit() {
@@ -176,7 +192,36 @@ export class ProjectEditComponent implements OnInit {
      
      
     
+     this.isLoggedIn = this.storageService.isLoggedIn();
+     if(this.isLoggedIn) {
 
+       this.username = this.storageService.getUser();
+       try {
+         const role = await this.authenticationService.getRole(this.username).toPromise();
+         if(role && role != this.storageService.getRole()) {
+           this.storageService.saveRole(role);
+         }
+
+         if(this.storageService.getRole() === "ROLE_ADMIN") {
+           this.role_on_project = "ADMIN";
+           return;
+         }
+
+         if(this.projectId) { 
+          this.accountService.getRoleOnProject(this.username, this.projectId).subscribe({
+           next: (role: string) => {
+             this.role_on_project = role;
+           },
+           error: (err) => {
+             console.error('Error fetching the role of the user from the database', err);
+           },
+         });
+        }
+       }
+       catch (error) {
+         console.error('Error fetching role, waiting took too long', error);
+       }
+     }
 
   }
 
@@ -299,6 +344,8 @@ export class ProjectEditComponent implements OnInit {
         tmb: tmb
       };
 
+      if(this.role_on_project == "ADMIN" || this.role_on_project == "EDITOR" || this.role_on_project == "PM") {
+
       const createdProject = await firstValueFrom(this.projectService.editProject(this.projectId, prj));
       console.log('Project edited successfully', createdProject);
 
@@ -325,12 +372,51 @@ export class ProjectEditComponent implements OnInit {
       this.addedMediaList = []
       for (const media of this.deletedMediaList) {
           if(media.mediaId!='')
-          {const res = await firstValueFrom(this.mediaService.deleteMedia(media.mediaId).pipe(map(x => x as String)));
+          {const res = await firstValueFrom(this.mediaService.deleteMedia(this.projectId, media.mediaId).pipe(map(x => x as String)));
           console.log('Media deleted successfully', media);
           }
       }
       this.deletedMediaList = []
-      this.router.navigate(['/project-detail/', this.projectId])
+      this.router.navigate(['/project-detail/', this.projectId]) }
+
+      else {
+        const req: Request = {
+          requestId: "", 
+          newTitle: this.title,
+          newDescription: this.description,
+          isCounterOffer: false,
+          project: this.project
+        }
+
+        const createdRequest = await firstValueFrom(this.requestService.createRequest(req))
+
+        for(const link of this.links) {
+          if(link.linkId == '') {
+            const addedLink = await firstValueFrom(this.linkService.addAddedLinkToRequest(createdRequest.requestId, link))
+            console.log(addedLink) 
+          } else {
+            const removedLink = await firstValueFrom(this.linkService.addRemovedLinkToRequest(createdRequest.requestId, link.linkId))
+            console.log("removed: " + removedLink)
+            const addedLink = await firstValueFrom(this.linkService.addAddedLinkToRequest(createdRequest.requestId, link))
+            console.log("added: " + addedLink)
+          }
+        }
+
+        for(const link of this.deleteLinkList) {
+          const removedLink = await firstValueFrom(this.linkService.addRemovedLinkToRequest(createdRequest.requestId, link.linkId))
+          console.log("removed: " + removedLink)
+        }
+
+        for(const media of this.deletedMediaList) {
+          const removedMedia = await firstValueFrom(this.mediaService.addRemovedMediaToRequest(createdRequest.requestId, media.mediaId))
+          console.log("deleted: " + removedMedia)
+        }
+
+        for(const media of this.addedMediaList) {
+          const addedMedia = await firstValueFrom(this.mediaService.addAddedMediaToRequest(createdRequest.requestId, media))
+          console.log("added: " + addedMedia)
+        }
+      }
       
 
     } catch (error) {

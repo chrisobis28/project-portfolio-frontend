@@ -24,4 +24,8 @@ export class TagService {
   addTagToProject(tag: Tag, projectId: string): Observable<Tag> {
     return this.httpClient.post<Tag>(this.API_URL+ `${projectId}` + "/" + `${tag.tagId}`, "")
   }
+
+  addTagToRequest(requestId: string, tagId: string, isRemove: boolean): Observable<Tag> {
+    return this.httpClient.post<Tag>(this.API_URL + "request/" + `${requestId}` + "/" + `${tagId}`, isRemove)
+  }
 }
