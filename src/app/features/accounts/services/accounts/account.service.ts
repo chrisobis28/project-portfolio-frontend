@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import {Observable} from "rxjs";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import { Project } from 'src/app/features/projects/models/project-models';
+import { ProjectTransfer } from '../../models/accounts-models';
 
 const API_URL = 'http://localhost:8080/account';
 
@@ -71,9 +72,9 @@ export class AccountService {
     return this.httpClient.get<Observable<any>>(API_URL, httpOptions);
   }
 
-  getProjects(username: string): Observable<Project[]> {
+  getProjects(username: string): Observable<ProjectTransfer[]> {
     const url = API_URL + `/role/${username}`;
-    return this.httpClient.get<Project[]>(url, httpOptions);
+    return this.httpClient.get<ProjectTransfer[]>(url, httpOptions);
   }
 
 }

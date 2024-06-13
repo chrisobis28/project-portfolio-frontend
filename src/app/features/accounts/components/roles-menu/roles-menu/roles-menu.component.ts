@@ -1,16 +1,16 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef } from '@angular/core';
 import { StorageService } from '../../../services/authentication/storage.service';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CommonModule } from '@angular/common';
-import { Account } from '../../../models/accounts-models';
+import { Account, AccountTransfer, ProjectTransfer } from '../../../models/accounts-models';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { FormsModule } from '@angular/forms';
 import { AccountService } from '../../../services/accounts/account.service';
-import { Observable, filter, firstValueFrom } from 'rxjs';
+import { Observable, debounceTime, filter, firstValueFrom, fromEvent } from 'rxjs';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DropdownModule } from 'primeng/dropdown';
-import { Project } from 'src/app/features/projects/models/project-models';
+import { Project, ProjectsToAccounts } from 'src/app/features/projects/models/project-models';
 
 @Component({
   selector: 'app-roles-menu',
@@ -28,12 +28,13 @@ export class RolesMenuComponent {
   ) { }
 
   username: string = '';
-  accounts: Account[] = [];
-  filteredAccounts: Account[] = [];
-  currentProjects: string[] = ['asdasd'];
-  selectedProject: string[] = [];
+  accounts: AccountTransfer[] = [];
+  filteredAccounts: AccountTransfer[] = [];
+  selectedProject: ProjectTransfer[] = [];
+  replace: string[] = [];
   // projectsUsername: string[] = [];
-  isPM: boolean = false;
+  isPM: boolean[] = [];
+  isPMfilter: boolean = false;
   search: string = '';
 
   async ngOnInit(): Promise<void> {
@@ -41,14 +42,16 @@ export class RolesMenuComponent {
       this.router.navigateByUrl('');
       return;
     }
+
     this.username = this.storageService.getUser();
     this.accountService.getAccounts().subscribe({
-      next: (data: Account[]) => {
+      next: (data: AccountTransfer[]) => {
         this.accounts = data.filter(x => x.username != this.username);
-        // this.accounts.forEach(async x => {
-        //   const projects = await this.getProjects(x.username);
-        //   x.project = projects.map(project => ({ id: project.projectId, title: project.title }));
-        // });
+        this.isPM = new Array(this.accounts.length).fill(false);
+        this.accounts.forEach(async x => {
+          x.projects = await this.getProjects(x.username);
+          x.projects.push({ projectId: 'null', name: 'None of the above', roleInProject: "nothing" });
+        });
       },
       error: err => {
         console.error('Error fetching media files', err);
@@ -56,11 +59,11 @@ export class RolesMenuComponent {
     })
   }
 
-  async getProjects(username: string): Promise<Project[]> {
+  async getProjects(username: string): Promise<ProjectTransfer[]> {
     return firstValueFrom(this.accountService.getProjects(username));
   }
 
-  retrieveProjects(account: Account): string[] {
-    return account.project.map(x => x.id);
+  retrieveProjectNames(account: AccountTransfer): string[] {
+    return account.projects.map(x => x.name);
   }
 }
