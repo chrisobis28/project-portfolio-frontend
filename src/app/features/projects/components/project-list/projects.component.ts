@@ -285,11 +285,12 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     this.filteredData = this.filterByTags(this.filteredData)
   }
 
-     getImageSrc(project:Project): string {
-       if(project.thumbnail == undefined)
-         return 'https://as2.ftcdn.net/v2/jpg/01/25/64/11/1000_F_125641180_KxdtmpD15Ar5h8jXXrE5vQLcusX8z809.jpg'
-      return `data:${project.thumbnail.filePath};base64,${project.thumbnail.fileContent}`;
-    }
+  getImageSrc(project:Project): string {
+    if(project.thumbnail == undefined)
+      return 'https://as2.ftcdn.net/v2/jpg/01/25/64/11/1000_F_125641180_KxdtmpD15Ar5h8jXXrE5vQLcusX8z809.jpg'
+    const type = project.thumbnail.filePath.substring(project.thumbnail.filePath.lastIndexOf('.') + 1);
+    return `data:image/${type};base64,${project.thumbnail.fileContent}`;
+  }
 
 
 
