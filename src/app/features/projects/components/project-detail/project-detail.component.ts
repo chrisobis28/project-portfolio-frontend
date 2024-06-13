@@ -4,12 +4,12 @@ import {BadgeModule} from 'primeng/badge';
 import {AvatarModule} from 'primeng/avatar';
 import {CardModule} from 'primeng/card';
 import {SplitterModule} from 'primeng/splitter';
-import {CommonModule} from '@angular/common';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
 import {TagModule} from 'primeng/tag';
 import {ButtonModule} from 'primeng/button';
 import {CarouselModule} from 'primeng/carousel';
 import {ChipModule} from 'primeng/chip';
-import {Collaborator, Link, Media, MediaFile, MediaFileContent, Project, Tag} from "../../models/project-models";
+import {Collaborator, Link, Media, MediaFileContent, Project, Tag} from "../../models/project-models";
 import {ActivatedRoute, RouterLink} from '@angular/router';
 import {DividerModule} from 'primeng/divider';
 import {ProjectService} from "../../services/project/project.service";
@@ -24,21 +24,24 @@ import { AccountService } from 'src/app/features/accounts/services/accounts/acco
 import { AuthenticationService } from 'src/app/features/accounts/services/authentication/authentication.service';
 import { firstValueFrom, Subscription } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
+import {ConfirmDialogModule} from "primeng/confirmdialog";
+import {ConfirmationService, MessageService} from "primeng/api";
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [DividerModule, ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule, DialogModule, RouterLink],
+  imports: [DividerModule, ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule, DialogModule, RouterLink, ConfirmDialogModule, NgOptimizedImage],
   templateUrl: './project-detail.component.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
-  styleUrls: ['./project-detail.component.css']
+  styleUrls: ['./project-detail.component.css'],
+  providers: [ConfirmationService, MessageService]
 })
 export class ProjectDetailComponent implements OnInit, OnDestroy {
-  images: MediaFile[] = [];
+  images: MediaFileContent[] = [];
   documents: Media[] = [];
-  bibTeX: MediaFile | undefined = {
-    a: '',
-    b: '',
-    c: ''
+  bibTeX: MediaFileContent | undefined = {
+    fileName: '',
+    filePath: '',
+    fileContent: ''
   };
   projectId: string = "";
   visible: boolean = false;
@@ -57,7 +60,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     collaboratorNames: [],
     tagNames: [],
     tags: [],
-    tmb: { a: '', b: '' },
+     thumbnail: { fileName: '', filePath: '' ,fileContent:''},
     template: null
   };
   responsiveOptions = [
@@ -114,13 +117,15 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     url: "ws://localhost:8080/topic/media/project",
     deserializer: msg => String(msg.data)
   })
-  constructor(private readonly router:Router, 
-    readonly projectService: ProjectService, 
-    private readonly tagService: TagService, 
-    private readonly linkService: LinkService, 
-    private readonly mediaService: MediaService, 
-    private readonly collaboratorService: CollaboratorService, 
-    private route: ActivatedRoute, 
+  constructor(private readonly router:Router,
+    readonly projectService: ProjectService,
+    private readonly tagService: TagService,
+    private readonly linkService: LinkService,
+    private readonly mediaService: MediaService,
+    private readonly collaboratorService: CollaboratorService,
+              private confirmationService: ConfirmationService,
+              private messageService: MessageService,
+    private route: ActivatedRoute,
     private storageService: StorageService,
     private accountService: AccountService,
     private authenticationService: AuthenticationService) {
@@ -132,7 +137,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   }
 
    async ngOnInit() {
-    
+
     this.initializeProject()
 
     this.wsProjectsSubscription = this.projectsWebSocket.subscribe(
@@ -180,8 +185,8 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
      async msg => {
        if(msg == this.projectId) {
          const mediaFileData = await this.getMediaContentByProjectId(this.projectId)
-         this.images = mediaFileData.filter(media => media.a && (media.a.endsWith(".jpg") || media.a.endsWith(".png")));
-         this.bibTeX = mediaFileData.find(media => media.a && media.a.endsWith(".bib"));
+         this.images = mediaFileData.filter(media => media.filePath && (media.filePath.endsWith(".jpg") || media.filePath.endsWith(".png")));
+         this.bibTeX = mediaFileData.find(media => media.filePath && media.filePath.endsWith(".bib"));
 
          const documentData = await this.getDocumentsByProjectId(this.projectId)
          this.documents = documentData.filter(media => media.path && !(
@@ -240,7 +245,6 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   }
 
   initializeProject(): void {
-    console.log("Whole project is initialized")
     this.route.params.subscribe(params => {
       this.projectId = (params['id']);
       this.projectService.getProjectById(params['id']).subscribe((responseProject: Project) => {
@@ -258,9 +262,10 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       });
     });
     this.mediaService.getMediasContentByProjectId(this.projectId).subscribe({
-       next: (data: MediaFile[]) => {
-         this.images = data.filter(media => media.a && (media.a.endsWith(".jpg") || media.a.endsWith(".png")));
-         this.bibTeX = data.find(media => media.a && media.a.endsWith(".bib"));
+       next: (data: MediaFileContent[]) => {
+         this.images = data.filter(media => media.filePath && (media.filePath.endsWith(".jpg") || media.filePath.endsWith(".png")));
+         console.log(data[0])
+         this.bibTeX = data.find(media => media.filePath && media.filePath.endsWith(".bib"));
        },
        error: (err: any) => {
          console.error('Error fetching media files', err);
@@ -296,7 +301,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     return firstValueFrom(this.linkService.getLinksByProjectId(id))
   }
 
-  async getMediaContentByProjectId(id: string): Promise<MediaFile[]> {
+  async getMediaContentByProjectId(id: string): Promise<MediaFileContent[]> {
     return firstValueFrom(this.mediaService.getMediasContentByProjectId(this.projectId))
   }
 
@@ -304,23 +309,11 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     return firstValueFrom(this.mediaService.getDocumentsByProjectId(id))
   }
 
-  getImageSrc(media: MediaFile): string {
-    return `data:${media.a};base64,${media.b}`;
+  getImageSrc(media: MediaFileContent): string {
+    return `data:${media.filePath};base64,${media.fileContent}`;
   }
   downloadFile(media: MediaFileContent) {
-    console.log(media);
-    const mimeType = 'application/octet-stream'
-    const byteArray = new Uint8Array(atob(media.b).split('').map(char => char.charCodeAt(0)));
-    const file = new Blob([byteArray], {type: mimeType});
-    const fileUrl = URL.createObjectURL(file);
-    const fileName = media.a;
-    let link = document.createElement("a");
-    link.download = fileName;
-    link.href = fileUrl;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(fileUrl);
+    this.mediaService.downloadFile(media);
   }
 
   isAbsoluteUrl(url: string): boolean {
@@ -331,7 +324,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     if (this.bibTeX == undefined) {
       return undefined;
     }
-    const decodedStr = atob(this.bibTeX.b);
+    const decodedStr = atob(this.bibTeX.fileContent);
     const utf8Str = decodeURIComponent(escape(decodedStr));
     const lines = utf8Str.split('\n');
     let maxIndex = 0;
@@ -356,10 +349,10 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   }
   downloadDocument(mediaId: string){
     let mediaFile : MediaFileContent = {
-      a:"",
-      b:"",
+      fileName:"",
+      filePath:"",
+      fileContent:""
     };
-    console.log(mediaId);
     this.mediaService.getDocumentContent(mediaId).subscribe({
        next: (data: MediaFileContent) => {
         mediaFile = data;
@@ -378,23 +371,24 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     this.router.navigateByUrl('');
   }
   getColorCode(color: string): string {
-    switch(color) {
-      case "red":
-        return "rgba(255, 93, 70, 0.45)"
-      case "green":
-        return "rgba(10, 118, 77, 0.45)"
-      case "blue":
-        return "rgba(10, 118, 255, 0.45)"
-      case "yellow":
-        return "rgba(255, 255, 0, 0.45)"
-      case "orange":
-        return "rgba(255, 190, 61, 0.45)"
-      case "purple":
-        return "rgba(106, 0, 255, 0.45)"
-      case "black":
-        return "rgba(0, 0, 0, 0.4)"
-      default:
-        return "rgba(111, 118, 133, 0.45)"
-    }
+    return this.tagService.getColorCode(color);
+  }
+  logout() {
+    this.confirmationService.confirm({
+      message: "Are you sure you want to log out of the account " + this.storageService.getUser() + "?",
+      accept: () => {
+        this.authenticationService.logout().subscribe({
+          next: () => {
+            this.isLoggedIn = false;
+            this.storageService.clean();
+            this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Logged out successfully.' });
+            return;
+          },
+          error: err => {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not be logged out.' });
+          }
+        })
+      }
+    })
   }
 }
