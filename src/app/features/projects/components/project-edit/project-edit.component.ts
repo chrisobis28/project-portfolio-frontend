@@ -416,6 +416,10 @@ export class ProjectEditComponent implements OnInit {
           const addedMedia = await firstValueFrom(this.mediaService.addAddedMediaToRequest(createdRequest.requestId, media))
           console.log("added: " + addedMedia)
         }
+
+
+      
+
       }
       
 
