@@ -9,13 +9,13 @@ import { FormsModule } from '@angular/forms';
 import { AccountService } from '../../../services/accounts/account.service';
 import { Observable, filter, firstValueFrom } from 'rxjs';
 import { CheckboxModule } from 'primeng/checkbox';
-import { MultiSelect } from 'primeng/multiselect';
+import { DropdownModule } from 'primeng/dropdown';
+import { Project } from 'src/app/features/projects/models/project-models';
 
 @Component({
   selector: 'app-roles-menu',
   standalone: true,
-  imports: [RouterModule, ButtonModule, CommonModule, FloatLabelModule, FormsModule, CheckboxModule],
-  //MULTISELECT
+  imports: [RouterModule, ButtonModule, CommonModule, FloatLabelModule, FormsModule, CheckboxModule, DropdownModule],
   templateUrl: './roles-menu.component.html',
   styleUrl: './roles-menu.component.css'
 })
@@ -30,21 +30,25 @@ export class RolesMenuComponent {
   username: string = '';
   accounts: Account[] = [];
   filteredAccounts: Account[] = [];
-  // selectedProjectId: number[] = [];
+  currentProjects: string[] = ['asdasd'];
+  selectedProject: string[] = [];
   // projectsUsername: string[] = [];
   isPM: boolean = false;
   search: string = '';
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     if(!this.storageService.isLoggedIn() || this.storageService.getRole() != "ROLE_ADMIN") {
       this.router.navigateByUrl('');
       return;
     }
     this.username = this.storageService.getUser();
     this.accountService.getAccounts().subscribe({
-      next: data => {
-        this.accounts = data;
-        this.filteredAccounts = this.accounts;
+      next: (data: Account[]) => {
+        this.accounts = data.filter(x => x.username != this.username);
+        // this.accounts.forEach(async x => {
+        //   const projects = await this.getProjects(x.username);
+        //   x.project = projects.map(project => ({ id: project.projectId, title: project.title }));
+        // });
       },
       error: err => {
         console.error('Error fetching media files', err);
@@ -52,12 +56,11 @@ export class RolesMenuComponent {
     })
   }
 
-  async getProjects(username: string): Promise<string[]> {
+  async getProjects(username: string): Promise<Project[]> {
     return firstValueFrom(this.accountService.getProjects(username));
   }
 
-  // getProjectsDirect(account: Account): Observable<string[]> {
-  //   this.projectsUsername = this.accountService.getProjects(account.username);
-  // }
-
+  retrieveProjects(account: Account): string[] {
+    return account.project.map(x => x.id);
+  }
 }

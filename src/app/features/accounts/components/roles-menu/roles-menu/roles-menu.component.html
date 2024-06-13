@@ -44,7 +44,7 @@
     <div class="grid">
         <div class="col-1"></div>
         <div class="col-10" style="display: flex; justify-content: space-between; flex-wrap: wrap;">
-            <ng-container *ngFor="let account of filteredAccounts">
+            <ng-container *ngFor="let account of accounts">
                 <div class="card relative col-12 md:col-5 lg:col-2 container-user">
                     <!-- Display account details here -->
                     <h3>{{ account.username }}</h3>
@@ -55,18 +55,17 @@
                         name="isPM" 
                         value="isPM" />
                     <!-- Add more details as needed -->
-                    <!-- <p-multiSelect 
-                        (onClick)="getProjectsDirect(account)"
-                        [options]="projectsUsername"
-                        [(ngModel)]="selectedProjectId[filteredAccounts.indexOf(account)]" 
+                    <p-dropdown 
+                        *ngIf="account.role != 'ROLE_ADMIN'"
+                        [(ngModel)]="selectedProject[accounts.indexOf(account)]" 
                         optionLabel="name" 
-                        placeholder="Project" /> -->
-
-                    <div class="button-container" style="text-align: right; justify-content: flex-end;">
+                        placeholder="Select a Project" />
+                    <div *ngIf="account.role != 'ROLE_ADMIN'" class="button-container" style="text-align: right; justify-content: flex-end;">
                         <a [routerLink]="['/add-project']">
                             <button pButton type="button" icon="pi pi-check" label="Apply" class="p-button-success p-button-rounded apply-button"></button>
                         </a>
                     </div>
+                    <h3 *ngIf="account.role == 'ROLE_ADMIN'" style="width:90%; font-style: italic; font-weight: 500; font-size: medium;">This user has admin permissions therefore you are not allowed to modify them.</h3>
                 </div>
             </ng-container>
         </div>

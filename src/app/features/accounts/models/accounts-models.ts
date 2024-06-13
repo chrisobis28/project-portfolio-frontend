@@ -1,9 +1,15 @@
 import { Nullable } from "primeng/ts-helpers"
+import { Project } from "../../projects/models/project-models"
 
 export interface Account {
     username: string
     role: string
-    projects: string[]
+    project: {id: string, title: string}[]
+}
+
+export interface AccountProject {
+    id: string
+    title: string
 }
 
 export interface RegisterUserRequest {
