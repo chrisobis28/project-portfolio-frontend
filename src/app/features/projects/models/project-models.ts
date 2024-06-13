@@ -13,7 +13,7 @@ export interface Project {
     collaboratorNames: string[]
     tagNames: string[]
     tags: Tag[]
-    tmb:MediaFileContent | undefined
+    thumbnail:MediaFileContent | undefined
 
 }
 
@@ -24,19 +24,21 @@ export interface Media {
     project: Project
     requestMediaProjects: RequestMediaProject[]
 }
+export interface EditMedia {
+  media:Media|null
+  mediaFileContent:MediaFileContent|null
+  file:File|null
+  delete:boolean
+}
 
 export interface ProjectsToAccounts {
     ptaId: string
     role: string
 }
-export interface MediaFile {
-  a: string;
-  b: string;
-  c: string;
-}
 export interface MediaFileContent {
-  a: string;
-  b: string;
+  fileName:string,
+  filePath:string,
+  fileContent:string
 }
 
 export interface ProjectsToCollaborators {
