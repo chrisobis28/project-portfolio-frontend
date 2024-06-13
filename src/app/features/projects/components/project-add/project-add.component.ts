@@ -1,4 +1,4 @@
-import { Component , OnInit } from '@angular/core';
+import { Component , OnDestroy, OnInit } from '@angular/core';
 import { InputTextModule } from 'primeng/inputtext';
 import { AbstractControl, FormControl, FormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { FloatLabelModule } from 'primeng/floatlabel';
@@ -16,7 +16,7 @@ import { FileUploadModule, UploadEvent } from 'primeng/fileupload';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { DropdownModule } from 'primeng/dropdown';
-import { firstValueFrom, map } from 'rxjs';
+import { Subscription, firstValueFrom, map } from 'rxjs';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { ChipModule } from 'primeng/chip';
@@ -27,6 +27,7 @@ import { MediaService } from '../../services/media/media.service';
 import { LinkService } from '../../services/link/link.service';
 import { CollaboratorService } from '../../services/collaborator/collaborator.service';
 import { TagService } from '../../services/tag/tag.service';
+import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 
 
 
@@ -43,7 +44,7 @@ import { TagService } from '../../services/tag/tag.service';
   providers: [ProjectService, MessageService]
 
 })
-export class ProjectAddComponent implements OnInit{
+export class ProjectAddComponent implements OnInit, OnDestroy{
 
   media: Media[] = [];
   project!: Project;
@@ -65,6 +66,18 @@ export class ProjectAddComponent implements OnInit{
   descriptionInput = new FormControl('', [Validators.required]);
   addedMediaList:FormData[]=[];
   deletedMediaList:Media[] =[];
+
+  wsTagsSubscription: Subscription = new Subscription()
+  wsCollaboratorsSubscription: Subscription = new Subscription()
+
+  tagsWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/tags",
+    deserializer: msg => String(msg.data)
+  })
+  collaboratorsWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/collaborators",
+    deserializer: msg => String(msg.data)
+  })
   
 
   invalidTitle: boolean = false
@@ -72,27 +85,69 @@ export class ProjectAddComponent implements OnInit{
   invalidMedia: boolean = false
   
   constructor(
-     private projectService: ProjectService, private messageService: MessageService,
-    private mediaService: MediaService, private templateService: TemplateService, 
-    private linkService: LinkService, private collaboratorService: CollaboratorService,
+    private projectService: ProjectService, 
+    private messageService: MessageService,
+    private mediaService: MediaService, 
+    private templateService: TemplateService, 
+    private linkService: LinkService, 
+    private collaboratorService: CollaboratorService,
     private tagService: TagService
     ) {}
 
+    ngOnDestroy(): void {
+      if(this.wsTagsSubscription)
+        this.wsTagsSubscription.unsubscribe()
+      if(this.wsCollaboratorsSubscription)
+        this.wsCollaboratorsSubscription.unsubscribe()
+    }
+
   async ngOnInit() {
-    this.tags = await this.getAllTags();
-    this.tagnames = this.tags.map(x => x.name)
-    this.filteredTags = this.tags
-    this.templates = await this.getAllTemplates()
-    this.templateNames = await this.getAllTemplateNames()
-    this.colaborators = await this.getAllCollaborators()
+    
+    await this.initializeFields()
+
+    this.wsTagsSubscription = this.tagsWebSocket.subscribe(
+      async msg => {
+        const words = msg.split(" ")
+        if(words[0] == "deleted") {
+        const tagName = this.tags.filter(x => x.tagId == words[1])[0].name
+        if(this.selectedTags.includes(tagName))
+          this.selectedTags.splice(this.selectedTags.indexOf(tagName), 1)
+        }
+        const newTags = await this.getAllTags();
+        this.tags = newTags
+        this.tagnames = newTags.map(x => x.name)
+        this.filteredTags = newTags
+      }
+    )
+
+    this.wsCollaboratorsSubscription = this.collaboratorsWebSocket.subscribe(
+      async msg => {
+        const words = msg.split(" ")
+        if(words[0] == "deleted") {
+          const collabName = this.colaborators.filter(x => x.collaboratorId == words[1])[0].name
+          if(this.selectedCollaborators.includes(collabName))
+            this.selectedCollaborators.splice(this.selectedCollaborators.indexOf(collabName), 1)
+        }
+        const newCollaborators = await this.getAllCollaborators()
+        this.colaborators = newCollaborators
+      }
+    )
+
     console.log('Templates:', this.templates);
     console.log('Template Names:', this.templateNames);
     this.selectedTags = []
     this.selectedCollaborators = []
     this.titleInput.setValue("")
     this.descriptionInput.setValue("")
-    
+  }
 
+  async initializeFields() {
+    this.tags = await this.getAllTags();
+    this.tagnames = this.tags.map(x => x.name)
+    this.filteredTags = this.tags
+    this.templates = await this.getAllTemplates()
+    this.templateNames = await this.getAllTemplateNames()
+    this.colaborators = await this.getAllCollaborators()
   }
 
   async getAllTemplates(): Promise<Template[]> {
