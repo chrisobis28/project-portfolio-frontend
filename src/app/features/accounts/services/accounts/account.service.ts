@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import {Observable} from "rxjs";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import { Project } from 'src/app/features/projects/models/project-models';
-import { ProjectTransfer } from '../../models/accounts-models';
+import { AccountTransfer, ProjectTransfer } from '../../models/accounts-models';
 
 const API_URL = 'http://localhost:8080/account';
 
@@ -36,6 +36,15 @@ export class AccountService {
     return this.httpClient.put<Observable<any>>(API_URL, body, httpOptions);
   }
 
+  editRoleOfAccount(accountTransfer: AccountTransfer): Observable<any> {
+    const body = {
+      username: accountTransfer.username,
+      isPM: accountTransfer.pm,
+      isAdmin: accountTransfer.admin
+  };
+    return this.httpClient.put<Observable<any>>(API_URL + '/editRole', body, httpOptions);
+  }
+
   getAccount(username: string): Observable<any> {
     const url = API_URL + `/public/${username}`;
     return this.httpClient.get<Observable<any>>(url, httpOptions);
@@ -48,7 +57,7 @@ export class AccountService {
 
   addRoleOnProject(username: string, projectId: string, roleInProject: string): Observable<any> {
     const url = API_URL + `/${username}/${projectId}`;
-    const body = { roleInProject };
+    const body = { role: roleInProject };
     return this.httpClient.post<Observable<any>>(url, body, httpOptions);
   }
 
@@ -59,8 +68,7 @@ export class AccountService {
 
   updateRoleOnProject(username: string, projectId: string, roleInProject: string): Observable<any> {
     const url = API_URL + `/${username}/${projectId}`;
-    const body = { roleInProject };
-    return this.httpClient.put<Observable<any>>(url, body, httpOptions);
+    return this.httpClient.put<Observable<any>>(url, '"' + roleInProject + '"', httpOptions);
   }
 
   getRoleOnProject(username: string, projectId: string): Observable<string> {
