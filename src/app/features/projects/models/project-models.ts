@@ -2,8 +2,8 @@ export interface Project {
     projectId: string;
     title: string
     description: string;
-    bibtex: string
     archived: boolean
+    template: Template | null
     media: Media[]
     projectsToAccounts: ProjectsToAccounts[]
     projectsToCollaborators: ProjectsToCollaborators[]
@@ -13,7 +13,7 @@ export interface Project {
     collaboratorNames: string[]
     tagNames: string[]
     tags: Tag[]
-    tmb:MediaFileContent
+    thumbnail:MediaFileContent | undefined
 
 }
 
@@ -21,30 +21,24 @@ export interface Media {
     mediaId: string
     name: string
     path: string
+    project: Project
     requestMediaProjects: RequestMediaProject[]
+}
+export interface EditMedia {
+  media:Media|null
+  mediaFileContent:MediaFileContent|null
+  file:File|null
+  delete:boolean
 }
 
 export interface ProjectsToAccounts {
     ptaId: string
     role: string
 }
-export interface MediaFile {
-  a: string;
-  b: string;
-  c: string;
-}
 export interface MediaFileContent {
-  a: string;
-  b: string;
-}
-export interface Account {
-    username: string
-    name: string
-    password: string
-    isAdministrator: boolean
-    isPM: boolean
-    projectstoAccounts: ProjectsToAccounts[]
-    requests: Request[]
+  fileName:string,
+  filePath:string,
+  fileContent:string
 }
 
 export interface ProjectsToCollaborators {
@@ -112,4 +106,23 @@ export interface Tag {
     tagsToProjects: TagToProject[]
 }
 
+export interface Template {
+    templateName: string
+    standardDescription: string
+    standardBibtex: string
+    numberOfCollaborators: number
+    projects: Project[]
+    templateAdditions: TemplateAddition[]
+}
+
+export interface TemplateAddition {
+    templateAdditionId: string
+    templateAdditionName: string
+    media: boolean
+    template: Template
+}
+
+export interface WebSocketStringMessage {
+    message: string
+}
 

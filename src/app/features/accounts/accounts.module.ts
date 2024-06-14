@@ -1,9 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ProjectsComponent } from './components/project-list/projects.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ProjectAddComponent } from './components/project-add/project-add.component';
-import { ProjectCardComponent } from "./components/project-card/project-card.component";
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
@@ -18,16 +15,15 @@ import { ChipsModule } from 'primeng/chips';
 import { ChipModule } from 'primeng/chip';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { RouterModule, Routes } from '@angular/router';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { MessagesModule } from 'primeng/messages';
 import { ToastModule } from 'primeng/toast';
 
 @NgModule({
     declarations: [
-        ProjectsComponent,
-        ProjectCardComponent
+        
     ],
     exports: [
-        ProjectsComponent,
+        
     ],
     imports: [
         CommonModule,
@@ -38,17 +34,17 @@ import { ToastModule } from 'primeng/toast';
         DividerModule,
         DataViewModule, 
         TagModule,
-        ToastModule,
         DropdownModule,
         FloatLabelModule,
         BrowserModule,
         BrowserAnimationsModule,
-        ConfirmDialogModule,
         InputTextModule, 
         ChipsModule,
         ChipModule,
         MultiSelectModule,
-        RouterModule
+        MessagesModule,
+        RouterModule,
+        ReactiveFormsModule
     ]
 })
-export class ProjectsModule { }
+export class AccountsModule { }

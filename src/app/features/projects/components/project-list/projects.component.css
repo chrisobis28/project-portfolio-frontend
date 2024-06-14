@@ -35,3 +35,61 @@
 .no-border-chip {
   border: none !important
 }
+
+.ui-confirmdialog-message {
+  color: red;
+}
+
+.button-container {
+  display: inline-block;
+  text-align: right;
+}
+
+.container-logged-in {
+  display: inline-block;
+  text-align: right;
+}
+
+.logout-button {
+  background-color: #3b82f6;
+  font-weight: bold;
+  border: none;
+  color: white;
+  padding: 5px 15px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 18px;
+  margin: 10px 2px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition-duration: 0.4s;
+  margin-left: 20px;
+}
+
+.logout-button:hover {
+  background-color: #2563EB;
+}
+
+.flex-container {
+  display: flex;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.container-logged-in {
+  display: flex;
+}
+.bottom-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 1rem;
+  position: relative;
+}
+.left-bottom {
+  text-align: left;
+}
+.right-bottom {
+  text-align: right;
+}

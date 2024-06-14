@@ -1,23 +1,25 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable} from '@angular/core';
 import { Observable } from 'rxjs';
-import { Project } from '../../models/project-models';
+import {Collaborator, Link, Media, Project, Tag, Template} from '../../models/project-models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProjectService {
   private readonly API_URL = 'http://localhost:8080/project/';
+
   constructor(
     private readonly httpClient: HttpClient
   ) { }
 
   getAllProjects(): Observable<Project[]> {
-    return this.httpClient.get<Project[]>(this.API_URL);
+    return this.httpClient.get<Project[]>(this.API_URL + 'public/');
   }
+  
 
-  getProjectById(id: String): Observable<Project> {
-    return this.httpClient.get<Project>(this.API_URL + `${id}`);
+  getProjectById(id: string): Observable<Project> {
+    return this.httpClient.get<Project>(this.API_URL+ `public/${id}`);
   }
 
   createProject(body: Project): Observable<Project> {
@@ -25,11 +27,15 @@ export class ProjectService {
   }
 
   editProject(id: String, body: Project): Observable<Project> {
-    return this.httpClient.put<Project>(this.API_URL + `/${id}`, body);
+    return this.httpClient.put<Project>(this.API_URL + `${id}`, body);
   }
 
   deleteProject(id: String): Observable<Object> {
-    return this.httpClient.delete<Object>(this.API_URL + `/${id}`);
+    return this.httpClient.delete<Object>(this.API_URL + `${id}`);
   }
+
+
+
+  
 
 }

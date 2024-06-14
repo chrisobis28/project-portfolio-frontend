@@ -11,6 +11,18 @@ export class LinkService {
   constructor(private readonly httpClient: HttpClient) { }
 
   getLinksByProjectId(id: string): Observable<Link[]> {
-    return this.httpClient.get<Link[]>(this.API_URL + `${id}`);
+    return this.httpClient.get<Link[]>(this.API_URL + `public/${id}`);
+  }
+
+  addLinkToProject(link: Link, projectId: string): Observable<Link> {
+    return this.httpClient.post<Link>(this.API_URL+`${projectId}`, link)
+  }
+
+  deleteLinkById(id: string): Observable<Object> {
+    return this.httpClient.delete<Object>(this.API_URL + `${id}`)
+  }
+
+  editLinkOfProject(link: Link): Observable<Link> {
+    return this.httpClient.put<Link>(this.API_URL, link)
   }
 }

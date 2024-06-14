@@ -3,104 +3,151 @@
 <head>
   <meta charset="UTF-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>{{project.title}}</title>
+  <title>{{ project.title }}</title>
   <style>
   </style>
 </head>
 <body>
 <div class="grid">
+
+  <div class="col-12" style="text-align: right;">
+    <div *ngIf="isLoggedIn" class="button-container" style="display: flex; align-items: center; justify-content: flex-end;">
+      <div class="container-logged-in" style="display: flex; align-items: center;">
+        <h4 style="margin: 0; margin-right: 10px;"><i>You ({{ username }}) are viewing this as {{ this.role_on_project }}.</i></h4>
+        <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
+        <p-button  (click)="logout()">Logout</p-button>
+      </div>
+    </div>
+  </div>
+
   <ng-container *ngIf=!isMobile>
     <div class="col-1">
     </div>
   </ng-container>
   <div [ngClass]="{'col-10': !isMobile, 'col-12': isMobile}">
-        <h1>{{project.title}}</h1>
-        <em><p>{{getCollaboratorNames()}}</p></em>
+    <div class="grid flex align-items-center justify-content-center">
+      <div class="col-12 md:col-1 lg:col-1 flex align-items justify-content-center">
+        <a href="http://localhost:4200">
+          <p-button [outlined]="true" icon="pi pi-arrow-left" severity="contrast"/>
+        </a>
+      </div>
+      <div class="col-12 md:col-9 lg:col-10">
+        <h1>{{ project.title }}</h1>
+      </div>
+      <div class="col-12 md:col-12 lg:col-1 flex align-items justify-content-center gap-2">
+        <a
+          *ngIf="isLoggedIn && (role_on_project === 'ADMIN' || role_on_project === 'PM' || role_on_project === 'CONTENT_CREATOR' || role_on_project === 'EDITOR')"
+          [routerLink]="['/project', 'edit', project.projectId]">
+          <p-button icon="pi pi-pencil" label="Edit" rounded severity="info"></p-button>
+        </a>
+        <p-button (click)="showDeleteDialog()"
+                  *ngIf="isLoggedIn && (role_on_project === 'ADMIN' || role_on_project === 'PM')" [rounded]="true" icon="pi pi-trash" label="Delete"
+                  severity="danger"></p-button>
+        <p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '25rem' }" header="Delete project">
+          <span class="p-text-secondary block mb-5">You are about to delete this project. Please be careful as this action cannot be undone. Please confirm your action.</span>
+          <div class="flex justify-content-end gap-2">
+            <p-button (click)="visible = false" label="Cancel" severity="secondary"/>
+            <p-button (click)="deleteProject(project.projectId);visible = false" icon="pi pi-trash" label="Confirm"
+                      severity="danger"/>
+          </div>
+        </p-dialog>
+      </div>
+    </div>
+    <div class="flex justify-content-between">
+      <div class="flex align-items-center">
+        <em>
+          <p>{{ getCollaboratorNames() }}</p>
+        </em>
+      </div>
+      <div class="flex align-items-center">
+        <p class="text-muted">24.10.2024</p>
+      </div>
+    </div>
     <p-divider></p-divider>
-          <h2>Description</h2>
-          <p style="font-size: 18px;text-align: justify;">
-          <ng-container *ngFor="let line of projectDescription">
-           {{ line }}
-            <br>
-          </ng-container>
-          </p>
-          <h2>Images</h2>
-          <div class="card">
-            <p-carousel
-              [circular]="false"
-              [numScroll]="3"
-              [numVisible]="3"
-              [responsiveOptions]="responsiveOptions"
-              [value]="images">
-              <ng-template let-image pTemplate="item">
-                <div class="border-1 surface-border border-round m-2 p-3">
-                  <div class="mb-3">
-                    <div class="relative mx-auto">
-                      <img
-                        [alt]="image.c"
-                        [src]="getImageSrc(image)"
-                        class="w-full border-round"/>
-                    </div>
-                  </div>
-                  <div class="flex justify-content-between align-items-center">
-                    <div class="mt-0 font-semibold text-m">
-                      {{ image.c }}
-                    </div>
-                    <span>
+    <h2>Description</h2>
+    <p style="font-size: 18px;text-align: justify;">
+      <ng-container *ngFor="let line of projectDescription">
+        {{ line }}
+        <br>
+      </ng-container>
+    </p>
+    <h2>Images</h2>
+    <div class="card">
+      <p-carousel
+        [circular]="false"
+        [numScroll]="3"
+        [numVisible]="3"
+        [responsiveOptions]="responsiveOptions"
+        [value]="images">
+        <ng-template let-image pTemplate="item">
+          <div class="border-1 surface-border border-round m-2 p-3">
+            <div class="mb-3">
+              <div class="relative mx-auto">
+                <img
+                  [alt]="image.fileName"
+                  [src]="getImageSrc(image)"
+                  class="w-full border-round"/>
+              </div>
+            </div>
+            <div class="flex justify-content-between align-items-center">
+              <div class="mt-0 font-semibold text-m">
+                {{ image.fileName }}
+              </div>
+              <span>
 
                         <p-button (click)="downloadFile(image)" icon="pi pi-download" styleClass="ml-2"/>
                     </span>
-                  </div>
-                </div>
-              </ng-template>
-            </p-carousel>
-          </div>
-          <h2>Further Information</h2>
-          <div class="grid">
-            <div class="col-4">
-              <div class="flex justify-content-center align-items-center">
-                <h4>Project Links</h4>
-              </div>
-              <div class="flex justify-content-center align-items-center gap-2 flex-wrap">
-                <ng-container *ngFor="let link of links">
-                  <a [href]="isAbsoluteUrl(link.url) ? link.url : 'http://' + link.url">
-                    <p-chip [label]="link.name" icon="pi pi-link"></p-chip>
-                  </a>
-                </ng-container>
-              </div>
-            </div>
-            <div class="col-4">
-              <div class="flex justify-content-center align-items-center">
-                <h4>Project files</h4>
-              </div>
-              <div class="flex justify-content-center align-items-center gap-2 flex-wrap">
-                <ng-container *ngFor="let doc of documents">
-                  <a (click)="downloadDocument(doc.mediaId)" href="javascript:void(0);">
-                    <p-chip icon="pi pi-file-pdf" label="{{doc.name}}.{{doc.path.split('.').pop()?.toLowerCase()}}"/>
-                  </a>
-                </ng-container>
-              </div>
-            </div>
-            <div class="col-4">
-              <div class="flex justify-content-center align-items-center">
-                <h4>Project Tags</h4>
-              </div>
-              <div class="flex justify-content-center align-items-center gap-2 flex-wrap">
-                <ng-container *ngFor="let tag of tags">
-                  <p-chip [style]="{'background':'rgba(11, 127, 171, 0.2)'}" icon="pi pi-tags" label="{{tag.name}}"/>
-                </ng-container>
-              </div>
             </div>
           </div>
-        <ng-container *ngIf="convertBibtex()!=undefined">
-            <h2>BibTex References</h2>
-            <pre style="font-size: smaller; max-width: 100%; width: auto;">{{ convertBibtex() }}</pre>
-        </ng-container>
+        </ng-template>
+      </p-carousel>
+    </div>
+    <h2>Further Information</h2>
+    <div class="grid">
+      <div class="col-4">
+        <div class="flex justify-content-center align-items-center">
+          <h4>Project Links</h4>
+        </div>
+        <div class="flex justify-content-center align-items-center gap-2 flex-wrap">
+          <ng-container *ngFor="let link of links">
+            <a [href]="isAbsoluteUrl(link.url) ? link.url : 'http://' + link.url" target="_blank">
+              <p-chip [label]="link.name" icon="pi pi-link"></p-chip>
+            </a>
+          </ng-container>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="flex justify-content-center align-items-center">
+          <h4>Project files</h4>
+        </div>
+        <div class="flex justify-content-center align-items-center gap-2 flex-wrap">
+          <ng-container *ngFor="let doc of documents">
+            <a (click)="downloadDocument(doc.mediaId)" href="javascript:void(0);">
+              <p-chip icon="pi pi-file-pdf" label="{{doc.name}}.{{doc.path.split('.').pop()?.toLowerCase()}}"/>
+            </a>
+          </ng-container>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="flex justify-content-center align-items-center">
+          <h4>Project Tags</h4>
+        </div>
+        <div class="flex justify-content-center align-items-center gap-2 flex-wrap">
+          <ng-container *ngFor="let tag of tags">
+            <p-chip [style]="{'background': getColorCode(tag.color)}" icon="pi pi-tags" label="{{tag.name}}"/>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+    <ng-container *ngIf="convertBibtex()!=undefined">
+      <h2>BibTex References</h2>
+      <pre style="font-size: smaller; max-width: 100%; width: auto;">{{ convertBibtex() }}</pre>
+    </ng-container>
     <p-divider></p-divider>
-        <footer style="display: flex; align-items: center; justify-content: center;">
-          <img alt="icon" src="https://seeklogo.com/images/T/TU_Delft-logo-D6086E1A70-seeklogo.com.png"
-               style="max-width: 100px; max-height: 100px;">
-        </footer>
+    <footer style="display: flex; align-items: center; justify-content: center;">
+      <img alt="icon" src="https://seeklogo.com/images/T/TU_Delft-logo-D6086E1A70-seeklogo.com.png"
+           style="max-width: 100px; max-height: 100px;">
+    </footer>
   </div>
   <ng-container *ngIf=!isMobile>
     <div class="col-1">
