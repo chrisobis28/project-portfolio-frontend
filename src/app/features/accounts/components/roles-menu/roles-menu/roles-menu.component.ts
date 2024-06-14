@@ -92,18 +92,26 @@ export class RolesMenuComponent {
         }
       });
     }
-    if(this.selectedProject[i] != null && this.initialRole[i] != this.selectedProject[i].roleInProject) {
-      this.accountService.updateRoleOnProject(accountTransfer.username, this.selectedProject[i].projectId, this.selectedProject[i].roleInProject).subscribe({
-        next: () => {
-          this.initialRole[i] = this.selectedProject[i].roleInProject;
-          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Project role successfully changed.' });
-        },
-        error: () => {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not change role on project.' 
-            + 'Remember that you have to exclusively pick from: CONTENT_CREATOR, PM, EDITOR' });
-          this.selectedProject[i].roleInProject = this.initialRole[i];
-        }
-      });
+    if(this.selectedProject[i] != null && 
+      this.initialRole[i] != this.selectedProject[i].roleInProject) {
+      if(this.checkRole(this.selectedProject[i].roleInProject)) {
+        this.accountService.updateRoleOnProject(accountTransfer.username, 
+          this.selectedProject[i].projectId, 
+          this.selectedProject[i].roleInProject).subscribe({
+          next: () => {
+            this.initialRole[i] = this.selectedProject[i].roleInProject;
+            this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Project role successfully changed.' });
+          },
+          error: () => {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not change role on project.'});
+            this.selectedProject[i].roleInProject = this.initialRole[i];
+          }
+        });
+      }
+      else {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not change role on project.\n' 
+          + 'Remember that you have to exclusively pick from: CONTENT_CREATOR, PM and EDITOR.' });
+      }
     }
   }
 
@@ -123,5 +131,9 @@ export class RolesMenuComponent {
       return this.isPM[i] != account.pm || this.initialRole[i] != this.selectedProject[i].roleInProject;
     else 
     return this.isPM[i] != account.pm;
+  }
+
+  checkRole(role: string): boolean {
+    return role == 'CONTENT_CREATOR' || role == 'PM' || role == 'EDITOR';
   }
 }
