@@ -27,10 +27,12 @@ import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import {ConfirmDialogModule} from "primeng/confirmdialog";
 import {ConfirmationService, MessageService} from "primeng/api";
 import { CollaboratorTransfer } from '../../models/project-models';
+import {ImageModule} from "primeng/image";
+import {GalleriaModule} from "primeng/galleria";
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [DividerModule, ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule, DialogModule, RouterLink, ConfirmDialogModule, NgOptimizedImage],
+  imports: [DividerModule, ChipModule, AccordionModule, BadgeModule, AvatarModule, CardModule, SplitterModule, CommonModule, TagModule, ButtonModule, CarouselModule, DialogModule, RouterLink, ConfirmDialogModule, NgOptimizedImage, ImageModule, GalleriaModule],
   templateUrl: './project-detail.component.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
   styleUrls: ['./project-detail.component.css'],
@@ -61,7 +63,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     collaboratorNames: [],
     tagNames: [],
     tags: [],
-     thumbnail: { fileName: '', filePath: '' ,fileContent:''},
+    thumbnail: { fileName: '', filePath: '' ,fileContent:''},
     template: null
   };
   responsiveOptions = [
@@ -189,7 +191,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
          const mediaFileData = await this.getMediaContentByProjectId(this.projectId)
          this.images = mediaFileData.filter(media => media.filePath && (media.filePath.endsWith(".jpg") || media.filePath.endsWith(".png")));
          this.bibTeX = mediaFileData.find(media => media.filePath && media.filePath.endsWith(".bib"));
-
+         this.project.thumbnail = this.images[0];
          const documentData = await this.getDocumentsByProjectId(this.projectId)
          this.documents = documentData.filter(media => media.path && !(
            media.path.endsWith(".jpg") ||
@@ -266,7 +268,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     this.mediaService.getMediasContentByProjectId(this.projectId).subscribe({
        next: (data: MediaFileContent[]) => {
          this.images = data.filter(media => media.filePath && (media.filePath.endsWith(".jpg") || media.filePath.endsWith(".png")));
-         console.log(data[0])
+         this.project.thumbnail = this.images[0];
          this.bibTeX = data.find(media => media.filePath && media.filePath.endsWith(".bib"));
        },
        error: (err: any) => {
@@ -312,12 +314,12 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   }
 
   getImageSrc(media: MediaFileContent): string {
-    return `data:${media.filePath};base64,${media.fileContent}`;
+    const type = media.filePath.substring(media.filePath.lastIndexOf('.') + 1);
+    return `data:image/${type};base64,${media.fileContent}`;
   }
   downloadFile(media: MediaFileContent) {
     this.mediaService.downloadFile(media);
   }
-
   isAbsoluteUrl(url: string): boolean {
     return url.startsWith('http://') || url.startsWith('https://');
   }

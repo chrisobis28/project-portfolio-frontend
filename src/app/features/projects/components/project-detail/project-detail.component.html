@@ -64,6 +64,21 @@
       </div>
     </div>
     <p-divider></p-divider>
+    <div class="flex flex-column">
+    <div *ngIf="this.project.thumbnail != undefined">
+      <div class="flex justify-content-center">
+        <p-image
+          [src]="getImageSrc(this.project.thumbnail)"
+          [alt]="this.project.thumbnail.fileName"
+          width="700"
+          [preview]="true">
+        </p-image>
+    </div>
+      <div class="flex justify-content-center">
+        <p class="image-description" style="color: #b0aeae;">{{ this.project.thumbnail.fileName }}</p> </div>
+      </div>
+    </div>
+
     <h2>Description</h2>
     <p style="font-size: 18px;text-align: justify;">
       <ng-container *ngFor="let line of projectDescription">
@@ -73,34 +88,23 @@
     </p>
     <h2>Images</h2>
     <div class="card">
-      <p-carousel
-        [circular]="false"
-        [numScroll]="3"
-        [numVisible]="3"
-        [responsiveOptions]="responsiveOptions"
-        [value]="images">
-        <ng-template let-image pTemplate="item">
-          <div class="border-1 surface-border border-round m-2 p-3">
-            <div class="mb-3">
-              <div class="relative mx-auto">
-                <img
-                  [alt]="image.fileName"
-                  [src]="getImageSrc(image)"
-                  class="w-full border-round"/>
-              </div>
+      <div *ngIf="images" class="flex flex-row flex-wrap gap-6">
+        <div *ngFor="let image of images" >
+          <div class="flex flex justify-content-center flex-column">
+            <div class="flex justify-content-center">
+              <p-image
+                [src]="getImageSrc(image)"
+                [alt]="image.fileName"
+                width="100"
+                height="50"
+                [preview]="true">
+              </p-image>
             </div>
-            <div class="flex justify-content-between align-items-center">
-              <div class="mt-0 font-semibold text-m">
-                {{ image.fileName }}
-              </div>
-              <span>
-
-                        <p-button (click)="downloadFile(image)" icon="pi pi-download" styleClass="ml-2"/>
-                    </span>
-            </div>
+            <div class="flex justify-content-center">
+              <p class="image-description" style="color: #b0aeae;"><small>{{ image.fileName }}</small></p> </div>
           </div>
-        </ng-template>
-      </p-carousel>
+        </div>
+      </div>
     </div>
     <h2>Further Information</h2>
     <div class="grid">

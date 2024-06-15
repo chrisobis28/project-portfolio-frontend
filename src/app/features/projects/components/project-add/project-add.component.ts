@@ -317,7 +317,6 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
         media.append('name', this.media[index].name);
         await firstValueFrom(this.mediaService.addDocumentToProject(createdProject.projectId, media));
       }
-
       this.addedMediaList = []
       this.media = []
       this.messageService.add({ severity: 'Success', summary: 'Success', detail: "The project was successfully saved!"});
@@ -393,9 +392,9 @@ downloadDocument(index: number){
   }
 
 removeMedia(index: number): void {
-  this.mediaNames.splice(index)
-  this.addedMediaList = this.addedMediaList.filter(x=>x.get('name')!=this.media[index].path);
-  this.media.splice(index, 1);
+  this.mediaNames.splice(index);
+  this.media.splice(index);
+  this.addedMediaList.splice(index);
 }
   showAddTagDialog() {
     this.addTagVisible = true;

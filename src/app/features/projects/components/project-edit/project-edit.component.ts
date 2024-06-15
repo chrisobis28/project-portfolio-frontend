@@ -189,6 +189,7 @@ export class ProjectEditComponent implements OnInit {
       async msg => {
         if(msg == "all" || msg == this.projectId) {
           if(this.projectId){
+            this.editMediaList=[]
           const newMedia = await this.getDocumentsByProjectId(this.projectId)
             for (const mediaObject of newMedia) {
             {
