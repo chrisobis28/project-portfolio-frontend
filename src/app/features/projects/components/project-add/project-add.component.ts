@@ -12,7 +12,7 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProjectService } from '../../services/project/project.service';
 import { TemplateService } from '../../services/template/template.service';
-import { FileUploadModule, UploadEvent } from 'primeng/fileupload';
+import {FileUpload, FileUploadHandlerEvent, FileUploadModule, UploadEvent} from 'primeng/fileupload';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { DropdownModule } from 'primeng/dropdown';
@@ -28,6 +28,8 @@ import { LinkService } from '../../services/link/link.service';
 import { CollaboratorService } from '../../services/collaborator/collaborator.service';
 import { TagService } from '../../services/tag/tag.service';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
+import {DialogModule} from "primeng/dialog";
+import {Router} from "@angular/router";
 
 
 
@@ -37,24 +39,27 @@ import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
   styleUrls: ['./project-add.component.css'],
   standalone: true,
   imports: [FormsModule, InputTextModule, FloatLabelModule,
-     InputTextareaModule, ChipsModule, TableModule, TagModule,
-      RatingModule, ButtonModule, CommonModule, FileUploadModule,
-      DropdownModule, ToastModule, AutoCompleteModule, ChipModule, ReactiveFormsModule, DataViewModule, 
-      ],
+    InputTextareaModule, ChipsModule, TableModule, TagModule,
+    RatingModule, ButtonModule, CommonModule, FileUploadModule,
+    DropdownModule, ToastModule, AutoCompleteModule, ChipModule, ReactiveFormsModule, DataViewModule, DialogModule,
+  ],
   providers: [ProjectService, MessageService]
 
 })
-export class ProjectAddComponent implements OnInit, OnDestroy{
+export class ProjectAddComponent implements OnInit, OnDestroy {
 
   media: Media[] = [];
+  mediaNames: string[] = [];
+  addTagVisible: boolean = false;
   project!: Project;
   title: string = '';
   description: string = '';
   tags: Tag[] = [];
+  newTagName: string = "";
+  newTagColor: string = "";
   selectedTags: string[] = []
-  colaborators: Collaborator[] = []
-  tagnames: string[] = [];
-  collaboratornames: string[] = []
+  collaborators: Collaborator[] = []
+  tagNames: string[] = [];
   selectedCollaborators: string[] = []
   links: Link[] = [];
   templates!: Template[];
@@ -63,9 +68,10 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
   filteredTags: Tag[] = [];
   filteredCollaborators: Collaborator[] = []
   titleInput = new FormControl('', [Validators.required]);
+  tagColorInput = new FormControl('', [Validators.required]);
+  tagNameInput = new FormControl('', [Validators.required]);
   descriptionInput = new FormControl('', [Validators.required]);
-  addedMediaList:FormData[]=[];
-  deletedMediaList:Media[] =[];
+  addedMediaList: FormData[] = [];
 
   wsTagsSubscription: Subscription = new Subscription()
   wsCollaboratorsSubscription: Subscription = new Subscription()
@@ -78,44 +84,41 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
     url: "ws://localhost:8080/topic/collaborators",
     deserializer: msg => String(msg.data)
   })
-  
 
-  invalidTitle: boolean = false
-  invalidDescription: boolean = false
-  invalidMedia: boolean = false
-  
   constructor(
-    private projectService: ProjectService, 
+    private projectService: ProjectService,
     private messageService: MessageService,
-    private mediaService: MediaService, 
-    private templateService: TemplateService, 
-    private linkService: LinkService, 
+    private mediaService: MediaService,
+    private templateService: TemplateService,
+    private linkService: LinkService,
     private collaboratorService: CollaboratorService,
-    private tagService: TagService
-    ) {}
+    private tagService: TagService,
+    private readonly router: Router
+  ) {
+  }
 
-    ngOnDestroy(): void {
-      if(this.wsTagsSubscription)
-        this.wsTagsSubscription.unsubscribe()
-      if(this.wsCollaboratorsSubscription)
-        this.wsCollaboratorsSubscription.unsubscribe()
-    }
+  ngOnDestroy(): void {
+    if (this.wsTagsSubscription)
+      this.wsTagsSubscription.unsubscribe()
+    if (this.wsCollaboratorsSubscription)
+      this.wsCollaboratorsSubscription.unsubscribe()
+  }
 
   async ngOnInit() {
-    
+
     await this.initializeFields()
 
     this.wsTagsSubscription = this.tagsWebSocket.subscribe(
       async msg => {
         const words = msg.split(" ")
-        if(words[0] == "deleted") {
-        const tagName = this.tags.filter(x => x.tagId == words[1])[0].name
-        if(this.selectedTags.includes(tagName))
-          this.selectedTags.splice(this.selectedTags.indexOf(tagName), 1)
+        if (words[0] == "deleted") {
+          const tagName = this.tags.filter(x => x.tagId == words[1])[0].name
+          if (this.selectedTags.includes(tagName))
+            this.selectedTags.splice(this.selectedTags.indexOf(tagName), 1)
         }
         const newTags = await this.getAllTags();
         this.tags = newTags
-        this.tagnames = newTags.map(x => x.name)
+        this.tagNames = newTags.map(x => x.name)
         this.filteredTags = newTags
       }
     )
@@ -123,18 +126,16 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
     this.wsCollaboratorsSubscription = this.collaboratorsWebSocket.subscribe(
       async msg => {
         const words = msg.split(" ")
-        if(words[0] == "deleted") {
-          const collabName = this.colaborators.filter(x => x.collaboratorId == words[1])[0].name
-          if(this.selectedCollaborators.includes(collabName))
+        if (words[0] == "deleted") {
+          const collabName = this.collaborators.filter(x => x.collaboratorId == words[1])[0].name
+          if (this.selectedCollaborators.includes(collabName))
             this.selectedCollaborators.splice(this.selectedCollaborators.indexOf(collabName), 1)
         }
         const newCollaborators = await this.getAllCollaborators()
-        this.colaborators = newCollaborators
+        this.collaborators = newCollaborators
       }
     )
 
-    console.log('Templates:', this.templates);
-    console.log('Template Names:', this.templateNames);
     this.selectedTags = []
     this.selectedCollaborators = []
     this.titleInput.setValue("")
@@ -143,11 +144,11 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
 
   async initializeFields() {
     this.tags = await this.getAllTags();
-    this.tagnames = this.tags.map(x => x.name)
+    this.tagNames = this.tags.map(x => x.name)
     this.filteredTags = this.tags
     this.templates = await this.getAllTemplates()
     this.templateNames = await this.getAllTemplateNames()
-    this.colaborators = await this.getAllCollaborators()
+    this.collaborators = await this.getAllCollaborators()
   }
 
   async getAllTemplates(): Promise<Template[]> {
@@ -156,10 +157,10 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
 
   async getAllTemplateNames(): Promise<string[]> {
     return firstValueFrom(this.templateService.getTemplates()
-    .pipe(
-      map(x => x.map(y => y.templateName))
-    ))
-    
+      .pipe(
+        map(x => x.map(y => y.templateName))
+      ))
+
   }
 
   filterTags(event: any) {
@@ -169,18 +170,48 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
 
   filterCollaborators(event: any) {
     const query = (event as AutoCompleteCompleteEvent).query
-    this.filteredCollaborators = this.colaborators.filter(collaborator => collaborator.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
+    this.filteredCollaborators = this.collaborators.filter(collaborator => collaborator.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
   }
 
   onTagSelect(event: any) {
     const tag = event;
-    if (!this.tagnames.includes(tag)) {
-      this.tagnames.push(tag);
+    if (!this.tagNames.includes(tag)) {
+      this.tagNames.push(tag);
     }
   }
 
   onUpload(event: UploadEvent) {
-    this.messageService.add({ severity: 'info', summary: 'Success', detail: 'File Uploaded with Basic Mode' });
+    this.messageService.add({severity: 'info', summary: 'Success', detail: 'File Uploaded with Basic Mode'});
+  }
+
+  async saveNewTag(): Promise<void> {
+    if (this.newTagName.length == 0) {
+      this.messageService.add({severity: 'error', summary: 'Error', detail: 'The Tag Name cannot be empty'});
+      return;
+    }
+    if (this.newTagColor.length == 0) {
+      this.messageService.add({severity: 'error', summary: 'Error', detail: 'The Tag Color cannot be empty'});
+      return;
+    }
+    try {
+      const newTag:Tag = {
+        tagId: "",
+        color: "",
+        name: "",
+        requestTagProjects: [],
+        tagsToProjects: []
+      }
+
+      newTag.name = this.newTagName;
+      newTag.color = this.newTagColor;
+      await firstValueFrom(this.tagService.createTag(newTag));
+      this.addTagVisible=false
+      this.messageService.add({ severity: 'success', summary: 'Success', detail:"The tag was successfully added" });
+    }
+    catch (error) {
+      console.error('Error saving the new tag', error);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: (error as Error).message });
+    }
   }
 
   async saveProject(): Promise<void> {
@@ -204,6 +235,12 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not be empty' });
         return
       }
+      for (const medianName of this.mediaNames) {
+        if(medianName.length < 1) {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not have an empty display name' });
+          return
+        }
+      }
       for (const link of this.links) {
         if(link.name.length < 1) {
           this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Links can not have an empty title' });
@@ -220,10 +257,6 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
     try {
       this.titleInput.setErrors({ invalid: false });
       this.descriptionInput.setErrors({ invalid: false });
-      const tmb: MediaFileContent = {
-        a: '',
-        b: ''
-      }
       const project: Project = {
         projectId: "",
         title: this.title,
@@ -239,25 +272,21 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
         collaboratorNames: [],
         tagNames: [],
         tags: [],
-        tmb: tmb
-
+        thumbnail:undefined
       };
-  
+
       const createdProject = await firstValueFrom(this.projectService.createProject(project));
-      console.log('Project created successfully', createdProject);
 
       this.title = ""
       this.description = ""
 
       for (const link of this.links) {
         await firstValueFrom(this.linkService.addLinkToProject(link, createdProject.projectId))
-        console.log('Links updated successfully in project', createdProject);
       }
       this.links = []
 
-      const finalCollaborators = this.colaborators.filter(x => this.selectedCollaborators.includes(x.name))
+      const finalCollaborators = this.collaborators.filter(x => this.selectedCollaborators.includes(x.name))
       for(const collaborator of finalCollaborators) {
-        console.log(this.colaborators)
         await firstValueFrom(this.collaboratorService.addCollaboratorToProject(collaborator, createdProject.projectId))
       }
 
@@ -271,15 +300,14 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
 
       this.selectedTags = []
 
-      for (const media of this.addedMediaList) {
+      for (const [index, media] of this.addedMediaList.entries()) {
+        media.append('name', this.media[index].name);
         await firstValueFrom(this.mediaService.addDocumentToProject(createdProject.projectId, media));
-        console.log('Media added successfully', media);
       }
-      
       this.addedMediaList = []
       this.media = []
-
-
+      this.messageService.add({ severity: 'Success', summary: 'Success', detail: "The project was successfully saved!"});
+      await this.router.navigate(['/project-detail/', createdProject.projectId])
     } catch (error) {
       console.error('Error saving project or links', error);
       this.messageService.add({ severity: 'error', summary: 'Error', detail: (error as Error).message });
@@ -291,7 +319,6 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
   }
 
   cancel(): void {
-    console.log('Operation cancelled');
     this.selectedTags = []
   }
 
@@ -304,41 +331,9 @@ export class ProjectAddComponent implements OnInit, OnDestroy{
     this.links.push(link);
   }
 
-  removeLink(linkToRemove: Link): void {
-    let index = this.links.findIndex(obj => obj === linkToRemove);
-
-    if (index !== -1) {
+  removeLink(index: number): void {
     this.links.splice(index, 1);
   }
-}
-
-  titleValidator(control: AbstractControl): ValidationErrors | null {
-    if(this.invalidTitle)
-      return null
-    else return { customError: true };
-}
-
-  
-  getColorCode(color: string): string {
-    switch(color) {
-      case "red":
-        return "rgba(255, 93, 70, 0.45)"
-      case "green":
-        return "rgba(10, 118, 77, 0.45)"
-      case "blue":
-        return "rgba(10, 118, 255, 0.45)"
-      case "yellow":
-        return "rgba(255, 255, 0, 0.45)"
-      case "orange":
-        return "rgba(255, 190, 61, 0.45)"
-      case "purple":
-        return "rgba(106, 0, 255, 0.45)"
-      case "black":
-        return "rgba(0, 0, 0, 0.45)"
-      default:
-        return "rgba(111, 118, 133, 0.45)"
-    }
-}
 
 getNamesForTags(tags: Tag[]): string[] {
   return tags.map(x => x.name)
@@ -353,76 +348,44 @@ getAllCollaborators(): Promise<Collaborator[]> {
 }
 
 isTitleDescriptionAndMediaValid(): boolean{
-  return this.title.length > 0 && this.description.length > 0 
+  return this.title.length > 0 && this.description.length > 0
   && this.media.length > 0
 }
 
-getInvalidTitle(): boolean {
-  return this.invalidTitle
-}
-
-async uploadFile(event: FileUploadEvent) {
-  const file = event.files[0];
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('name', file.name);
-  this.addedMediaList.push(formData);
-  this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media added! The media will be uploaded when the edit will be saved!'});
-  let newMedia:Media = {
-    mediaId:'',
-    name:file.name,
-    path:file.name,
-    project:this.project,
-    requestMediaProjects:[]
-  }
-  this.media.push(newMedia)
-}
-
-downloadDocument(mediaId: string){
-  let mediaFile : MediaFileContent = {
-    a:"",
-    b:"",
-  };
-  console.log(mediaId);
-  this.mediaService.getDocumentContent(mediaId).subscribe({
-    next: (data: MediaFileContent) => {
-      mediaFile = data;
-      this.downloadFile(mediaFile);
-    },
-    error: (err:any) => {
-      console.error('Error fetching media files', err);
+  async uploadFile(event: FileUploadHandlerEvent, form: FileUpload) {
+    const file = event.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    this.mediaNames.push("");
+    this.addedMediaList.push(formData);
+    this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media added! The media will be uploaded when the edit will be saved!'});
+    let newMedia:Media = {
+      mediaId:'',
+      name:file.name,
+      path:file.name,
+      project:this.project,
+      requestMediaProjects:[]
     }
-  })
-}
+    this.media.push(newMedia)
+    form.clear();
+  }
 
-downloadFile(media: MediaFileContent) {
-  console.log(media);
-  const mimeType = 'application/octet-stream'
-  const byteArray = new Uint8Array(atob(media.b).split('').map(char => char.charCodeAt(0)));
-  const file = new Blob([byteArray], {type: mimeType});
-  const fileUrl = URL.createObjectURL(file);
-  const fileName = media.a;
-  let link = document.createElement("a");
-  link.download = fileName;
-  link.href = fileUrl;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(fileUrl);
-}
+downloadDocument(index: number){
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(<File>this.addedMediaList[index].get('file'));
+    link.download = this.media[index].path; // Adjust filename based on actual file type
+    link.click();
+    document.body.removeChild(link);
+  }
 
 removeMedia(index: number): void {
-  this.deletedMediaList.push(this.media[index])
-  this.addedMediaList = this.addedMediaList.filter(x=>x.get('name')!=this.media[index].path);
-  console.log(this.media[index].path);
-  this.media.splice(index, 1);
+  this.mediaNames.splice(index);
+  this.media.splice(index);
+  this.addedMediaList.splice(index);
 }
-
-
-
-
-
-
+  showAddTagDialog() {
+    this.addTagVisible = true;
+  }
 }
 
 

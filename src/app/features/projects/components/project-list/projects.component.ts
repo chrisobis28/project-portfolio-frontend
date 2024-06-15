@@ -25,9 +25,9 @@ export class ProjectsComponent implements OnInit, OnDestroy {
   filteredData: Project[] = [];
   layout: DataView["layout"] = "list";
   projectName: string = '';
-  projectCollaborator: string = ''
-  tagNames: string[] = []
-  selectedTagNames: string[] = []
+  projectCollaborator: string = '';
+  tagNames: string[] = [];
+  selectedTagNames: string[] = [];
   isLoggedIn: boolean = false;
   username: string = '';
   role: Nullable<string> = '';
@@ -60,7 +60,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     url: "ws://localhost:8080/topic/media/project",
     deserializer: msg => String(msg.data)
   })
-  
+
   constructor(
     private readonly projectService: ProjectService,
     private readonly collaboratorService: CollaboratorService,
@@ -104,9 +104,9 @@ export class ProjectsComponent implements OnInit, OnDestroy {
              x.archived = project.archived
             })
         }
-        else 
+        else
         {
-        console.log("refreshing all projects"); 
+        console.log("refreshing all projects");
         await this.initProjects()
       }
       }
@@ -117,7 +117,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
             console.log("refreshing only collaborators for project: " + msg)
             switch(msg) {
               case "all" : return this.data.forEach(async x => x.collaboratorNames = await this.getCollaboratorsForId(x.projectId))
-              default : return this.data.filter(x => x.projectId == msg).forEach(async x => x.collaboratorNames = await this.getCollaboratorsForId(x.projectId)) 
+              default : return this.data.filter(x => x.projectId == msg).forEach(async x => x.collaboratorNames = await this.getCollaboratorsForId(x.projectId))
           }}
     )
 
@@ -132,9 +132,9 @@ export class ProjectsComponent implements OnInit, OnDestroy {
       async msg => {
             console.log("refreshing only tags for project: " + msg)
             switch(msg) {
-              case "all" : return this.data.forEach(async x => {x.tagNames = await this.getTagNamesForId(x.projectId); 
+              case "all" : return this.data.forEach(async x => {x.tagNames = await this.getTagNamesForId(x.projectId);
                                                                 x.tags = await this.getTagsForId(x.projectId)})
-              default : return this.data.filter(x => x.projectId == msg).forEach(async x => {x.tagNames = await this.getTagNamesForId(x.projectId); 
+              default : return this.data.filter(x => x.projectId == msg).forEach(async x => {x.tagNames = await this.getTagNamesForId(x.projectId);
                                                                                              x.tags = await this.getTagsForId(x.projectId)})
             }
       }
@@ -142,20 +142,23 @@ export class ProjectsComponent implements OnInit, OnDestroy {
 
     this.wsMediaProjectSubscription = this.mediaProjectWebSocket.subscribe(
       async msg => {
-            console.log("refreshing media for project: " + msg) 
+            console.log("refreshing media for project: " + msg)
               this.data.filter(x => x.projectId == msg).forEach(async x => {
                 const newMedia = await this.getMediaForId(x.projectId)
                 x.media = newMedia
                 console.log(x.media)
                 if (newMedia && newMedia.length > 0) {
-                  x.tmb = await this.getImageForId(newMedia[0].mediaId);
+                  x.thumbnail = await this.getImageForId(newMedia[0].mediaId);
                 }
-                else 
-                  x.tmb = undefined
-              })   
+                else
+                  x.thumbnail = undefined
+              })
       }
     )
     }
+  getColorCode(color:string):string{
+    return this.tagService.getColorCode(color);
+  }
 
     ngOnDestroy() {
 
@@ -193,7 +196,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
         this.data.forEach(async (x) => {
           x.media = await this.getMediaForId(x.projectId);
           if (x.media && x.media.length > 0) {
-            x.tmb = await this.getImageForId(x.media[0].mediaId);
+            x.thumbnail = await this.getImageForId(x.media[0].mediaId);
           }
         });
         this.filteredData = this.data
@@ -282,37 +285,19 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     this.filteredData = this.filterByTags(this.filteredData)
   }
 
-  getColorCode(color: string): string {
-      switch(color) {
-        case "red":
-          return "rgba(255, 93, 70, 0.45)"
-        case "green":
-          return "rgba(10, 118, 77, 0.45)"
-        case "blue":
-          return "rgba(10, 118, 255, 0.45)"
-        case "yellow":
-          return "rgba(255, 255, 0, 0.45)"
-        case "orange":
-          return "rgba(255, 190, 61, 0.45)"
-        case "purple":
-          return "rgba(106, 0, 255, 0.45)"
-        case "black":
-          return "rgba(0, 0, 0, 0.4)"
-        default:
-          return "rgba(111, 118, 133, 0.45)"
-      }
+  getImageSrc(project:Project): string {
+    if(project.thumbnail == undefined)
+      return 'https://as2.ftcdn.net/v2/jpg/01/25/64/11/1000_F_125641180_KxdtmpD15Ar5h8jXXrE5vQLcusX8z809.jpg'
+    const type = project.thumbnail.filePath.substring(project.thumbnail.filePath.lastIndexOf('.') + 1);
+    return `data:image/${type};base64,${project.thumbnail.fileContent}`;
   }
-     getImageSrc(project:Project): string {
-       if(project.tmb == undefined)
-         return 'https://as2.ftcdn.net/v2/jpg/01/25/64/11/1000_F_125641180_KxdtmpD15Ar5h8jXXrE5vQLcusX8z809.jpg'
-      return `data:${project.tmb.a};base64,${project.tmb.b}`;
-    }
 
 
 
     logout() {
+      const username = this.storageService.getUser();
       this.confirmationService.confirm({
-        message: "Are you sure you want to log out of the account " + this.storageService.getUser() + "?",
+        message: "Are you sure you want to log out of the account " + username + "?",
         accept: () => {
           this.authenticationService.logout().subscribe({
             next: () => {

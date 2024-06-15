@@ -8,6 +8,7 @@ import { ProjectEditComponent } from './features/projects/components/project-edi
 import { LoginMenuComponent } from './features/accounts/components/login-menu/login-menu.component';
 import { AuthGuard } from './core/auth.guard';
 import { ProjectTemplateComponent } from './features/projects/components/project-template/project-template.component';
+import { RolesMenuComponent } from './features/accounts/components/roles-menu/roles-menu/roles-menu.component';
 
 const routes: Routes = [
   { path: '', component: ProjectsComponent },
@@ -17,7 +18,8 @@ const routes: Routes = [
   { path: 'project/edit/:id', component: ProjectEditComponent },
   { path: 'template', component: ProjectTemplateComponent },
   { path: 'login', component: LoginMenuComponent, canActivate: [AuthGuard] },
-  { path: '', redirectTo: '/projects', pathMatch: 'full' }
+  { path: 'roles-menu', component: RolesMenuComponent },
+  { path: '**', redirectTo: '' }
 ];
 
 @NgModule({

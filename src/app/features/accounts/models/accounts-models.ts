@@ -1,11 +1,17 @@
 import { Nullable } from "primeng/ts-helpers"
+import { Project, ProjectsToAccounts } from "../../projects/models/project-models"
 
-export interface Account {
+export interface AccountTransfer {
     username: string
+    admin: boolean
+    pm: boolean
+    projects: ProjectTransfer[]
+}
+
+export interface ProjectTransfer {
+    projectId: string
     name: string
-    password: string
-    isAdministrator: boolean
-    isPM: boolean
+    roleInProject: string
 }
 
 export interface RegisterUserRequest {
