@@ -107,8 +107,7 @@ export interface Tag {
 export interface Template {
     templateName: string
     standardDescription: string
-    standardBibtex: string
-    numberOfCollaborators: number
+    numberOfCollaborators: number | undefined
     projects: Project[]
     templateAdditions: TemplateAddition[]
 }
@@ -117,7 +116,7 @@ export interface TemplateAddition {
     templateAdditionId: string
     templateAdditionName: string
     media: boolean
-    template: Template
+    template: Template | null
 }
 
 export interface WebSocketStringMessage {
