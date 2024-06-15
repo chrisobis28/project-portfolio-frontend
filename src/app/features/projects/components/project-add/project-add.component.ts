@@ -139,11 +139,6 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     this.wsCollaboratorsSubscription = this.collaboratorsWebSocket.subscribe(
       async msg => {
         const words = msg.split(" ")
-        // if (words[0] == "deleted") {
-        //   const collabName = this.collaborators.filter(x => x.collaboratorId == words[1])[0].name
-        //   if (this.selectedCollaborators.includes(collabName))
-        //     this.selectedCollaborators.splice(this.selectedCollaborators.indexOf(collabName), 1)
-        // }
         const newCollaborators = await this.getAllCollaborators()
         this.collaborators = newCollaborators
       }
@@ -182,9 +177,12 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   }
 
   filterCollaborators(event: any) {
-    const query = (event as AutoCompleteCompleteEvent).query
-    this.filteredCollaborators = this.collaborators.filter(collaborator => collaborator.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
+    const query = (event as AutoCompleteCompleteEvent).query.toLowerCase();
+    this.filteredCollaborators = this.collaborators
+      .filter(collaborator => collaborator.name.toLowerCase().includes(query))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
+  
 
   onTagSelect(event: any) {
     const tag = event;
@@ -402,6 +400,12 @@ removeMedia(index: number): void {
 
   showAddCollaboratorDialog() {
     this.addCollaboratorVisible = true;
+  }
+
+  onCollaboratorSelect(event: any) {
+    const selectedCollaborator = event.value;
+    this.newCollaboratorName = selectedCollaborator.name;
+    this.collaboratorNameInput.setValue(selectedCollaborator.name);
   }
 
   editCollaborator(collaborator: CollaboratorTransfer, index: number) {

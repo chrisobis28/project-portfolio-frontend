@@ -92,6 +92,7 @@ export class ProjectEditComponent implements OnInit {
   tags: Tag[] | undefined;
   tagnames: string[] | undefined;
   collaboratornames: string[] | undefined;
+  collaborators: Collaborator[] = [];
   tagColorInput = new FormControl('', [Validators.required]);
   tagNameInput = new FormControl('', [Validators.required]);
   wsProjectsSubscription: Subscription = new Subscription()
@@ -137,6 +138,13 @@ export class ProjectEditComponent implements OnInit {
      private tagService: TagService,
      private readonly router: Router
     ) {}
+
+  ngOnDestroy(): void {
+    if (this.wsTagsSubscription)
+      this.wsTagsSubscription.unsubscribe()
+    if (this.wsCollaboratorsSubscription)
+      this.wsCollaboratorsSubscription.unsubscribe()
+  }
 
   async ngOnInit() {
     await this.initializeFields()
@@ -218,6 +226,13 @@ export class ProjectEditComponent implements OnInit {
       }
      )
 
+     this.wsCollaboratorsSubscription = this.collaboratorsWebSocket.subscribe(
+      async msg => {
+        const words = msg.split(" ")
+        const newCollaborators = await this.getAllCollaborators()
+        this.collaborators = newCollaborators
+      }
+    )
 
 
      //should define here the collaborators and tags websocket such that it updates autocomplete
@@ -234,6 +249,7 @@ export class ProjectEditComponent implements OnInit {
     this.templates = await this.getAllTemplates()
     this.templateNames = await this.getAllTemplateNames()
     this.platformTags = await this.getAllTags();
+    this.collaborators = await this.getAllCollaborators()
     this.platformCollaborators = await this.getAllCollaborators()
 
     if (this.projectId) {
@@ -290,10 +306,14 @@ export class ProjectEditComponent implements OnInit {
   async getCollaboratorsByProjectId(id: string): Promise<CollaboratorTransfer[]> {
     return firstValueFrom(this.collaboratorService.getCollaboratorsByProjectId(id))
   }
+
   filterCollaborators(event: any) {
-    const query = (event as AutoCompleteCompleteEvent).query
-    this.filteredCollaborators = this.platformCollaborators.filter(collaborator => collaborator.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
+    const query = (event as AutoCompleteCompleteEvent).query.toLowerCase();
+    this.filteredCollaborators = this.collaborators
+      .filter(collaborator => collaborator.name.toLowerCase().includes(query))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
+
   getNamesForTags(tags: Tag[]): string[] {
     return tags.map(x => x.name)
   }
@@ -529,6 +549,12 @@ export class ProjectEditComponent implements OnInit {
     this.addCollaboratorVisible = true;
   }
 
+  onCollaboratorSelect(event: any) {
+    const selectedCollaborator = event.value;
+    this.newCollaboratorName = selectedCollaborator.name;
+    this.collaboratorNameInput.setValue(selectedCollaborator.name);
+  }
+
   editCollaborator(collaborator: CollaboratorTransfer, index: number) {
     this.newCollaboratorName = collaborator.name;
     this.newCollaboratorRole = collaborator.role;
@@ -561,7 +587,7 @@ export class ProjectEditComponent implements OnInit {
     }
     if (this.editIndex !== null) {
       const collaborator = this.selectedCollaborators[this.editIndex];
-      if (collaborator.collaboratorId) {
+      if (collaborator && collaborator.collaboratorId) {
         this.removeCollaborators.push(collaborator.collaboratorId);
       }
       collaborator.name = this.newCollaboratorName;

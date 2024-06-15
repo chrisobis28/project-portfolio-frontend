@@ -36,3 +36,12 @@
         padding-bottom: 20px;
     }
 }
+
+.input-container {
+  width: 100%;
+  max-width: 20rem;
+}
+
+.full-width {
+  width: 100%;
+}
