@@ -25,9 +25,9 @@ export class ProjectsComponent implements OnInit, OnDestroy {
   filteredData: Project[] = [];
   layout: DataView["layout"] = "list";
   projectName: string = '';
-  projectCollaborator: string = ''
-  tagNames: string[] = []
-  selectedTagNames: string[] = []
+  projectCollaborator: string = '';
+  tagNames: string[] = [];
+  selectedTagNames: string[] = [];
   isLoggedIn: boolean = false;
   username: string = '';
   role: Nullable<string> = '';
@@ -295,8 +295,9 @@ export class ProjectsComponent implements OnInit, OnDestroy {
 
 
     logout() {
+      const username = this.storageService.getUser();
       this.confirmationService.confirm({
-        message: "Are you sure you want to log out of the account " + this.storageService.getUser() + "?",
+        message: "Are you sure you want to log out of the account " + username + "?",
         accept: () => {
           this.authenticationService.logout().subscribe({
             next: () => {

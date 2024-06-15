@@ -33,9 +33,12 @@
 
         <div class="col-10 bottom-container">
             <h1 class="left-bottom">Project portfolio management system</h1>
-            <div *ngIf="isLoggedIn && (role === 'ROLE_ADMIN' || role === 'ROLE_PM')" class="right-bottom" style="margin-right: 8px">
-                <a [routerLink]="['/add-project']">
-                    <p-button icon="pi pi-plus" label="Add" rounded severity="info"></p-button>
+            <div *ngIf="isLoggedIn && (role === 'ROLE_ADMIN' || role === 'ROLE_PM')" class="right-bottom;" style="display: flex; flex-wrap: wrap; justify-content: space-between;">
+                <a *ngIf="role === 'ROLE_ADMIN'" [routerLink]="['/roles-menu']" style="margin: 3px;">
+                    <p-button icon="pi pi-user" label="Roles" rounded severity="info"></p-button>
+                </a>
+                <a [routerLink]="['/add-project']" style="margin: 3px">
+                  <p-button icon="pi pi-plus" label="Add" rounded severity="info"></p-button>
                 </a>
             </div>
         </div>
