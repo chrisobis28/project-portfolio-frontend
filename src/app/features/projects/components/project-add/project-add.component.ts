@@ -30,6 +30,8 @@ import { TagService } from '../../services/tag/tag.service';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 import {DialogModule} from "primeng/dialog";
 import {Router} from "@angular/router";
+import { AccountService } from 'src/app/features/accounts/services/accounts/account.service';
+import { CollaboratorTransfer } from '../../models/project-models';
 
 
 
@@ -60,7 +62,8 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   selectedTags: string[] = []
   collaborators: Collaborator[] = []
   tagNames: string[] = [];
-  selectedCollaborators: string[] = []
+  selectedCollaborators: CollaboratorTransfer[] = []
+  editIndex: number | null = null;
   links: Link[] = [];
   templates!: Template[];
   templateNames: string[] = [];
@@ -72,6 +75,15 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   tagNameInput = new FormControl('', [Validators.required]);
   descriptionInput = new FormControl('', [Validators.required]);
   addedMediaList: FormData[] = [];
+
+  addCollaboratorVisible: boolean = false;
+  newCollaboratorName: string = '';
+  newCollaboratorRole: string = '';
+  collaboratorNameInput = new FormControl('', [
+    Validators.required,
+    Validators.pattern('^[a-zA-Z ]{1,50}$')
+  ]);
+  collaboratorRoleInput = new FormControl('', Validators.required);
 
   wsTagsSubscription: Subscription = new Subscription()
   wsCollaboratorsSubscription: Subscription = new Subscription()
@@ -93,6 +105,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     private linkService: LinkService,
     private collaboratorService: CollaboratorService,
     private tagService: TagService,
+    private accountService: AccountService,
     private readonly router: Router
   ) {
   }
@@ -126,11 +139,11 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     this.wsCollaboratorsSubscription = this.collaboratorsWebSocket.subscribe(
       async msg => {
         const words = msg.split(" ")
-        if (words[0] == "deleted") {
-          const collabName = this.collaborators.filter(x => x.collaboratorId == words[1])[0].name
-          if (this.selectedCollaborators.includes(collabName))
-            this.selectedCollaborators.splice(this.selectedCollaborators.indexOf(collabName), 1)
-        }
+        // if (words[0] == "deleted") {
+        //   const collabName = this.collaborators.filter(x => x.collaboratorId == words[1])[0].name
+        //   if (this.selectedCollaborators.includes(collabName))
+        //     this.selectedCollaborators.splice(this.selectedCollaborators.indexOf(collabName), 1)
+        // }
         const newCollaborators = await this.getAllCollaborators()
         this.collaborators = newCollaborators
       }
@@ -285,9 +298,9 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
       }
       this.links = []
 
-      const finalCollaborators = this.collaborators.filter(x => this.selectedCollaborators.includes(x.name))
-      for(const collaborator of finalCollaborators) {
-        await firstValueFrom(this.collaboratorService.addCollaboratorToProject(collaborator, createdProject.projectId))
+      // const finalCollaborators = this.collaborators.filter(x => this.selectedCollaborators.includes(x.name))
+      for(const collaborator of this.selectedCollaborators) {
+        await firstValueFrom(this.collaboratorService.createAndAddCollaboratorToProject(collaborator, createdProject.projectId))
       }
 
       this.selectedCollaborators = []
@@ -387,6 +400,66 @@ removeMedia(index: number): void {
   showAddTagDialog() {
     this.addTagVisible = true;
   }
+
+  showAddCollaboratorDialog() {
+    this.addCollaboratorVisible = true;
+  }
+
+  editCollaborator(collaborator: CollaboratorTransfer, index: number) {
+    this.newCollaboratorName = collaborator.name;
+    this.newCollaboratorRole = collaborator.role;
+    this.editIndex = index;
+    this.showAddCollaboratorDialog();
+  }
+
+  removeCollaborator(index: number) {
+    this.selectedCollaborators.splice(index, 1);
+  }
+
+  async saveNewCollaborator() {
+    if (this.collaboratorNameInput.invalid || this.collaboratorRoleInput.invalid) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Invalid collaborator name or role' });
+      return;
+    }
+
+    const isDuplicate = this.selectedCollaborators.some((collaborator, index) => 
+      collaborator.name.toLowerCase() === this.newCollaboratorName.toLowerCase() && index !== this.editIndex
+    );
+
+    if (isDuplicate) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'A collaborator with the same name already exists' });
+      return;
+    }
+
+    const newCollaborator: CollaboratorTransfer = {
+      collaboratorId: '',
+      name: this.newCollaboratorName,
+      role: this.newCollaboratorRole,
+    };
+
+    if (this.editIndex !== null) {
+      this.selectedCollaborators[this.editIndex] = newCollaborator;
+      this.editIndex = null;
+    } else {
+      this.selectedCollaborators.push(newCollaborator);
+    }
+
+    this.addCollaboratorVisible = false;
+    this.newCollaboratorName = '';
+    this.newCollaboratorRole = '';
+    this.collaboratorNameInput.reset();
+    this.collaboratorRoleInput.reset();
+  }
+
+  cancelAddCollaborator() {
+    this.addCollaboratorVisible = false;
+    this.newCollaboratorName = '';
+    this.newCollaboratorRole = '';
+    this.collaboratorNameInput.reset();
+    this.collaboratorRoleInput.reset();
+    this.editIndex = null;
+  }
+  
 }
 
 

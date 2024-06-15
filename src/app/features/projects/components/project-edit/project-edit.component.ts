@@ -7,6 +7,7 @@ import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ChipsModule } from 'primeng/chips';
 import {
   Collaborator,
+  CollaboratorTransfer,
   EditMedia,
   Link,
   Media,
@@ -57,11 +58,21 @@ export class ProjectEditComponent implements OnInit {
   newTagColor: string = "";
   addTagVisible: boolean = false;
   platformCollaborators: Collaborator[] = [];
-  selectedCollaborators: Collaborator[] = []
+  projectCollaborators: CollaboratorTransfer[] = []
+  editIndex: number | null = null;
   selectedCollaboratorNames: string[] = []
   filteredCollaborators: Collaborator[] = []
-  addCollaborators: Collaborator[] = []
-  removeCollaborators: Collaborator[] = []
+  removeCollaborators: string[] = []
+  selectedCollaborators: CollaboratorTransfer[] = [];
+
+  addCollaboratorVisible: boolean = false;
+  newCollaboratorName: string = '';
+  newCollaboratorRole: string = '';
+  collaboratorNameInput = new FormControl('', [
+    Validators.required,
+    Validators.pattern('^[a-zA-Z ]{1,50}$')
+  ]);
+  collaboratorRoleInput = new FormControl('', Validators.required);
 
   platformTags: Tag[] = [];
   selectedTags: Tag[] = []
@@ -79,7 +90,6 @@ export class ProjectEditComponent implements OnInit {
   editMediaList: EditMedia[] = []
 
   tags: Tag[] | undefined;
-  colaborators: Collaborator[] | undefined;
   tagnames: string[] | undefined;
   collaboratornames: string[] | undefined;
   tagColorInput = new FormControl('', [Validators.required]);
@@ -157,7 +167,6 @@ export class ProjectEditComponent implements OnInit {
         if(msg == "all" || msg == this.projectId) {
           if(this.projectId){
             const newCollaborators = await this.getCollaboratorsByProjectId(this.projectId)
-            this.colaborators = newCollaborators
             this.collaboratornames = newCollaborators.map(x => x.name)
           }
         }
@@ -254,9 +263,10 @@ export class ProjectEditComponent implements OnInit {
         this.selectedTags = response;
         this.selectedTagNames = this.selectedTags.map(x => x.name)
       });
-      this.collaboratorService.getCollaboratorsByProjectId(this.projectId).subscribe((response: Collaborator[]) => {
-        this.selectedCollaborators = response
-        this.selectedCollaboratorNames = this.selectedCollaborators.map(x => x.name)
+      this.collaboratorService.getCollaboratorsByProjectId(this.projectId).subscribe((response: CollaboratorTransfer[]) => {
+        this.projectCollaborators = response
+        this.selectedCollaboratorNames = this.projectCollaborators.map(x => x.name)
+        this.selectedCollaborators = [...this.projectCollaborators];
       });
     } else {
       console.error('Project ID is null');
@@ -276,7 +286,7 @@ export class ProjectEditComponent implements OnInit {
     return collaborators.map(x => x.name)
   }
 
-  async getCollaboratorsByProjectId(id: string): Promise<Collaborator[]> {
+  async getCollaboratorsByProjectId(id: string): Promise<CollaboratorTransfer[]> {
     return firstValueFrom(this.collaboratorService.getCollaboratorsByProjectId(id))
   }
   filterCollaborators(event: any) {
@@ -356,16 +366,16 @@ export class ProjectEditComponent implements OnInit {
       this.removeTags = this.selectedTags.filter(x=>!this.selectedTagNames.includes(x.name));
       this.addTags = this.platformTags.filter(x=>this.selectedTagNames.includes(x.name) && !this.selectedTags.flatMap(x=>x.name).includes(x.name));
 
-      this.removeCollaborators = this.selectedCollaborators.filter(x=>!this.selectedCollaboratorNames.includes(x.name));
-      this.addCollaborators = this.platformCollaborators.filter(x=>this.selectedCollaboratorNames.includes(x.name) && !this.selectedCollaborators.flatMap(x=>x.name).includes(x.name));
+      // this.removeCollaborators = this.projectCollaborators.filter(x=>!this.selectedCollaboratorNames.includes(x.name)).map(x => x.collaboratorId);
+      // this.addCollaborators = this.platformCollaborators.filter(x=>this.selectedCollaboratorNames.includes(x.name) && !this.projectCollaborators.flatMap(x=>x.name).includes(x.name));
 
       const createdProject = await firstValueFrom(this.projectService.editProject(this.projectId, prj));
 
       for (const collaborator of this.removeCollaborators) {
-        await firstValueFrom(this.collaboratorService.deleteCollaboratorFromProject(collaborator,this.projectId))
+        await firstValueFrom(this.collaboratorService.deleteCollaboratorFromProject(this.projectId, collaborator))
       }
-      for (const collaborator of this.addCollaborators) {
-        await firstValueFrom(this.collaboratorService.addCollaboratorToProject(collaborator,this.projectId))
+      for (const collaborator of this.selectedCollaborators) {
+        await firstValueFrom(this.collaboratorService.createAndAddCollaboratorToProject(collaborator,this.projectId))
       }
       for (const tag of this.removeTags) {
         await firstValueFrom(this.tagService.removeTagFromProject(tag,this.projectId))
@@ -512,5 +522,70 @@ export class ProjectEditComponent implements OnInit {
       console.error('Error saving the new tag', error);
       this.messageService.add({ severity: 'error', summary: 'Error', detail: (error as Error).message });
     }
+  }
+
+  showAddCollaboratorDialog() {
+    this.addCollaboratorVisible = true;
+  }
+
+  editCollaborator(collaborator: CollaboratorTransfer, index: number) {
+    this.newCollaboratorName = collaborator.name;
+    this.newCollaboratorRole = collaborator.role;
+    this.editIndex = index;
+    this.showAddCollaboratorDialog();
+  }
+
+  removeCollaborator(index: number) {
+    const collaborator = this.selectedCollaborators[index];
+    if (collaborator.collaboratorId) {
+      this.removeCollaborators.push(collaborator.collaboratorId);
+      collaborator.collaboratorId = '';
+    }
+    this.selectedCollaborators.splice(index, 1);
+  }
+
+  saveNewCollaborator() {
+    if (this.collaboratorNameInput.invalid || this.collaboratorRoleInput.invalid) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Invalid collaborator name or role' });
+      return;
+    }
+
+    const isDuplicate = this.selectedCollaborators.some((collaborator, index) => 
+      collaborator.name.toLowerCase() === this.newCollaboratorName.toLowerCase() && index !== this.editIndex
+    );
+
+    if (isDuplicate) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'A collaborator with the same name already exists' });
+      return;
+    }
+    if (this.editIndex !== null) {
+      const collaborator = this.selectedCollaborators[this.editIndex];
+      if (collaborator.collaboratorId) {
+        this.removeCollaborators.push(collaborator.collaboratorId);
+      }
+      collaborator.name = this.newCollaboratorName;
+      collaborator.role = this.newCollaboratorRole;
+    } else {
+      const newCollaborator: CollaboratorTransfer = {
+        collaboratorId: '',
+        name: this.newCollaboratorName,
+        role: this.newCollaboratorRole
+      };
+      this.selectedCollaborators.push(newCollaborator);
+    }
+
+    this.newCollaboratorName = '';
+    this.newCollaboratorRole = '';
+    this.editIndex = null;
+    this.addCollaboratorVisible = false;
+  }
+
+  cancelAddCollaborator() {
+    this.addCollaboratorVisible = false;
+    this.newCollaboratorName = '';
+    this.newCollaboratorRole = '';
+    this.collaboratorNameInput.reset();
+    this.collaboratorRoleInput.reset();
+    this.editIndex = null;
   }
 }

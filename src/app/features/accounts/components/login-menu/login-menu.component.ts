@@ -56,7 +56,7 @@ export class LoginMenuComponent implements OnInit {
   ]);
   nameR = new FormControl('', [
     Validators.required,
-    Validators.pattern('^[a-zA-Z_]{1,50}$')
+    Validators.pattern('^[a-zA-Z ]{1,50}$')
   ]);
 
   loginForm: FormGroup = new FormGroup({});

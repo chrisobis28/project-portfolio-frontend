@@ -75,6 +75,13 @@ export interface Collaborator {
     requestCollaboratorsProjects: RequestCollaboratorsProjects[]
 }
 
+export interface CollaboratorTransfer {
+    collaboratorId: string;
+    name: string;
+    role: string;
+}
+
+
 export interface Request {
     requestId: string
     newTitle: string

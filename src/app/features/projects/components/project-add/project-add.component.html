@@ -93,26 +93,67 @@
         </div>
       </div>
       </div>
-      <div class="card">
-        <div class="grid align-items-center">
-          <div class="lg:col-9 col-12">
-            <div class="p-fluid">
-        <p-floatLabel>
-
-          <p-autoComplete [(ngModel)]="selectedCollaborators"
-            [suggestions]="getNamesForCollaborators(filteredCollaborators)"
-            (completeMethod)="filterCollaborators($event)" [multiple]="true" [forceSelection]="true">
-          </p-autoComplete>
-
-          <label>Collaborators</label>
-        </p-floatLabel>
-            </div>
-          </div>
-          <div class="lg:col-3 col-12 flex justify-content-center align-items-center">
-            <p-button (click)="showAddTagDialog()" icon="pi pi-user-plus" label="Add platform collaborator" severity="secondary"></p-button>
-          </div>
+      <div class="grid align-items-center">
+  <!-- <div class="lg:col-12 col-12">
+    <div class="p-fluid">
+      <p-floatLabel style="width: 100%;">
+        <p-autoComplete
+          [(ngModel)]="selectedCollaborators"
+          [suggestions]="filteredCollaborators"
+          (completeMethod)="filterCollaborators($event)"
+          [multiple]="true"
+          [forceSelection]="true"
+          [field]="'name'">
+        </p-autoComplete>
+        <label>Collaborators</label>
+      </p-floatLabel>
+    </div>
+  </div> -->
+  <div class="lg:col-12 col-12">
+    <div class="flex justify-content-center align-items-center mb-3">
+      <p-button (click)="showAddCollaboratorDialog()" icon="pi pi-user-plus" label="Add Collaborator" severity="secondary"></p-button>
+    </div>
+    <div class="p-fluid">
+      <div class="grid">
+        <div class="col-4"><strong>Name</strong></div>
+        <div class="col-4"><strong>Role</strong></div>
+        <div class="col-2"><strong>Edit</strong></div>
+        <div class="col-2"><strong>Delete</strong></div>
+      </div>
+      <div class="grid" *ngFor="let collaborator of selectedCollaborators; let i = index">
+        <div class="col-4">{{ collaborator.name }}</div>
+        <div class="col-4">{{ collaborator.role }}</div>
+        <div class="col-2">
+          <button pButton type="button" icon="pi pi-pencil" class="p-button-rounded p-button-warning" (click)="editCollaborator(collaborator, i)"></button>
+        </div>
+        <div class="col-2">
+          <button pButton type="button" icon="pi pi-times" class="p-button-rounded p-button-danger" (click)="removeCollaborator(i)"></button>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<p-dialog [(visible)]="addCollaboratorVisible" [modal]="true" [style]="{ width: '30rem' }" header="Add Collaborator">
+  <div class="dialog-content p-3">
+    <p class="dialog-info mb-4">You are about to add a new collaborator to the project. To add a collaborator, please fill in the name and role fields.</p>
+    <div class="flex flex-column justify-content-center align-items-center gap-4 mb-4">
+      <p-floatLabel>
+        <input pInputText id="newCollaboratorNameInput" [(ngModel)]="newCollaboratorName" [formControl]="collaboratorNameInput" style="width: 100%; max-width: 20rem;" />
+        <label for="newCollaboratorNameInput">Collaborator Name</label>
+      </p-floatLabel>
+      <p-floatLabel>
+        <input pInputText id="newCollaboratorRoleInput" [(ngModel)]="newCollaboratorRole" [formControl]="collaboratorRoleInput" style="width: 100%; max-width: 20rem;" />
+        <label for="newCollaboratorRoleInput">Collaborator Role</label>
+      </p-floatLabel>
+    </div>
+  </div>
+  <div class="dialog-actions flex justify-content-end gap-2 p-3">
+    <p-button (click)="cancelAddCollaborator()" label="Cancel" severity="secondary" class="p-button-outlined" />
+    <p-button (click)="saveNewCollaborator()" label="Add Collaborator" severity="primary" />
+  </div>
+</p-dialog>
+
 
         <div class="linkUpload">
           <div class=" grid flex">
