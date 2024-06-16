@@ -26,6 +26,7 @@ import { firstValueFrom, Subscription } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import {ConfirmDialogModule} from "primeng/confirmdialog";
 import {ConfirmationService, MessageService} from "primeng/api";
+import { CollaboratorTransfer } from '../../models/project-models';
 import {ImageModule} from "primeng/image";
 import {GalleriaModule} from "primeng/galleria";
 @Component({
@@ -65,7 +66,24 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     thumbnail: { fileName: '', filePath: '' ,fileContent:''},
     template: null
   };
-  collaborators: Collaborator[] = [];
+  responsiveOptions = [
+    {
+      breakpoint: '1199px',
+      numVisible: 1,
+      numScroll: 1
+    },
+    {
+      breakpoint: '991px',
+      numVisible: 2,
+      numScroll: 1
+    },
+    {
+      breakpoint: '767px',
+      numVisible: 1,
+      numScroll: 1
+    }
+  ];
+  collaborators: CollaboratorTransfer[] = [];
   links: Link[] = [];
   tags: Tag[] = [];
   isMobile: boolean;
@@ -117,9 +135,10 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     this.isMobile = window.innerWidth <= 767;
   }
 
-  getCollaboratorNames(): string {
-    return this.collaborators.map(obj => obj.name).join(', ');
+  getCollaborators(): string {
+    return this.collaborators.map(collaborator => `${collaborator.name} (${collaborator.role})`).join(', ');
   }
+  
 
    async ngOnInit() {
 
@@ -239,7 +258,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       this.linkService.getLinksByProjectId(params['id']).subscribe((responseLinks: Link[]) => {
         this.links = responseLinks;
       });
-      this.collaboratorService.getCollaboratorsByProjectId(params['id']).subscribe((responseCollaborators: Collaborator[]) => {
+      this.collaboratorService.getCollaboratorsByProjectId(params['id']).subscribe((responseCollaborators: CollaboratorTransfer[]) => {
         this.collaborators = responseCollaborators;
       });
       this.tagService.getTagsByProjectId(params['id']).subscribe((responseTags: Tag[]) => {
@@ -274,7 +293,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     return firstValueFrom(this.projectService.getProjectById(id))
   }
 
-  async getCollaboratorsByProjectId(id: string): Promise<Collaborator[]> {
+  async getCollaboratorsByProjectId(id: string): Promise<CollaboratorTransfer[]> {
     return firstValueFrom(this.collaboratorService.getCollaboratorsByProjectId(id))
   }
 
