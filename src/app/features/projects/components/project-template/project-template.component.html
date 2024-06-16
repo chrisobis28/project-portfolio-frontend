@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Template</title>
+</head>
+
+<body>
+  <div class="grid">
+    <div class="col-1"></div>
+    <div class="col-10">
+      <div class="introduction">
+        <div class="grid">
+          <div class="col-1 center" style="align-items: center;">
+            <a href="http://localhost:4200/add-project">
+              <p-button icon="pi pi-arrow-left" [outlined]="true" severity="contrast" />
+            </a>
+          </div>
+          <div class="col-9">
+            <h1 id="title" style="text-align: center;">Add a new template</h1>
+          </div>
+          <div class="col-3"></div>
+          <div class="col-12">
+            <p id="subtitle">Add constraints for a template*.</p>
+          </div>
+        </div>
+      </div>
+      <div class="card flex justify-content-start">
+        <p-floatLabel>
+          <input pInputText id="templateTitle" [(ngModel)]="title" [ngClass]="{'error': !title}"
+            [formControl]="titleInput" style="width: 81vw" />
+          <label for="username">Template Title</label>
+        </p-floatLabel>
+      </div>
+      <div class="card flex justify-content-start min-w-full">
+        <p-floatLabel>
+          <textarea id="float-input" rows="5" pInputTextarea style="width: 81vw" [(ngModel)]="description"
+            [ngClass]="{'error': !description}" [formControl]="descriptionInput" [autoResize]="true">
+            </textarea>
+          <label for="float-input">Standard Description</label>
+        </p-floatLabel>
+      </div>
+      <div class="card flex justify-content-start">
+        <p-floatLabel>
+            <p-dropdown 
+                [options]="numberOptions"
+                [(ngModel)]="selectedNumber"
+                optionLabel="label" 
+                optionValue="value" 
+                [showClear]="true"
+                inputId="float-label"
+                [style]="{'width':'250px', 'height':'45px'}" />
+            <label for="float-label">Number of Collaborators</label>
+        </p-floatLabel>
+      </div>
+      <div class="additionSection">
+        <div class="grid flex">
+          <p-toast/>
+          <h3 class="col-2 min-w-max">Template Addition</h3>
+          <div class="col-10"></div>
+        </div>
+        <div class="card">
+          <p-dataView #dv [value]="additions">
+            <ng-template let-additions pTemplate="list">
+              <div *ngFor="let addition of additions;let i = index" class="col-12" class="col-12">
+                <div class="grid row-gap-2">
+                  <div class="col-12 md:col-6 lg:col-5">
+                    <p-floatLabel>
+                      <input [(ngModel)]="addition.templateAdditionName" [ngClass]="{'error': !addition.templateAdditionName}" pInputText
+                             style="width: 100%;"/>
+                      <label >Template addition name</label>
+                    </p-floatLabel>
+                  </div>
+                  <div class="relative col-12 md:col-6 lg:col-4 flex justify-content-center">
+                    <p-selectButton 
+                        [options]="stateOptions"
+                        [(ngModel)]="addition.media"
+                        optionLabel="label" 
+                        optionValue="value"
+                        (onChange)="updateAdditionMedia(addition, $event.value)" />
+                  </div>
+                  <div class="flex justify-content-center col-12 md:col-12 lg:col-3">
+                    <p-button (click)="removeAddition(additions[i])" icon="pi pi-trash" label="Delete" severity="danger">
+                    </p-button>
+                  </div>
+                </div>
+              </div>
+
+            </ng-template>
+          </p-dataView>
+        </div>
+        <div class="flex justify-content-center">
+          <p-button (click)="addAddition()" icon="pi pi-plus-circle" label="Add Addition"/>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="flex justify-content-end">
+          <a href="http://localhost:4200/add-project">
+          <p-button label="Cancel" class="p-button-secondary" severity="danger" (click)="cancel()"></p-button>
+          </a>
+          <a href="http://localhost:4200/add-project">
+          <button id="saveButton" pButton pRipple label="Save" class="p-button-success" type="submit"
+            (click)="saveTemplate()">
+          </button>
+          </a>
+        </div>
+      </div>
+      <div>
+
+      </div>
+    </div>
+    <div class="col-2"></div>
+  </div>
+</body>
+
+</html>
