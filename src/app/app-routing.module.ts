@@ -7,12 +7,14 @@ import { ProjectCardComponent } from './features/projects/components/project-car
 import { ProjectEditComponent } from './features/projects/components/project-edit/project-edit.component';
 import { LoginMenuComponent } from './features/accounts/components/login-menu/login-menu.component';
 import { AuthGuard } from './core/auth.guard';
+import { RequestDetailComponent } from './features/projects/components/request-detail/request-detail.component';
 
 const routes: Routes = [
   { path: '', component: ProjectsComponent },
   { path: 'add-project', component: ProjectAddComponent },
   { path: 'project-card', component: ProjectCardComponent},
   { path: 'project-detail/:id', component: ProjectDetailComponent },
+  { path: 'request-detail/:id/:idProject', component: RequestDetailComponent },
   { path: 'project/edit/:id', component: ProjectEditComponent },
   { path: 'login', component: LoginMenuComponent, canActivate: [AuthGuard] },
   { path: '', redirectTo: '/projects', pathMatch: 'full' }

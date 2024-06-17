@@ -14,6 +14,14 @@ export class RequestService {
   ) { }
 
   createRequest(body: Request): Observable<Request> {
-    return this.httpClient.post<Request>(this.API_URL, body);
+    return this.httpClient.put<Request>(this.API_URL, body);
+  }
+
+  getRequestsForProject(projectId: string): Observable<Request[]> {
+    return this.httpClient.get<Request[]>(this.API_URL + "project/" + `${projectId}`)
+  }
+
+  getRequestById(requestId: string, projectId: string): Observable<Request> {
+    return this.httpClient.get<Request>(this.API_URL + `${requestId}` + "/" + `${projectId}`)
   }
 }

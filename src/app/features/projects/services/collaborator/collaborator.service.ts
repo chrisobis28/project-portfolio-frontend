@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Collaborator } from '../../models/project-models';
+import { Collaborator, RequestCollaboratorsProjects } from '../../models/project-models';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -31,6 +31,10 @@ export class CollaboratorService {
 
   addCollaboratorToRequest(requestId: string, collaboratorId: string, isRemove: boolean): Observable<Collaborator> {
     return this.httpClient.post<Collaborator>(this.API_URL + "request/" + `${requestId}` + "/" + `${collaboratorId}`, isRemove)
+  }
+
+  getChangesCollaboratorsForRequest(requestId: string): Observable<RequestCollaboratorsProjects[]> {
+    return this.httpClient.get<RequestCollaboratorsProjects[]>(this.API_URL + "request/" + `${requestId}`)
   }
 
 }

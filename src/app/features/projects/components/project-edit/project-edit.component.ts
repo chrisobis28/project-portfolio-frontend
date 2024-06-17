@@ -400,13 +400,12 @@ export class ProjectEditComponent implements OnInit {
         thumbnail: thumbnail
       };
 
-      if(this.role_on_project == "ADMIN" || this.role_on_project == "EDITOR" || this.role_on_project == "PM") {
-
+      this.removeCollaborators = this.selectedCollaborators.filter(x=>!this.selectedCollaboratorNames.includes(x.name));
+      this.addCollaborators = this.platformCollaborators.filter(x=>this.selectedCollaboratorNames.includes(x.name) && !this.selectedCollaborators.flatMap(x=>x.name).includes(x.name));
       this.removeTags = this.selectedTags.filter(x=>!this.selectedTagNames.includes(x.name));
       this.addTags = this.platformTags.filter(x=>this.selectedTagNames.includes(x.name) && !this.selectedTags.flatMap(x=>x.name).includes(x.name));
 
-      this.removeCollaborators = this.selectedCollaborators.filter(x=>!this.selectedCollaboratorNames.includes(x.name));
-      this.addCollaborators = this.platformCollaborators.filter(x=>this.selectedCollaboratorNames.includes(x.name) && !this.selectedCollaborators.flatMap(x=>x.name).includes(x.name));
+      if(this.role_on_project == "ADMIN" || this.role_on_project == "EDITOR" || this.role_on_project == "PM") {
 
       const createdProject = await firstValueFrom(this.projectService.editProject(this.projectId, prj));
 
@@ -462,7 +461,19 @@ export class ProjectEditComponent implements OnInit {
           newTitle: this.title,
           newDescription: this.description,
           isCounterOffer: false,
-          project: this.project
+          project: this.project,
+          account: {
+            username: this.username,
+            name: "",
+            password: "",
+            role: "ROLE_USER",
+            projectsToAccounts: [],
+            requests: []
+          },
+          requestTagProjects: [],
+          requestMediaProjects: [],
+          requestLinkProjects: [],
+          requestCollaboratorsProjects: []
         }
 
         const createdRequest = await firstValueFrom(this.requestService.createRequest(req))
@@ -484,19 +495,53 @@ export class ProjectEditComponent implements OnInit {
           console.log("removed: " + removedLink)
         }
 
-        // for(const media of this.deletedMediaList) {
-        //   const removedMedia = await firstValueFrom(this.mediaService.addRemovedMediaToRequest(createdRequest.requestId, media.mediaId))
-        //   console.log("deleted: " + removedMedia)
-        // }
+        this.deleteLinkList = []
 
-        // for(const media of this.addedMediaList) {
-        //   const addedMedia = await firstValueFrom(this.mediaService.addAddedMediaToRequest(createdRequest.requestId, media))
-        //   console.log("added: " + addedMedia)
-        // }
+        
 
+        for (const editMedia of this.editMediaList) {
+          if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
+          {
+            await firstValueFrom(this.mediaService.addRemovedMediaToRequest(createdRequest.requestId,editMedia.media.mediaId));
+          }
+          else if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
+          {
+            const formData = new FormData();
+            formData.append('file', editMedia.file);
+            formData.append('name', editMedia.media.name);
+            await firstValueFrom(this.mediaService.addAddedMediaToRequest(createdRequest.requestId, formData));
+          }
+          else if(editMedia.media != null && editMedia.media.mediaId!='')
+        {
+          // await firstValueFrom(this.mediaService.addRemovedMediaToRequest(createdRequest.requestId, editMedia.media.mediaId));
+          // await firstValueFrom(this.mediaService.addAddedMediaToRequest(createdRequest.requestId, editMedia.media))
+        }
+      }
+      this.editMediaList = []
 
-      
+      console.log(this.addCollaborators)
 
+      for (const coll of this.addCollaborators) {
+        await firstValueFrom(this.collaboratorService.addCollaboratorToRequest(createdRequest.requestId, coll.collaboratorId, false))
+      }
+
+      console.log(this.removeCollaborators)
+
+      for (const coll of this.removeCollaborators) {
+        await firstValueFrom(this.collaboratorService.addCollaboratorToRequest(createdRequest.requestId, coll.collaboratorId, true))
+      }
+
+      console.log(this.addTags)
+
+      for(const tag of this.addTags) {
+        await firstValueFrom(this.tagService.addTagToRequest(createdRequest.requestId, tag.tagId, false))
+      }
+
+      console.log(this.removeTags)
+
+      for (const tag of this.removeTags) {
+        await firstValueFrom(this.tagService.addTagToRequest(createdRequest.requestId, tag.tagId, true))
+      }
       }
       
 

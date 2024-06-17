@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div class="grid">
+        <div class="col-1"></div>
+        <div class="col-10">
+            <div class="introduction">
+                <div class="grid">
+                    <div class="col-1 center" style="align-items: center;">
+                        <a href="http://localhost:4200">
+                            <p-button [outlined]="true" icon="pi pi-arrow-left" severity="contrast" />
+                        </a>
+                    </div>
+                    <div class="col-9">
+                        <h1 id="title" style="text-align: center;">Changed made by user {{this.username}}</h1>
+                    </div>
+                    <div class="col-3"></div>
+                    <div class="col-12">
+                        <p id="subtitle">Choose to either accept or reject the request</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card flex justify-content-start ">
+                <h3>Template name here</h3>
+            </div>
+            <div>
+                <p-floatLabel>
+                    <input [(ngModel)]="this.project.title" [disabled]="true" id="projecttitle" pInputText
+                        style="width: 81vw" />
+                    <label>Project Title</label>
+                </p-floatLabel>
+            </div>
+            <div class="card flex justify-content-start min-w-full">
+                <p-floatLabel>
+                    <textarea [(ngModel)]="this.project.description" [autoResize]="true" [disabled]="true"
+                        id="float-input" pInputTextarea rows="5" style="width: 81vw">
+                  </textarea>
+                    <label for="float-input">Description</label>
+                </p-floatLabel>
+            </div>
+            <div class="card">
+                <div class="grid align-items-center">
+                    <div class="lg:col-9 col-12">
+                        <div class="p-fluid">
+                            <p-floatLabel>
+                                <div class="card flex align-items-center gap-2 flex-wrap">
+                                    <ng-container *ngFor="let tag of allTags">
+                                        <p-chip [style]="{'background': decideColorTag(tag)}" icon="pi pi-tags"
+                                            label="{{tag.name}}" />
+                                    </ng-container>
+                                </div>
+                                <label>Tags</label>
+                            </p-floatLabel>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="grid align-items-center">
+                    <div class="lg:col-9 col-12">
+                        <div class="p-fluid">
+                            <p-floatLabel>
+                                <div class="card flex align-items-center gap-2 flex-wrap">
+                                    <ng-container *ngFor="let collaborator of allCollaborators">
+                                        <p-chip [style]="{'background': decideColorCollaborator(collaborator)}"
+                                            icon="pi pi-tags" label="{{collaborator.name}}" />
+                                    </ng-container>
+                                </div>
+                                <label>Collaborators</label>
+                            </p-floatLabel>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="linkUpload">
+                <div class=" grid flex">
+                    <h3 class="col-2">Links</h3>
+                    <div class="col-10"></div>
+                </div>
+                <div class="card">
+                    <p-dataView #dv [value]="allLinks">
+                        <ng-template let-links pTemplate="list">
+                            <div *ngFor="let link of links;let i = index" class="col-12" class="col-12">
+                                <div class="grid row-gap-2" [style]="{'background': decideColorLink(link)}">
+                                    <div class="col-12 md:col-6 lg:col-5">
+                                        <p-floatLabel>
+                                            <input [(ngModel)]="link.name" [disabled]="true"
+                                                [ngClass]="{'error': !link.name}" pInputText style="width: 85%;" />
+                                            <label>Link display name</label>
+                                        </p-floatLabel>
+                                    </div>
+                                    <div class="col-12 md:col-6 lg:col-4">
+                                        <p-floatLabel>
+                                            <input [(ngModel)]="link.url" [disabled]="true"
+                                                [ngClass]="{'error': !link.url}" pInputText style="width: 85%;" />
+                                            <label>Link address(URL)</label>
+                                        </p-floatLabel>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </ng-template>
+                    </p-dataView>
+                </div>
+            </div>
+            <div class="mediaUpload">
+                <div class=" grid flex">
+                    <div class="col-2">
+                        <h3>Media</h3>
+                    </div>
+                    <div class="col-10"></div>
+                </div>
+                <div class="card">
+                    <p-dataView #dv [value]="allMedia">
+                        <ng-template let-editMediaList pTemplate="list">
+                            <div *ngFor="let media of editMediaList; let i = index" class="col-12" class="col-12">
+                                <div *ngIf="media.delete==false" [style]="{'background': decideColorMedia(media)}">
+                                    <div class="grid">
+                                        <div class="col-12 md:col-6 lg:col-3 ">
+                                            <h4>{{ media.media.path }}</h4>
+                                        </div>
+                                        <div class="col-12 md:col-6 lg:col-3 ">
+                                            <p-floatLabel>
+                                                <input [(ngModel)]="media.media.name" [disabled]="true"
+                                                    [ngClass]="{'error': !media.name}" pInputText
+                                                    style="width: 100%;" />
+                                                <label>Media display name</label>
+                                            </p-floatLabel>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        </ng-template>
+                    </p-dataView>
+                </div>
+            </div>
+
+        </div>
+        <div class="col-2"></div>
+    </div>
+</body>
+
+</html>

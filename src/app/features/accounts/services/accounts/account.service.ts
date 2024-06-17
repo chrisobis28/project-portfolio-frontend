@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {Observable} from "rxjs";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
+import { Account, Project } from 'src/app/features/projects/models/project-models';
 
 const API_URL = 'http://localhost:8080/account';
 
@@ -34,9 +35,9 @@ export class AccountService {
     return this.httpClient.put<Observable<any>>(API_URL, body, httpOptions);
   }
 
-  getAccount(username: string): Observable<any> {
+  getAccount(username: string): Observable<Account> {
     const url = API_URL + `/public/${username}`;
-    return this.httpClient.get<Observable<any>>(url, httpOptions);
+    return this.httpClient.get<Account>(url, httpOptions);
   }
 
   deleteAccount(username: string): Observable<any> {
@@ -64,6 +65,10 @@ export class AccountService {
   getRoleOnProject(username: string, projectId: string): Observable<string> {
     const url = API_URL + `/public/role/${username}/${projectId}`;
     return this.httpClient.get<string>(url, httpOptionsGet);
+  }
+
+  getProjectsManagedByAccount(username: string): Observable<Project[]> {
+    return this.httpClient.get<Project[]>(API_URL + "/public/managed/" + `${username}`)
   }
 
 }

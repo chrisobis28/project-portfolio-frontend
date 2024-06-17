@@ -20,11 +20,12 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { RouterModule, Routes } from '@angular/router';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
+import { DialogModule } from 'primeng/dialog';
 
 @NgModule({
     declarations: [
         ProjectsComponent,
-        ProjectCardComponent
+        ProjectCardComponent,
     ],
     exports: [
         ProjectsComponent,
@@ -48,7 +49,8 @@ import { ToastModule } from 'primeng/toast';
         ChipsModule,
         ChipModule,
         MultiSelectModule,
-        RouterModule
+        RouterModule,
+        DialogModule
     ]
 })
 export class ProjectsModule { }

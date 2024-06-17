@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs";
-import {Link} from "../../models/project-models";
+import {Link, RequestLinkProject} from "../../models/project-models";
 import { NONE_TYPE } from '@angular/compiler';
 
 @Injectable({
@@ -33,5 +33,9 @@ export class LinkService {
 
   addAddedLinkToRequest(requestId: string, link: Link): Observable<Link> {
     return this.httpClient.put<Link>(this.API_URL + "request/add/" + `${requestId}`, link)
+  }
+
+  getChangedLinksForRequest(requestId: string): Observable<RequestLinkProject[]> {
+    return this.httpClient.get<RequestLinkProject[]>(this.API_URL + "request/" + `${requestId}`)
   }
 }

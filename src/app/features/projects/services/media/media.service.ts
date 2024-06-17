@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {Observable, map} from "rxjs";
-import {MediaFileContent, Media, Link} from "../../models/project-models";
+import {MediaFileContent, Media, Link, RequestMediaProject} from "../../models/project-models";
 import {HttpClient} from "@angular/common/http";
 
 @Injectable({
@@ -45,5 +45,8 @@ export class MediaService {
   }
   addRemovedMediaToRequest(requestId: string, mediaId: string) {
     return this.httpClient.post<Media>(this.API_URL + "request/remove/" + `${requestId}` + "/" + `${mediaId}`, null)
+  }
+  getMediaChangedForRequest(requestId: string): Observable<RequestMediaProject[]> {
+    return this.httpClient.get<RequestMediaProject[]>(this.API_URL + "request/" + `${requestId}`)
   }
 }

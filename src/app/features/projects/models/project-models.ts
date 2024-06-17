@@ -85,6 +85,28 @@ export interface Request {
     newDescription: string
     isCounterOffer: boolean
     project: Project
+    account: Account
+    requestTagProjects: RequestTagProject[]
+    requestMediaProjects: RequestMediaProject[]
+    requestLinkProjects: RequestLinkProject[]
+    requestCollaboratorsProjects: RequestCollaboratorsProjects[]
+}
+
+export interface Account {
+    username: string
+    name: string
+    password: string
+    role: string
+    projectsToAccounts : ProjectsToAccounts[]
+    requests: Request[]
+}
+
+
+export interface ProjectsToAccounts {
+    ptaId: string
+    role: string
+    account: Account
+    project: Project
 }
 
 export interface RequestCollaboratorsProjects {

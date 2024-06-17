@@ -11,34 +11,71 @@
 
 <body>
 
-<div class="grid">
-        <p-toast />
+  <div class="grid">
+    <p-toast />
 
-        <div class="col-12" style="text-align: right;">
-            <div *ngIf="!isLoggedIn" class="button-container">
-                <a [routerLink]="['/login']">
-                    <p-button label="Login"></p-button>
-                </a>
-            </div>
-            <div *ngIf="isLoggedIn" class="button-container">
-                <div class="container-logged-in">
-                    <h4><i>You are logged in as {{username}} ({{role?.substring(5)}}).</i></h4>
-                    <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
-                  <p-button (click)="logout()">Logout</p-button>
+    <div class="col-12" style="text-align: right;">
+      <div *ngIf="!isLoggedIn" class="button-container">
+        <a [routerLink]="['/login']">
+          <p-button label="Login"></p-button>
+        </a>
+      </div>
+      <div *ngIf="isLoggedIn" class="button-container">
+        <div class="container-logged-in">
+          <h4><i>You are logged in as {{username}} ({{role?.substring(5)}}).</i></h4>
+          <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
+          <p-button (click)="logout()">Logout</p-button>
+        </div>
+        <div *ngIf="isLoggedIn">
+
+          <p-button icon="pi pi-user-edit" label="View your requests" (click)="showDialog()" rounded
+            severity="info"></p-button>
+          <p-dialog header="Edit Requests" [modal]="true" [(visible)]="visible" [style]="{ width: '25rem' }">
+            <p-dataView #dv [value]="requests" [rows]="5" [paginator]="true">
+              <ng-template pTemplate="list" let-requests>
+                <div class="grid grid-nogutter">
+                  <div class="col-12" *ngFor="let item of requests; let first = first">
+                    <div class="flex flex-column sm:flex-row sm:align-items-left p-4 gap-3"
+                      [ngClass]="{ 'border-top-1 surface-border': !first }">
+
+                      <div
+                        class="flex flex-column md:flex-row justify-content-between md:align-items-left flex-1 gap-4">
+                        <div class="flex flex-row md:flex-column justify-content-between align-items-left gap-2">
+                          <div>
+                            <a
+                              href="http://localhost:4200/request-detail/{{item.requestId}}/{{item.project.projectId}}">
+                              <div class="text-lg font-medium text-900 mt-2">User
+                                {{item.account.username}} wants to edit project
+                                {{item.project.title}}
+                              </div>
+                            </a>
+                          </div>
+                          <div class="surface-100 p-1" style="border-radius: 30px">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-            </div>
+              </ng-template>
+            </p-dataView>
+          </p-dialog>
         </div>
+      </div>
+    </div>
 
-        <div class="col-1"></div>
 
-        <div class="col-10 bottom-container">
-            <h1 class="left-bottom">Project portfolio management system</h1>
-            <div *ngIf="isLoggedIn && (role === 'ROLE_ADMIN' || role === 'ROLE_PM')" class="right-bottom" style="margin-right: 8px">
-                <a [routerLink]="['/add-project']">
-                    <p-button icon="pi pi-plus" label="Add" rounded severity="info"></p-button>
-                </a>
-            </div>
-        </div>
+    <div class="col-1"></div>
+
+    <div class="col-10 bottom-container">
+      <h1 class="left-bottom">Project portfolio management system</h1>
+      <div *ngIf="isLoggedIn && (role === 'ROLE_ADMIN' || role === 'ROLE_PM')" class="right-bottom"
+        style="margin-right: 8px">
+        <a [routerLink]="['/add-project']">
+          <p-button icon="pi pi-plus" label="Add" rounded severity="info"></p-button>
+        </a>
+      </div>
+    </div>
   </div>
 
   <div class="grid">
@@ -84,7 +121,7 @@
               </div>
 
               <div class="card relative justify-content-center col-6 md:col-6 lg:col-1">
-                  <p-button label="Search" rounded severity="info"></p-button>
+                <p-button label="Search" rounded severity="info"></p-button>
               </div>
             </div>
 
