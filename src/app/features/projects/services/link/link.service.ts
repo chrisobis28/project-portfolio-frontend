@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs";
 import {Link} from "../../models/project-models";
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class LinkService {
-  private readonly API_URL = 'http://localhost:8080/link/'
+  private readonly API_URL = environment.apiUrl + '/link/';
   constructor(private readonly httpClient: HttpClient) { }
 
   getLinksByProjectId(id: string): Observable<Link[]> {

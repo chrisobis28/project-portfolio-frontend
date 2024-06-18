@@ -3,8 +3,9 @@ import {Observable} from "rxjs";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import { Project } from 'src/app/features/projects/models/project-models';
 import { AccountTransfer, ProjectTransfer } from '../../models/accounts-models';
+import { environment } from 'src/environments/environment';
 
-const API_URL = 'http://localhost:8080/account';
+const API_URL = environment.apiUrl + '/account';
 
 const httpOptions = {
     headers: new HttpHeaders({

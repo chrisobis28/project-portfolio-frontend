@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import {Observable, map} from "rxjs";
 import {MediaFileContent, Media, Link} from "../../models/project-models";
 import {HttpClient} from "@angular/common/http";
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MediaService {
-  private readonly API_URL = 'http://localhost:8080/media/'
+  private readonly API_URL = environment.apiUrl + '/media/';
   constructor(private readonly httpClient: HttpClient) { }
   getMediasContentByProjectId(projectId: string): Observable<MediaFileContent[]> {
     return this.httpClient.get<MediaFileContent[]>(this.API_URL + "public/images/" + `${projectId}`);
