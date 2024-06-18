@@ -3,7 +3,7 @@ import { Collaborator, Link, Media, Project, Request, Tag } from '../../models/p
 import { StorageService } from 'src/app/features/accounts/services/authentication/storage.service';
 import { AuthenticationService } from 'src/app/features/accounts/services/authentication/authentication.service';
 import { AccountService } from 'src/app/features/accounts/services/accounts/account.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { RequestService } from '../../services/request/request.service';
 import { firstValueFrom } from 'rxjs';
 import { CollaboratorService } from '../../services/collaborator/collaborator.service';
@@ -69,7 +69,8 @@ export class RequestDetailComponent implements OnInit, OnDestroy {
     private collaboratorService: CollaboratorService,
     private tagService: TagService,
     private mediaService: MediaService,
-    private linkService: LinkService
+    private linkService: LinkService,
+    private readonly router: Router
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -119,20 +120,30 @@ export class RequestDetailComponent implements OnInit, OnDestroy {
       console.log(this.project)
 
       const newCollaborators = await firstValueFrom(this.collaboratorService.getChangesCollaboratorsForRequest(this.requestId))
+      const oldCollaborators = await firstValueFrom (this.collaboratorService.getCollaboratorsByProjectId(this.projectId))
+      this.originalCollaborators = oldCollaborators
       this.addedCollaborators = newCollaborators.filter( x => x.isRemove == false).map(x => x.collaborator)
       this.removedCollaborators = newCollaborators.filter( x => x.isRemove == true).map( x => x.collaborator)
       this.allCollaborators = this.originalCollaborators.concat(this.addedCollaborators)
 
+
+      const oldTags = await firstValueFrom(this.tagService.getTagsByProjectId(this.projectId))
+      this.originalTags = oldTags
       const newTags = await firstValueFrom(this.tagService.getTagsChangedForRequest(this.requestId))
       this.addedTags = newTags.filter(x => x.isRemove == false).map(x => x.tag)
       this.removedTags = newTags.filter(x => x.isRemove == true).map(x => x.tag)
       this.allTags = this.originalTags.concat(this.addedTags)
 
+
+      const oldmedia = await firstValueFrom(this.mediaService.getDocumentsByProjectId(this.projectId))
+      this.originalMedia = oldmedia
       const newMedia = await firstValueFrom(this.mediaService.getMediaChangedForRequest(this.requestId))
       this.addedMedia = newMedia.filter(x => x.isRemove == false).map(x => x.media)
       this.removedMedia = newMedia.filter(x => x.isRemove == true).map(x => x.media)
       this.allMedia = this.originalMedia.concat(this.addedMedia)
 
+      const oldLinks = await firstValueFrom(this.linkService.getLinksByProjectId(this.projectId))
+      this.originalLinks = oldLinks
       const newLinks = await firstValueFrom(this.linkService.getChangedLinksForRequest(this.requestId))
       this.addedLinks = newLinks.filter(x => x.isRemove == false).map(x => x.link)
       this.removedLinks = newLinks.filter(x => x.isRemove == true).map(x => x.link)
@@ -142,7 +153,7 @@ export class RequestDetailComponent implements OnInit, OnDestroy {
   }
 
   decideColorTag(tag: Tag): string {
-    if(this.removedTags.includes(tag))
+    if(this.removedTags.some(x => x.tagId == tag.tagId))
       return "rgba(255, 93, 70, 0.45)"
     else if(this.addedTags.includes(tag))
       return "rgba(10, 118, 77, 0.45)"
@@ -150,7 +161,7 @@ export class RequestDetailComponent implements OnInit, OnDestroy {
   }
 
   decideColorCollaborator(collaborator: Collaborator): string {
-    if(this.removedCollaborators.includes(collaborator))
+    if(this.removedCollaborators.some(x => x.collaboratorId == collaborator.collaboratorId))
       return "rgba(255, 93, 70, 0.45)"
     else if(this.addedCollaborators.includes(collaborator))
       return "rgba(10, 118, 77, 0.45)"
@@ -158,7 +169,7 @@ export class RequestDetailComponent implements OnInit, OnDestroy {
   }
 
   decideColorLink(link: Link): string {
-    if(this.removedLinks.includes(link))
+    if(this.removedLinks.some(x => x.linkId == link.linkId))
       return "rgba(255, 93, 70, 0.45)"
     else if(this.addedLinks.includes(link))
       return "rgba(10, 118, 77, 0.45)"
@@ -166,7 +177,8 @@ export class RequestDetailComponent implements OnInit, OnDestroy {
   }
 
   decideColorMedia(media: Media): string {
-    if(this.removedMedia.includes(media))
+    console.log(media)
+    if(this.removedMedia.some(x => x.mediaId == media.mediaId))
       return "rgba(255, 93, 70, 0.45)"
     else if(this.addedMedia.includes(media))
       return "rgba(10, 118, 77, 0.45)"
@@ -176,6 +188,18 @@ export class RequestDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     
+  }
+
+  acceptRequest(): void {
+    if(this.requestId && this.projectId){
+      firstValueFrom(this.requestService.acceptRequest(this.requestId, this.projectId))}
+    this.router.navigate([''])
+  }
+
+  rejectRequest(): void {
+    if(this.requestId)
+      firstValueFrom(this.requestService.rejectRequest(this.requestId))
+    this.router.navigate([''])
   }
 
 

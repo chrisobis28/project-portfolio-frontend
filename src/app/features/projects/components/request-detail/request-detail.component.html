@@ -27,20 +27,32 @@
                     </div>
                 </div>
             </div>
+
             <div class="card flex justify-content-start ">
                 <h3>Template name here</h3>
-            </div>
-            <div>
-                <p-floatLabel>
-                    <input [(ngModel)]="this.project.title" [disabled]="true" id="projecttitle" pInputText
-                        style="width: 81vw" />
-                    <label>Project Title</label>
-                </p-floatLabel>
+                <pre>
+
+
+
+                </pre>
             </div>
             <div class="card flex justify-content-start min-w-full">
                 <p-floatLabel>
-                    <textarea [(ngModel)]="this.project.description" [autoResize]="true" [disabled]="true"
-                        id="float-input" pInputTextarea rows="5" style="width: 81vw">
+                    <input *ngIf="this.project" [(ngModel)]="this.project.title" [disabled]="true" id="projecttitle"
+                        pInputText style="width: 81vw" />
+                    <label>Project Title</label>
+                </p-floatLabel>
+                <pre>
+
+
+
+
+                </pre>
+            </div>
+            <div class="card flex justify-content-start min-w-full">
+                <p-floatLabel>
+                    <textarea *ngIf="this.project" [(ngModel)]="this.project.description" [autoResize]="true"
+                        [disabled]="true" id="float-input" pInputTextarea rows="5" style="width: 81vw">
                   </textarea>
                     <label for="float-input">Description</label>
                 </p-floatLabel>
@@ -49,15 +61,20 @@
                 <div class="grid align-items-center">
                     <div class="lg:col-9 col-12">
                         <div class="p-fluid">
-                            <p-floatLabel>
-                                <div class="card flex align-items-center gap-2 flex-wrap">
-                                    <ng-container *ngFor="let tag of allTags">
-                                        <p-chip [style]="{'background': decideColorTag(tag)}" icon="pi pi-tags"
-                                            label="{{tag.name}}" />
-                                    </ng-container>
-                                </div>
-                                <label>Tags</label>
-                            </p-floatLabel>
+                            Tags:
+                            <pre>
+
+                            </pre>
+                            <div class="card flex align-items-center gap-2 flex-wrap">
+                                <ng-container *ngFor="let tag of allTags">
+                                    <p-chip [style]="{'background': decideColorTag(tag)}" icon="pi pi-tags"
+                                        label="{{tag.name}}" />
+                                </ng-container>
+                            </div>
+                            <pre>
+
+
+                            </pre>
                         </div>
                     </div>
                 </div>
@@ -66,15 +83,19 @@
                 <div class="grid align-items-center">
                     <div class="lg:col-9 col-12">
                         <div class="p-fluid">
-                            <p-floatLabel>
-                                <div class="card flex align-items-center gap-2 flex-wrap">
-                                    <ng-container *ngFor="let collaborator of allCollaborators">
-                                        <p-chip [style]="{'background': decideColorCollaborator(collaborator)}"
-                                            icon="pi pi-tags" label="{{collaborator.name}}" />
-                                    </ng-container>
-                                </div>
-                                <label>Collaborators</label>
-                            </p-floatLabel>
+                            Collaborators:
+                            <pre>
+
+                            </pre>
+                            <div class="card flex align-items-center gap-2 flex-wrap">
+
+                                <ng-container *ngFor="let collaborator of allCollaborators">
+                                    <p-chip [style]="{'background': decideColorCollaborator(collaborator)}"
+                                        icon="pi pi-tags" label="{{collaborator.name}}" />
+                                </ng-container>
+                            </div>
+
+
                         </div>
                     </div>
                 </div>
@@ -120,16 +141,16 @@
                 </div>
                 <div class="card">
                     <p-dataView #dv [value]="allMedia">
-                        <ng-template let-editMediaList pTemplate="list">
-                            <div *ngFor="let media of editMediaList; let i = index" class="col-12" class="col-12">
-                                <div *ngIf="media.delete==false" [style]="{'background': decideColorMedia(media)}">
+                        <ng-template let-allMedia pTemplate="list">
+                            <div *ngFor="let media of allMedia; let i = index" class="col-12" class="col-12">
+                                <div [style]="{'background': decideColorMedia(media)}">
                                     <div class="grid">
                                         <div class="col-12 md:col-6 lg:col-3 ">
-                                            <h4>{{ media.media.path }}</h4>
+                                            <h4>{{ media.path }}</h4>
                                         </div>
                                         <div class="col-12 md:col-6 lg:col-3 ">
                                             <p-floatLabel>
-                                                <input [(ngModel)]="media.media.name" [disabled]="true"
+                                                <input [(ngModel)]="media.name" [disabled]="true"
                                                     [ngClass]="{'error': !media.name}" pInputText
                                                     style="width: 100%;" />
                                                 <label>Media display name</label>
@@ -142,6 +163,18 @@
 
                         </ng-template>
                     </p-dataView>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="flex justify-content-end">
+                    <p-button (click)="rejectRequest()" class="p-button-secondary" label="Reject"
+                        severity="danger"></p-button>
+
+                    <button (click)="acceptRequest()" class="p-button-success" id="saveButton" label="Accept" pButton
+                        pRipple type="submit">
+                    </button>
+
                 </div>
             </div>
 
