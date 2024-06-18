@@ -15,7 +15,7 @@ export class AuthInterceptor implements HttpInterceptor {
         private storageService: StorageService
     ) { }
 
-    intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
 
 
         const authReq = req.clone({

@@ -4,7 +4,7 @@ import { AbstractControl, FormsModule, ValidationErrors, Validators } from '@ang
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ChipsModule } from 'primeng/chips';
-import { Collaborator, Link, Media, MediaFileContent, Project, Tag, Template, TemplateAddition } from '../../models/project-models';
+import { Template, TemplateAddition } from '../../models/project-models';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { RatingModule } from 'primeng/rating';
@@ -12,23 +12,25 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProjectService } from '../../services/project/project.service';
 import { TemplateService } from '../../services/template/template.service';
-import { FileUploadModule, UploadEvent } from 'primeng/fileupload';
+import { FileUploadModule } from 'primeng/fileupload';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { DropdownModule } from 'primeng/dropdown';
-import { Subscription, firstValueFrom, map } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { AutoCompleteModule } from 'primeng/autocomplete';
-import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { ChipModule } from 'primeng/chip';
 import { DataViewModule } from 'primeng/dataview';
-import { FileUploadEvent } from 'primeng/fileupload';
 import { MediaService } from '../../services/media/media.service';
 import { LinkService } from '../../services/link/link.service';
 import { CollaboratorService } from '../../services/collaborator/collaborator.service';
 import { TagService } from '../../services/tag/tag.service';
-import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { SelectButtonModule } from 'primeng/selectbutton';
+
+interface StateOption {
+  label: string;
+  value: boolean;
+}
 
 @Component({
   selector: 'app-project-template',
@@ -46,7 +48,7 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 export class ProjectTemplateComponent implements OnInit, OnDestroy {
 
   formGroup!: FormGroup;
-  stateOptions: any[] = [
+  stateOptions: StateOption[] = [
       { label: 'Link', value: false },
       { label: 'Media', value: true }
   ];
@@ -156,7 +158,7 @@ export class ProjectTemplateComponent implements OnInit, OnDestroy {
   }
 
   removeAddition(additionToRemove: TemplateAddition): void {
-    let index = this.additions.findIndex(obj => obj === additionToRemove);
+    const index = this.additions.findIndex(obj => obj === additionToRemove);
 
     if (index !== -1) {
       this.additions.splice(index, 1);

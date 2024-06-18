@@ -1,10 +1,10 @@
 import { Component , OnDestroy, OnInit } from '@angular/core';
 import { InputTextModule } from 'primeng/inputtext';
-import { AbstractControl, FormControl, FormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { FormControl, FormsModule, Validators } from '@angular/forms';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ChipsModule } from 'primeng/chips';
-import { Collaborator, Link, Media, MediaFileContent, Project, Tag, Template } from '../../models/project-models';
+import { Collaborator, Link, Media, Project, Tag, Template, CollaboratorSelectEvent } from '../../models/project-models';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { RatingModule } from 'primeng/rating';
@@ -12,7 +12,7 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProjectService } from '../../services/project/project.service';
 import { TemplateService } from '../../services/template/template.service';
-import {FileUpload, FileUploadHandlerEvent, FileUploadModule, UploadEvent} from 'primeng/fileupload';
+import {FileUpload, FileUploadHandlerEvent, FileUploadModule} from 'primeng/fileupload';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { DropdownModule } from 'primeng/dropdown';
@@ -22,7 +22,6 @@ import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { ChipModule } from 'primeng/chip';
 import { ReactiveFormsModule } from '@angular/forms';
 import { DataViewModule } from 'primeng/dataview';
-import {FileUploadEvent} from 'primeng/fileupload';
 import { MediaService } from '../../services/media/media.service';
 import { LinkService } from '../../services/link/link.service';
 import { CollaboratorService } from '../../services/collaborator/collaborator.service';
@@ -88,11 +87,11 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   wsTagsSubscription: Subscription = new Subscription()
   wsCollaboratorsSubscription: Subscription = new Subscription()
 
-  tagsWebSocket: WebSocketSubject<any> = webSocket({
+  tagsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/tags",
     deserializer: msg => String(msg.data)
   })
-  collaboratorsWebSocket: WebSocketSubject<any> = webSocket({
+  collaboratorsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/collaborators",
     deserializer: msg => String(msg.data)
   })
@@ -137,8 +136,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     )
 
     this.wsCollaboratorsSubscription = this.collaboratorsWebSocket.subscribe(
-      async msg => {
-        const words = msg.split(" ")
+      async () => {
         const newCollaborators = await this.getAllCollaborators()
         this.collaborators = newCollaborators
       }
@@ -171,28 +169,16 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
 
   }
 
-  filterTags(event: any) {
+  filterTags(event: unknown) {
     const query = (event as AutoCompleteCompleteEvent).query
     this.filteredTags = this.tags.filter(tag => tag.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
   }
 
-  filterCollaborators(event: any) {
+  filterCollaborators(event: unknown) {
     const query = (event as AutoCompleteCompleteEvent).query.toLowerCase();
     this.filteredCollaborators = this.collaborators
       .filter(collaborator => collaborator.name.toLowerCase().includes(query))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }
-  
-
-  onTagSelect(event: any) {
-    const tag = event;
-    if (!this.tagNames.includes(tag)) {
-      this.tagNames.push(tag);
-    }
-  }
-
-  onUpload(event: UploadEvent) {
-    this.messageService.add({severity: 'info', summary: 'Success', detail: 'File Uploaded with Basic Mode'});
   }
 
   async saveNewTag(): Promise<void> {
@@ -370,7 +356,7 @@ isTitleDescriptionAndMediaValid(): boolean{
     this.mediaNames.push("");
     this.addedMediaList.push(formData);
     this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media added! The media will be uploaded when the edit will be saved!'});
-    let newMedia:Media = {
+    const newMedia:Media = {
       mediaId:'',
       name:file.name,
       path:file.name,
@@ -402,7 +388,7 @@ removeMedia(index: number): void {
     this.addCollaboratorVisible = true;
   }
 
-  onCollaboratorSelect(event: any) {
+  onCollaboratorSelect(event: CollaboratorSelectEvent) {
     const selectedCollaborator = event.value;
     this.newCollaboratorName = selectedCollaborator.name;
     this.collaboratorNameInput.setValue(selectedCollaborator.name);

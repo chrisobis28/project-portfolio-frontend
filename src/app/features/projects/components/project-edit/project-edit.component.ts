@@ -14,7 +14,8 @@ import {
   MediaFileContent,
   Project,
   Tag,
-  Template
+  Template,
+  CollaboratorSelectEvent
 } from '../../models/project-models';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -22,7 +23,7 @@ import { RatingModule } from 'primeng/rating';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProjectService } from '../../services/project/project.service';
-import {FileUpload, FileUploadEvent, FileUploadHandlerEvent, FileUploadModule} from 'primeng/fileupload';
+import {FileUpload, FileUploadHandlerEvent, FileUploadModule} from 'primeng/fileupload';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import{ MediaService} from "../../services/media/media.service";
@@ -32,7 +33,6 @@ import { LinkService } from '../../services/link/link.service';
 import { CollaboratorService } from '../../services/collaborator/collaborator.service';
 import { TemplateService } from '../../services/template/template.service';
 import { TagService } from '../../services/tag/tag.service';
-import { Serializer } from '@angular/compiler';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 import {AutoCompleteCompleteEvent, AutoCompleteModule} from "primeng/autocomplete";
 import {DataViewModule} from "primeng/dataview";
@@ -103,31 +103,31 @@ export class ProjectEditComponent implements OnInit {
   wsLinksProjectSubscription: Subscription = new Subscription()
   wsMediaProjectSubscription: Subscription = new Subscription()
 
-  projectsWebSocket: WebSocketSubject<any> = webSocket({
+  projectsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/projects",
     deserializer: msg => String(msg.data)
   })
-  collaboratorsProjectWebSocket: WebSocketSubject<any> = webSocket({
+  collaboratorsProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/collaborators/project",
     deserializer: msg => String(msg.data)
   })
-  collaboratorsWebSocket: WebSocketSubject<any> = webSocket({
+  collaboratorsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/collaborators",
     deserializer: msg => String(msg.data)
   })
-  tagsProjectWebSocket: WebSocketSubject<any> = webSocket({
+  tagsProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/tags/project",
     deserializer: msg => String(msg.data)
   })
-  tagsWebSocket: WebSocketSubject<any> = webSocket({
+  tagsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/tags",
     deserializer: msg => String(msg.data)
   })
-  linksProjectWebSocket: WebSocketSubject<any> = webSocket({
+  linksProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/link/project",
     deserializer: msg => String(msg.data)
   })
-  mediaProjectWebSocket: WebSocketSubject<any> = webSocket({
+  mediaProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/media/project",
     deserializer: msg => String(msg.data)
   })
@@ -227,8 +227,7 @@ export class ProjectEditComponent implements OnInit {
      )
 
      this.wsCollaboratorsSubscription = this.collaboratorsWebSocket.subscribe(
-      async msg => {
-        const words = msg.split(" ")
+      async () => {
         const newCollaborators = await this.getAllCollaborators()
         this.collaborators = newCollaborators
       }
@@ -307,7 +306,7 @@ export class ProjectEditComponent implements OnInit {
     return firstValueFrom(this.collaboratorService.getCollaboratorsByProjectId(id))
   }
 
-  filterCollaborators(event: any) {
+  filterCollaborators(event: unknown) {
     const query = (event as AutoCompleteCompleteEvent).query.toLowerCase();
     this.filteredCollaborators = this.collaborators
       .filter(collaborator => collaborator.name.toLowerCase().includes(query))
@@ -317,7 +316,7 @@ export class ProjectEditComponent implements OnInit {
   getNamesForTags(tags: Tag[]): string[] {
     return tags.map(x => x.name)
   }
-  filterTags(event: any) {
+  filterTags(event: unknown) {
     const query = (event as AutoCompleteCompleteEvent).query
     this.filteredTags = this.platformTags.filter(tag => tag.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
   }
@@ -421,7 +420,7 @@ export class ProjectEditComponent implements OnInit {
       for (const editMedia of this.editMediaList) {
           if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
           {
-            await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as String)));
+            await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as string)));
           }
           else if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
           {
@@ -483,7 +482,7 @@ export class ProjectEditComponent implements OnInit {
         mediaFile = data;
         this.downloadFile(mediaFile);
       },
-      error: (err: any) => {
+      error: (err: unknown) => {
         console.error('Error fetching media files', err);
       }
     })
@@ -496,7 +495,7 @@ export class ProjectEditComponent implements OnInit {
       summary: 'Success',
       detail: 'Media added! The media will be uploaded when the edit will be saved!'
     });
-    let newMedia: Media = {
+    const newMedia: Media = {
       mediaId: '',
       name: file.name,
       path: file.name,
@@ -549,7 +548,7 @@ export class ProjectEditComponent implements OnInit {
     this.addCollaboratorVisible = true;
   }
 
-  onCollaboratorSelect(event: any) {
+  onCollaboratorSelect(event: CollaboratorSelectEvent) {
     const selectedCollaborator = event.value;
     this.newCollaboratorName = selectedCollaborator.name;
     this.collaboratorNameInput.setValue(selectedCollaborator.name);

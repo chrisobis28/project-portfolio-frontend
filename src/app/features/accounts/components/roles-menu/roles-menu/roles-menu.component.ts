@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener } from '@angular/core';
+import { Component,HostListener } from '@angular/core';
 import { StorageService } from '../../../services/authentication/storage.service';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -7,10 +7,9 @@ import { AccountTransfer, ProjectTransfer } from '../../../models/accounts-model
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { FormsModule } from '@angular/forms';
 import { AccountService } from '../../../services/accounts/account.service';
-import { Observable, debounceTime, filter, firstValueFrom, fromEvent } from 'rxjs';
+import { firstValueFrom} from 'rxjs';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DropdownModule } from 'primeng/dropdown';
-import { Project, ProjectsToAccounts } from 'src/app/features/projects/models/project-models';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 

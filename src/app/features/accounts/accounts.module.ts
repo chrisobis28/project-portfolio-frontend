@@ -14,9 +14,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ChipsModule } from 'primeng/chips';
 import { ChipModule } from 'primeng/chip';
 import { MultiSelectModule } from 'primeng/multiselect';
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule} from '@angular/router';
 import { MessagesModule } from 'primeng/messages';
-import { ToastModule } from 'primeng/toast';
 
 @NgModule({
     declarations: [
