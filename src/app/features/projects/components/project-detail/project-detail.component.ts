@@ -29,6 +29,7 @@ import {ConfirmationService, MessageService} from "primeng/api";
 import { CollaboratorTransfer } from '../../models/project-models';
 import {ImageModule} from "primeng/image";
 import {GalleriaModule} from "primeng/galleria";
+import { environment } from 'src/environments/environment';
 @Component({
   selector: 'app-project-detail',
   standalone: true,
@@ -101,23 +102,23 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
 
 
   projectsWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/projects",
+    url: environment.wsUrl + '/topic/project',
     deserializer: msg => String(msg.data)
   })
   collaboratorsProjectWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/collaborators/project",
+    url: environment.wsUrl + '/topic/collaborators/project',
     deserializer: msg => String(msg.data)
   })
   tagsProjectWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/tags/project",
+    url: environment.wsUrl + '/topic/tags/project',
     deserializer: msg => String(msg.data)
   })
   linksProjectWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/link/project",
+    url: environment.wsUrl + '/topic/link/project',
     deserializer: msg => String(msg.data)
   })
   mediaProjectWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/media/project",
+    url: environment.wsUrl + '/topic/media/project',
     deserializer: msg => String(msg.data)
   })
   constructor(private readonly router:Router,

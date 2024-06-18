@@ -37,6 +37,7 @@ import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 import {AutoCompleteCompleteEvent, AutoCompleteModule} from "primeng/autocomplete";
 import {DataViewModule} from "primeng/dataview";
 import {DialogModule} from "primeng/dialog";
+import { environment } from 'src/environments/environment';
 @Component({
   selector: 'app-project-edit',
   templateUrl: './project-edit.component.html',
@@ -104,31 +105,31 @@ export class ProjectEditComponent implements OnInit {
   wsMediaProjectSubscription: Subscription = new Subscription()
 
   projectsWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/projects",
+    url: environment.wsUrl + '/topic/projects',
     deserializer: msg => String(msg.data)
   })
   collaboratorsProjectWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/collaborators/project",
+    url: environment.wsUrl + '/topic/collaborators/project',
     deserializer: msg => String(msg.data)
   })
   collaboratorsWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/collaborators",
+    url: environment.wsUrl + '/topic/collaborators',
     deserializer: msg => String(msg.data)
   })
   tagsProjectWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/tags/project",
+    url: environment.wsUrl + '/topic/tags/project',
     deserializer: msg => String(msg.data)
   })
   tagsWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/tags",
+    url: environment.wsUrl + '/topic/tags',
     deserializer: msg => String(msg.data)
   })
   linksProjectWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/link/project",
+    url: environment.wsUrl + '/topic/link/project',
     deserializer: msg => String(msg.data)
   })
   mediaProjectWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/media/project",
+    url: environment.wsUrl + '/topic/media/project',
     deserializer: msg => String(msg.data)
   })
 

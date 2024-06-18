@@ -32,6 +32,7 @@ import {DialogModule} from "primeng/dialog";
 import {Router} from "@angular/router";
 import { AccountService } from 'src/app/features/accounts/services/accounts/account.service';
 import { CollaboratorTransfer } from '../../models/project-models';
+import { environment} from 'src/environments/environment';
 
 
 
@@ -89,11 +90,11 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   wsCollaboratorsSubscription: Subscription = new Subscription()
 
   tagsWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/tags",
+    url: environment.wsUrl + "/topic/tags",
     deserializer: msg => String(msg.data)
   })
   collaboratorsWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/collaborators",
+    url: environment.wsUrl + "/topic/collaborators",
     deserializer: msg => String(msg.data)
   })
 
