@@ -11,36 +11,36 @@ export class StorageService {
   constructor() {}
 
   clean(): void {
-    window.sessionStorage.removeItem(USER_KEY);
-    window.sessionStorage.removeItem(COOKIE_DATE);
-    window.sessionStorage.removeItem(ROLE);
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(COOKIE_DATE);
+    localStorage.removeItem(ROLE);
   }
 
   public saveUser(username: string): void {
-    window.sessionStorage.removeItem(USER_KEY);
-    window.sessionStorage.setItem(USER_KEY, username);
+    localStorage.removeItem(USER_KEY);
+    localStorage.setItem(USER_KEY, username);
   }
 
   public saveDate(date: string): void {
-    window.sessionStorage.removeItem(COOKIE_DATE);
-    window.sessionStorage.setItem(COOKIE_DATE, date);
+    localStorage.removeItem(COOKIE_DATE);
+    localStorage.setItem(COOKIE_DATE, date);
   }
 
   public saveRole(role: string): void {
-    window.sessionStorage.removeItem(ROLE);
-    window.sessionStorage.setItem(ROLE, role);
+    localStorage.removeItem(ROLE);
+    localStorage.setItem(ROLE, role);
   }
 
   public getUser(): string {
-    const username = window.sessionStorage.getItem(USER_KEY);
+    const username = localStorage.getItem(USER_KEY);
     if (username) {
       return username;
     }
-    throw new Error('No username could be found')
+    return '';
   }
 
   public getDate(): string | null {
-    const expirationDate = window.sessionStorage.getItem(COOKIE_DATE);
+    const expirationDate = localStorage.getItem(COOKIE_DATE);
     if (expirationDate) {
       return expirationDate;
     }
@@ -48,7 +48,7 @@ export class StorageService {
   }
 
   public getRole(): string | null {
-    const role = window.sessionStorage.getItem(ROLE);
+    const role = localStorage.getItem(ROLE);
     if (role) {
       return role;
     }
@@ -56,7 +56,7 @@ export class StorageService {
   }
 
   public isLoggedIn(): boolean {
-    const username = window.sessionStorage.getItem(USER_KEY);
+    const username = localStorage.getItem(USER_KEY);
     if (username && !this.dateExpired()) {
       return true;
     }

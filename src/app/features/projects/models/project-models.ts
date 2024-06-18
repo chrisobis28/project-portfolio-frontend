@@ -13,7 +13,7 @@ export interface Project {
     collaboratorNames: string[]
     tagNames: string[]
     tags: Tag[]
-    tmb:MediaFileContent | undefined
+    thumbnail:MediaFileContent | undefined
 
 }
 
@@ -24,19 +24,21 @@ export interface Media {
     project: Project
     requestMediaProjects: RequestMediaProject[]
 }
+export interface EditMedia {
+  media:Media|null
+  mediaFileContent:MediaFileContent|null
+  file:File|null
+  delete:boolean
+}
 
 export interface ProjectsToAccounts {
     ptaId: string
     role: string
 }
-export interface MediaFile {
-  a: string;
-  b: string;
-  c: string;
-}
 export interface MediaFileContent {
-  a: string;
-  b: string;
+  fileName:string,
+  filePath:string,
+  fileContent:string
 }
 
 export interface ProjectsToCollaborators {
@@ -73,6 +75,13 @@ export interface Collaborator {
     requestCollaboratorsProjects: RequestCollaboratorsProjects[]
 }
 
+export interface CollaboratorTransfer {
+    collaboratorId: string;
+    name: string;
+    role: string;
+}
+
+
 export interface Request {
     requestId: string
     newTitle: string
@@ -107,8 +116,7 @@ export interface Tag {
 export interface Template {
     templateName: string
     standardDescription: string
-    standardBibtex: string
-    numberOfCollaborators: number
+    numberOfCollaborators: number | undefined
     projects: Project[]
     templateAdditions: TemplateAddition[]
 }
@@ -117,7 +125,7 @@ export interface TemplateAddition {
     templateAdditionId: string
     templateAdditionName: string
     media: boolean
-    template: Template
+    template: Template | null
 }
 
 export interface WebSocketStringMessage {
