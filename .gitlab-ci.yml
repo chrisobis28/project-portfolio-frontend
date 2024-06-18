@@ -12,7 +12,7 @@ lint:
 
 test:
   stage: test
-  image: node:22.1.0
+  image: circleci/node:latest-browsers
   script:
     - npm install @angular/cli
     - npm run test
