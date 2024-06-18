@@ -39,6 +39,7 @@ import {GalleriaModule} from "primeng/galleria";
   providers: [ConfirmationService, MessageService]
 })
 export class ProjectDetailComponent implements OnInit, OnDestroy {
+  private readonly HOST ='localhost:8080'
   images: MediaFileContent[] = [];
   documents: Media[] = [];
   bibTeX: MediaFileContent | undefined = {
@@ -101,23 +102,23 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
 
 
   projectsWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/projects",
+    url: "ws://"+this.HOST+"/topic/projects",
     deserializer: msg => String(msg.data)
   })
   collaboratorsProjectWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/collaborators/project",
+    url: "ws://"+this.HOST+"/topic/collaborators/project",
     deserializer: msg => String(msg.data)
   })
   tagsProjectWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/tags/project",
+    url: "ws://"+this.HOST+"/topic/tags/project",
     deserializer: msg => String(msg.data)
   })
   linksProjectWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/link/project",
+    url: "ws://"+this.HOST+"/topic/link/project",
     deserializer: msg => String(msg.data)
   })
   mediaProjectWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/media/project",
+    url: "ws://"+this.HOST+"/topic/media/project",
     deserializer: msg => String(msg.data)
   })
   constructor(private readonly router:Router,
@@ -138,7 +139,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   getCollaborators(): string {
     return this.collaborators.map(collaborator => `${collaborator.name} (${collaborator.role})`).join(', ');
   }
-  
+
 
    async ngOnInit() {
 

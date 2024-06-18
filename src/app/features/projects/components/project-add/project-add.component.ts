@@ -49,7 +49,7 @@ import { CollaboratorTransfer } from '../../models/project-models';
 
 })
 export class ProjectAddComponent implements OnInit, OnDestroy {
-
+  private readonly HOST ='localhost:8080'
   media: Media[] = [];
   mediaNames: string[] = [];
   addTagVisible: boolean = false;
@@ -89,11 +89,11 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   wsCollaboratorsSubscription: Subscription = new Subscription()
 
   tagsWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/tags",
+    url: "ws://"+this.HOST+"/topic/tags",
     deserializer: msg => String(msg.data)
   })
   collaboratorsWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/collaborators",
+    url: "ws://"+this.HOST+"/topic/collaborators",
     deserializer: msg => String(msg.data)
   })
 
@@ -182,7 +182,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
       .filter(collaborator => collaborator.name.toLowerCase().includes(query))
       .sort((a, b) => a.name.localeCompare(b.name));
   }
-  
+
 
   onTagSelect(event: any) {
     const tag = event;
@@ -425,7 +425,7 @@ removeMedia(index: number): void {
       return;
     }
 
-    const isDuplicate = this.selectedCollaborators.some((collaborator, index) => 
+    const isDuplicate = this.selectedCollaborators.some((collaborator, index) =>
       collaborator.name.toLowerCase() === this.newCollaboratorName.toLowerCase() && index !== this.editIndex
     );
 
@@ -462,7 +462,7 @@ removeMedia(index: number): void {
     this.collaboratorRoleInput.reset();
     this.editIndex = null;
   }
-  
+
 }
 
 

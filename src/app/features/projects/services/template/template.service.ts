@@ -8,7 +8,8 @@ import { Template, TemplateAddition } from '../../models/project-models';
 })
 export class TemplateService {
 
-  private readonly API_URL = 'http://localhost:8080/template';
+  private readonly HOST ='http://localhost:8080'
+  private readonly API_URL = this.HOST+'/template';
 
   constructor(
     private readonly httpClient: HttpClient

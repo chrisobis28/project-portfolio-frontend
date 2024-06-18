@@ -7,7 +7,8 @@ import {HttpClient} from "@angular/common/http";
   providedIn: 'root'
 })
 export class MediaService {
-  private readonly API_URL = 'http://localhost:8080/media/'
+  private readonly HOST ='http://localhost:8080'
+  private readonly API_URL = this.HOST+ '/media/'
   constructor(private readonly httpClient: HttpClient) { }
   getMediasContentByProjectId(projectId: string): Observable<MediaFileContent[]> {
     return this.httpClient.get<MediaFileContent[]>(this.API_URL + "public/images/" + `${projectId}`);

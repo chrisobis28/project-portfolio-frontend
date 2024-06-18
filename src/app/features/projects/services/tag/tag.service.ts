@@ -8,7 +8,8 @@ import { Observable } from 'rxjs';
 })
 export class TagService {
 
-  private readonly API_URL = 'http://localhost:8080/tag/';
+  private readonly HOST ='http://localhost:8080'
+  private readonly API_URL = this.HOST+'/tag/';
   constructor(
     private readonly httpClient: HttpClient
   ) { }

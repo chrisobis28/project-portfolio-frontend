@@ -7,7 +7,8 @@ import {Collaborator, Link, Media, Project, Tag, Template} from '../../models/pr
   providedIn: 'root'
 })
 export class ProjectService {
-  private readonly API_URL = 'http://localhost:8080/project/';
+  private readonly HOST ='http://localhost:8080'
+  private readonly API_URL = this.HOST+'/project/';
 
   constructor(
     private readonly httpClient: HttpClient
@@ -16,7 +17,7 @@ export class ProjectService {
   getAllProjects(): Observable<Project[]> {
     return this.httpClient.get<Project[]>(this.API_URL + 'public/');
   }
-  
+
 
   getProjectById(id: string): Observable<Project> {
     return this.httpClient.get<Project>(this.API_URL+ `public/${id}`);
@@ -36,6 +37,6 @@ export class ProjectService {
 
 
 
-  
+
 
 }

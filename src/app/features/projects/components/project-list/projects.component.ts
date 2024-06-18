@@ -21,6 +21,7 @@ import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
   providers: [ConfirmationService, MessageService]
 })
 export class ProjectsComponent implements OnInit, OnDestroy {
+  private readonly HOST ='localhost:8080'
   data: Project[] = [];
   filteredData: Project[] = [];
   layout: DataView["layout"] = "list";
@@ -41,23 +42,23 @@ export class ProjectsComponent implements OnInit, OnDestroy {
 
 
   projectsWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/projects",
+    url: "ws://"+this.HOST+"/topic/projects",
     deserializer: msg => String(msg.data)
   })
   collaboratorsProjectWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/collaborators/project",
+    url: "ws://"+this.HOST+"/topic/collaborators/project",
     deserializer: msg => String(msg.data)
   })
   tagsWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/tags",
+    url: "ws://"+this.HOST+"/topic/tags",
     deserializer: msg => String(msg.data)
   })
   tagsProjectWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/tags/project",
+    url: "ws://"+this.HOST+"/topic/tags/project",
     deserializer: msg => String(msg.data)
   })
   mediaProjectWebSocket: WebSocketSubject<any> = webSocket({
-    url: "ws://localhost:8080/topic/media/project",
+    url: "ws://"+this.HOST+"/topic/media/project",
     deserializer: msg => String(msg.data)
   })
 

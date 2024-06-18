@@ -9,7 +9,8 @@ import { Observable } from 'rxjs';
 })
 export class CollaboratorService {
 
-  private readonly API_URL = 'http://localhost:8080/collaborator/';
+  private readonly HOST ='http://localhost:8080'
+  private readonly API_URL = this.HOST+'/collaborator/';
   constructor(
     private readonly httpClient: HttpClient
   ) { }
