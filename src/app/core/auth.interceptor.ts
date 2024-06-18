@@ -19,7 +19,10 @@ export class AuthInterceptor implements HttpInterceptor {
 
 
         let authReq = req.clone({
-            withCredentials: true
+            withCredentials: true,
+            setHeaders: {
+                'ngrok-skip-browser-warning': 'true'
+            }
         });
         return next.handle(authReq).pipe(
             catchError((error: HttpErrorResponse) => {
