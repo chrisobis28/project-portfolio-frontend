@@ -66,6 +66,7 @@ export class ProjectEditComponent implements OnInit {
   filteredCollaborators: Collaborator[] = []
   removeCollaborators: string[] = []
   selectedCollaborators: CollaboratorTransfer[] = [];
+  initialTags: Tag[] = [];
 
   addCollaboratorVisible: boolean = false;
   newCollaboratorName: string = '';
@@ -190,6 +191,8 @@ export class ProjectEditComponent implements OnInit {
             const newTags  = await this.getTagsByProjectId(this.projectId)
             this.tags = newTags
             this.tagnames = newTags.map(x => x.name);
+            this.selectedTags = newTags;
+            this.selectedTagNames = newTags.map(x => x.name);
           }
         }
       }
@@ -280,7 +283,10 @@ export class ProjectEditComponent implements OnInit {
       });
       this.tagService.getTagsByProjectId(this.projectId).subscribe((response: Tag[]) => {
         this.tags = response;
-        this.tagnames = this.selectedTags.map(x => x.name)
+        this.initialTags = response
+        this.tagnames = this.tags.map(x => x.name);
+        this.selectedTags = this.tags;
+        this.selectedTagNames = this.tagnames;
       });
       this.collaboratorService.getCollaboratorsByProjectId(this.projectId).subscribe((response: CollaboratorTransfer[]) => {
         this.projectCollaborators = response
@@ -386,9 +392,12 @@ export class ProjectEditComponent implements OnInit {
         thumbnail: thumbnail
       };
 
-      this.removeTags = this.platformTags.filter(x=>!this.selectedTagNames.includes(x.name));
+      this.removeTags = this.initialTags.filter(tag => !this.selectedTags.map(t => t.name).includes(tag.name));
+      this.addTags = this.selectedTags.filter(tag => !this.initialTags.map(t => t.name).includes(tag.name));
+    
+      // this.removeTags = this.selectedTags.filter(x=>!this.selectedTagNames.includes(x.name));
       // this.removeTags = this.tags.filter(x=>!this.selectedTags.includes(x));
-      this.addTags = this.platformTags.filter(x=>this.selectedTagNames.includes(x.name) && !this.selectedTags.flatMap(x=>x.name).includes(x.name));
+      // this.addTags = this.platformTags.filter(x=>this.selectedTagNames.includes(x.name) && !this.selectedTags.flatMap(x=>x.name).includes(x.name));
 
       // this.removeCollaborators = this.projectCollaborators.filter(x=>!this.selectedCollaboratorNames.includes(x.name)).map(x => x.collaboratorId);
       // this.addCollaborators = this.platformCollaborators.filter(x=>this.selectedCollaboratorNames.includes(x.name) && !this.projectCollaborators.flatMap(x=>x.name).includes(x.name));
