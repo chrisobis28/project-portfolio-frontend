@@ -38,7 +38,7 @@
             </div>
             <div class="card flex justify-content-start min-w-full">
                 <p-floatLabel>
-                    <input *ngIf="this.project" [(ngModel)]="this.project.title" [disabled]="true" id="projecttitle"
+                    <input *ngIf="this.project" [(ngModel)]="this.request.newTitle" [disabled]="true" id="projecttitle"
                         pInputText style="width: 81vw" />
                     <label>Project Title</label>
                 </p-floatLabel>
@@ -51,7 +51,7 @@
             </div>
             <div class="card flex justify-content-start min-w-full">
                 <p-floatLabel>
-                    <textarea *ngIf="this.project" [(ngModel)]="this.project.description" [autoResize]="true"
+                    <textarea *ngIf="this.project" [(ngModel)]="this.request.newDescription" [autoResize]="true"
                         [disabled]="true" id="float-input" pInputTextarea rows="5" style="width: 81vw">
                   </textarea>
                     <label for="float-input">Description</label>

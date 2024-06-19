@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {Observable, map} from "rxjs";
-import {MediaFileContent, Media, Link, RequestMediaProject} from "../../models/project-models";
+import {MediaFileContent, Media, Link, RequestMediaProject, Request} from "../../models/project-models";
 import {HttpClient} from "@angular/common/http";
 
 @Injectable({
@@ -40,13 +40,13 @@ export class MediaService {
     document.body.removeChild(link);
     URL.revokeObjectURL(fileUrl);
   }
-  addAddedMediaToRequest(requestId: string, document:FormData) {
-    return this.httpClient.post<Media>(this.API_URL + "request/add/" + `${requestId}`, document)
+  addAddedMediaToRequest(requestId: string, document:FormData, projectId: string) {
+    return this.httpClient.post<Media>(this.API_URL + "request/add/" + `${requestId}` + "/" + `${projectId}`, document)
   }
-  addRemovedMediaToRequest(requestId: string, mediaId: string) {
-    return this.httpClient.post<Media>(this.API_URL + "request/remove/" + `${requestId}` + "/" + `${mediaId}`, null)
+  addRemovedMediaToRequest(requestId: string, mediaId: string, projectId: string) {
+    return this.httpClient.post<Media>(this.API_URL + "request/remove/" + `${requestId}` + "/" + `${mediaId}` + "/" + `${projectId}`, null)
   }
-  getMediaChangedForRequest(requestId: string): Observable<RequestMediaProject[]> {
-    return this.httpClient.get<RequestMediaProject[]>(this.API_URL + "request/" + `${requestId}`)
+  getMediaChangedForRequest(requestId: string, projectId: string): Observable<RequestMediaProject[]> {
+    return this.httpClient.get<RequestMediaProject[]>(this.API_URL + "request/" + `${requestId}` + "/" + `${projectId}`)
   }
 }

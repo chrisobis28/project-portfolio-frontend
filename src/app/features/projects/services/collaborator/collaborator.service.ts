@@ -29,12 +29,12 @@ export class CollaboratorService {
     return this.httpClient.delete<String>(this.API_URL + `${projectId}` + "/" + `${collaborator.collaboratorId}`,{ responseType: 'text' as 'json'});
   }
 
-  addCollaboratorToRequest(requestId: string, collaboratorId: string, isRemove: boolean): Observable<Collaborator> {
-    return this.httpClient.post<Collaborator>(this.API_URL + "request/" + `${requestId}` + "/" + `${collaboratorId}`, isRemove)
+  addCollaboratorToRequest(requestId: string, collaboratorId: string, isRemove: boolean, projectId: string): Observable<Collaborator> {
+    return this.httpClient.post<Collaborator>(this.API_URL + "request/" + `${requestId}` + "/" + `${collaboratorId}` + "/" + `${projectId}`, isRemove)
   }
 
-  getChangesCollaboratorsForRequest(requestId: string): Observable<RequestCollaboratorsProjects[]> {
-    return this.httpClient.get<RequestCollaboratorsProjects[]>(this.API_URL + "request/" + `${requestId}`)
+  getChangesCollaboratorsForRequest(requestId: string, projectId: string): Observable<RequestCollaboratorsProjects[]> {
+    return this.httpClient.get<RequestCollaboratorsProjects[]>(this.API_URL + "request/" + `${requestId}` + "/" + `${projectId}`)
   }
 
 }

@@ -119,7 +119,7 @@ export class RequestDetailComponent implements OnInit, OnDestroy {
       console.log(this.request)
       console.log(this.project)
 
-      const newCollaborators = await firstValueFrom(this.collaboratorService.getChangesCollaboratorsForRequest(this.requestId))
+      const newCollaborators = await firstValueFrom(this.collaboratorService.getChangesCollaboratorsForRequest(this.requestId, this.projectId))
       const oldCollaborators = await firstValueFrom (this.collaboratorService.getCollaboratorsByProjectId(this.projectId))
       this.originalCollaborators = oldCollaborators
       this.addedCollaborators = newCollaborators.filter( x => x.isRemove == false).map(x => x.collaborator)
@@ -129,7 +129,7 @@ export class RequestDetailComponent implements OnInit, OnDestroy {
 
       const oldTags = await firstValueFrom(this.tagService.getTagsByProjectId(this.projectId))
       this.originalTags = oldTags
-      const newTags = await firstValueFrom(this.tagService.getTagsChangedForRequest(this.requestId))
+      const newTags = await firstValueFrom(this.tagService.getTagsChangedForRequest(this.requestId, this.projectId))
       this.addedTags = newTags.filter(x => x.isRemove == false).map(x => x.tag)
       this.removedTags = newTags.filter(x => x.isRemove == true).map(x => x.tag)
       this.allTags = this.originalTags.concat(this.addedTags)
@@ -137,14 +137,14 @@ export class RequestDetailComponent implements OnInit, OnDestroy {
 
       const oldmedia = await firstValueFrom(this.mediaService.getDocumentsByProjectId(this.projectId))
       this.originalMedia = oldmedia
-      const newMedia = await firstValueFrom(this.mediaService.getMediaChangedForRequest(this.requestId))
+      const newMedia = await firstValueFrom(this.mediaService.getMediaChangedForRequest(this.requestId, this.projectId))
       this.addedMedia = newMedia.filter(x => x.isRemove == false).map(x => x.media)
       this.removedMedia = newMedia.filter(x => x.isRemove == true).map(x => x.media)
       this.allMedia = this.originalMedia.concat(this.addedMedia)
 
       const oldLinks = await firstValueFrom(this.linkService.getLinksByProjectId(this.projectId))
       this.originalLinks = oldLinks
-      const newLinks = await firstValueFrom(this.linkService.getChangedLinksForRequest(this.requestId))
+      const newLinks = await firstValueFrom(this.linkService.getChangedLinksForRequest(this.requestId, this.projectId))
       this.addedLinks = newLinks.filter(x => x.isRemove == false).map(x => x.link)
       this.removedLinks = newLinks.filter(x => x.isRemove == true).map(x => x.link)
       this.allLinks = this.originalLinks.concat(this.addedLinks)
@@ -197,8 +197,8 @@ export class RequestDetailComponent implements OnInit, OnDestroy {
   }
 
   rejectRequest(): void {
-    if(this.requestId)
-      firstValueFrom(this.requestService.rejectRequest(this.requestId))
+    if(this.requestId && this.projectId)
+      firstValueFrom(this.requestService.rejectRequest(this.requestId, this.projectId))
     this.router.navigate([''])
   }
 

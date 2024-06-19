@@ -480,18 +480,18 @@ export class ProjectEditComponent implements OnInit {
 
         for(const link of this.links) {
           if(link.linkId == '') {
-            const addedLink = await firstValueFrom(this.linkService.addAddedLinkToRequest(createdRequest.requestId, link))
+            const addedLink = await firstValueFrom(this.linkService.addAddedLinkToRequest(createdRequest.requestId, link, this.projectId))
             console.log(addedLink) 
           } else {
-            const removedLink = await firstValueFrom(this.linkService.addRemovedLinkToRequest(createdRequest.requestId, link.linkId))
+            const removedLink = await firstValueFrom(this.linkService.addRemovedLinkToRequest(createdRequest.requestId, link.linkId, this.projectId))
             console.log("removed: " + removedLink)
-            const addedLink = await firstValueFrom(this.linkService.addAddedLinkToRequest(createdRequest.requestId, link))
+            const addedLink = await firstValueFrom(this.linkService.addAddedLinkToRequest(createdRequest.requestId, link, this.projectId))
             console.log("added: " + addedLink)
           }
         }
 
         for(const link of this.deleteLinkList) {
-          const removedLink = await firstValueFrom(this.linkService.addRemovedLinkToRequest(createdRequest.requestId, link.linkId))
+          const removedLink = await firstValueFrom(this.linkService.addRemovedLinkToRequest(createdRequest.requestId, link.linkId, this.projectId))
           console.log("removed: " + removedLink)
         }
 
@@ -502,14 +502,14 @@ export class ProjectEditComponent implements OnInit {
         for (const editMedia of this.editMediaList) {
           if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
           {
-            await firstValueFrom(this.mediaService.addRemovedMediaToRequest(createdRequest.requestId,editMedia.media.mediaId));
+            await firstValueFrom(this.mediaService.addRemovedMediaToRequest(createdRequest.requestId,editMedia.media.mediaId, this.projectId));
           }
           else if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
           {
             const formData = new FormData();
             formData.append('file', editMedia.file);
             formData.append('name', editMedia.media.name);
-            await firstValueFrom(this.mediaService.addAddedMediaToRequest(createdRequest.requestId, formData));
+            await firstValueFrom(this.mediaService.addAddedMediaToRequest(createdRequest.requestId, formData, this.projectId));
           }
           else if(editMedia.media != null && editMedia.media.mediaId!='')
         {
@@ -522,25 +522,25 @@ export class ProjectEditComponent implements OnInit {
       console.log(this.addCollaborators)
 
       for (const coll of this.addCollaborators) {
-        await firstValueFrom(this.collaboratorService.addCollaboratorToRequest(createdRequest.requestId, coll.collaboratorId, false))
+        await firstValueFrom(this.collaboratorService.addCollaboratorToRequest(createdRequest.requestId, coll.collaboratorId, false, this.projectId))
       }
 
       console.log(this.removeCollaborators)
 
       for (const coll of this.removeCollaborators) {
-        await firstValueFrom(this.collaboratorService.addCollaboratorToRequest(createdRequest.requestId, coll.collaboratorId, true))
+        await firstValueFrom(this.collaboratorService.addCollaboratorToRequest(createdRequest.requestId, coll.collaboratorId, true, this.projectId))
       }
 
       console.log(this.addTags)
 
       for(const tag of this.addTags) {
-        await firstValueFrom(this.tagService.addTagToRequest(createdRequest.requestId, tag.tagId, false))
+        await firstValueFrom(this.tagService.addTagToRequest(createdRequest.requestId, tag.tagId, false, this.projectId))
       }
 
       console.log(this.removeTags)
 
       for (const tag of this.removeTags) {
-        await firstValueFrom(this.tagService.addTagToRequest(createdRequest.requestId, tag.tagId, true))
+        await firstValueFrom(this.tagService.addTagToRequest(createdRequest.requestId, tag.tagId, true, this.projectId))
       }
       }
       

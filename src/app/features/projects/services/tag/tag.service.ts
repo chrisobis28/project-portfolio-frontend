@@ -52,11 +52,11 @@ export class TagService {
   }
 
 
-  addTagToRequest(requestId: string, tagId: string, isRemove: boolean): Observable<Tag> {
-    return this.httpClient.post<Tag>(this.API_URL + "request/" + `${requestId}` + "/" + `${tagId}`, isRemove)
+  addTagToRequest(requestId: string, tagId: string, isRemove: boolean, projectId: string): Observable<Tag> {
+    return this.httpClient.post<Tag>(this.API_URL + "request/" + `${requestId}` + "/" + `${tagId}` + "/" + `${projectId}`, isRemove)
   }
 
-  getTagsChangedForRequest(requestId: string): Observable<RequestTagProject[]> {
-    return this.httpClient.get<RequestTagProject[]>(this.API_URL + "request/" + `${requestId}`)
+  getTagsChangedForRequest(requestId: string, projectId: string): Observable<RequestTagProject[]> {
+    return this.httpClient.get<RequestTagProject[]>(this.API_URL + "request/" + `${requestId}` + "/" + `${projectId}`)
   }
 }

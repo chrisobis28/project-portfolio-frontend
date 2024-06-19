@@ -25,12 +25,12 @@ export class RequestService {
     return this.httpClient.get<Request>(this.API_URL + `${requestId}` + "/" + `${projectId}`)
   }
 
-  acceptRequest(requestId: string, projectId: string): Observable<Object> {
-    console.log(this.API_URL + "public/" + `${projectId}` + "/" + `${requestId}`)
-    return this.httpClient.post<Object>(this.API_URL + "public/" + `${projectId}` + "/" + `${requestId}`, {})
+  acceptRequest(requestId: string, projectId: string): Observable<void> {
+    console.log(this.API_URL  + `${projectId}` + "/" + `${requestId}`)
+    return this.httpClient.put<void>(this.API_URL  + `${projectId}` + "/" + `${requestId}`, null)
   }
 
-  rejectRequest(requestId: string): Observable<void> {
-    return this.httpClient.delete<void>(this.API_URL + `${requestId}`)
+  rejectRequest(requestId: string, projectId: string): Observable<void> {
+    return this.httpClient.put<void>(this.API_URL + "delete/" + `${requestId}` + "/" + `${projectId}`, null)
   }
 }
