@@ -37,6 +37,7 @@ import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 import {AutoCompleteCompleteEvent, AutoCompleteModule} from "primeng/autocomplete";
 import {DataViewModule} from "primeng/dataview";
 import {DialogModule} from "primeng/dialog";
+import { ColorPickerModule } from 'primeng/colorpicker';
 @Component({
   selector: 'app-project-edit',
   templateUrl: './project-edit.component.html',
@@ -45,7 +46,7 @@ import {DialogModule} from "primeng/dialog";
   imports: [FormsModule, InputTextModule, FloatLabelModule,
     InputTextareaModule, ChipsModule, TableModule, TagModule,
     RatingModule, ButtonModule, CommonModule, FileUploadModule,
-    DropdownModule, ToastModule, RouterLink, AutoCompleteModule, DataViewModule, DialogModule, ReactiveFormsModule],
+    DropdownModule, ToastModule, RouterLink, AutoCompleteModule, DataViewModule, DialogModule, ReactiveFormsModule, ColorPickerModule],
   providers: [ProjectService, MessageService]
 })
 
@@ -57,6 +58,7 @@ export class ProjectEditComponent implements OnInit {
   newTagName: string = "";
   newTagColor: string = "";
   addTagVisible: boolean = false;
+  deleteDialogVisible = false;
   platformCollaborators: Collaborator[] = [];
   projectCollaborators: CollaboratorTransfer[] = []
   editIndex: number | null = null;
@@ -277,8 +279,8 @@ export class ProjectEditComponent implements OnInit {
         this.selectedTemplateName = this.project.template?.templateName;
       });
       this.tagService.getTagsByProjectId(this.projectId).subscribe((response: Tag[]) => {
-        this.selectedTags = response;
-        this.selectedTagNames = this.selectedTags.map(x => x.name)
+        this.tags = response;
+        this.tagnames = this.selectedTags.map(x => x.name)
       });
       this.collaboratorService.getCollaboratorsByProjectId(this.projectId).subscribe((response: CollaboratorTransfer[]) => {
         this.projectCollaborators = response
@@ -384,7 +386,8 @@ export class ProjectEditComponent implements OnInit {
         thumbnail: thumbnail
       };
 
-      this.removeTags = this.selectedTags.filter(x=>!this.selectedTagNames.includes(x.name));
+      this.removeTags = this.platformTags.filter(x=>!this.selectedTagNames.includes(x.name));
+      // this.removeTags = this.tags.filter(x=>!this.selectedTags.includes(x));
       this.addTags = this.platformTags.filter(x=>this.selectedTagNames.includes(x.name) && !this.selectedTags.flatMap(x=>x.name).includes(x.name));
 
       // this.removeCollaborators = this.projectCollaborators.filter(x=>!this.selectedCollaboratorNames.includes(x.name)).map(x => x.collaboratorId);
@@ -445,6 +448,7 @@ export class ProjectEditComponent implements OnInit {
   }
 
   cancel(): void {
+    this.router.navigateByUrl("http://localhost:4200/project-detail/" + this.projectId);
   }
 
   isAnyLinkFieldEmpty(): boolean {
@@ -614,5 +618,13 @@ export class ProjectEditComponent implements OnInit {
     this.collaboratorNameInput.reset();
     this.collaboratorRoleInput.reset();
     this.editIndex = null;
+  }
+
+  isDarkColor(color: string): boolean {
+    return this.tagService.isDarkColor(color);
+  }
+
+  showDeleteDialog(): void {
+    this.deleteDialogVisible = true;
   }
 }

@@ -9,15 +9,36 @@
 
 <body>
 
+    
     <div class="grid">
         <div class="col-12 right-align">
-            <div class="first-container">
-                <h4><i>You ({{username}}) can edit the permissions of accounts on the platform.</i></h4>
+            <div class="first-container justify-content-flex-end align-items-center">
+                <i class="pi pi-user" style="color: #3b82f6; margin-right: 10px;"></i>
+                <h4><i>{{username}} (ADMIN)</i></h4>
                 <a [routerLink]="['']">
                     <button class="home-button">Home</button>
                 </a>
+                <p-button [style]='{"margin-left":"5%", "padding":"13px"}' severity="success" (click)="showHelp = true" icon="pi pi-question"></p-button>
             </div>
         </div>
+
+        <div style="display: flex; justify-content: flex-end;">
+            <p-dialog [(visible)]="showHelp" [modal]="true" [style]="{ width: '40%' }" header="Helper Menu - Admin Roles">
+              <div class="dialog-content p-3">
+                <p class="dialog-info mb-4 ">The <b>roles page</b> is the <b>admin</b>'s way into viewing and modifying the <b>permissions</b> of all accounts currently on the platform. 
+                    The page allows the authorized user to search individuals by <b>username</b> and whether they are registered as <b>Project Managers</b>, 
+                    i.e. also have <b>writing</b> access.</p>
+                <p class="dialog-info mb-4 ">An <b>admin</b> can choose to give <b>writing</b> (<b>project</b> and <b>template</b> creating) permissions to a user 
+                    through their corresponding checkbox, as well as choose to modify the individual's <b>role</b> on a certain <b>project</b>. 
+                    Choosing the project for the modification to happen on, he can choose one of the three roles "<b>Project Manager</b>" 
+                    (add, remove, edit permissions), "<b>Content Creator</b>" (edit permission that require <b>approval</b>) and "<b>Editor</b>" 
+                    (edit permission without the need of sending <b>requests</b> to their Project Manager).</p>
+              </div>
+              <div class="dialog-actions flex justify-content-end">
+                <p-button (click)="showHelp = false" label="Understood" severity="success" class="p-button-outlined" />
+              </div>
+            </p-dialog>
+      </div>
     
         <div class="col-1"></div>
     
@@ -29,16 +50,15 @@
     <div class="grid">
         <div class="col-1"></div>
         <div class="col-10 container-style" style="display: flex; justify-content: space-between;">
-            <div class="card relative col-12 md:col-5 lg:col-2" style="display: flex; align-items: center; flex-grow: 1;">
-                <input type="text" class="role-on-project" style="margin-right: 10px; width: 25%" [(ngModel)]="searchUsername" placeholder="Username"/>
-                <!-- (input)="onUserFilterChange($event)" -->
+            <div class="card relative col-12 md:col-5 lg:col-2" style="display: flex; align-items: center; gap: 10px; flex-grow: 1;">
+                <i class="pi pi-search" style="font-size: 1.2rem"></i>
+                <input type="text" class="role-on-project" style=" width: 25%" [(ngModel)]="searchUsername" placeholder="Search a Username"/>
                 <p-checkbox 
                     [(ngModel)]="searchIsPM"
                     label="Project Manager" 
                     name="isPM" 
                     [binary]="true"
                     value="isPM" />
-                    <!-- (ngModelChange)="onPMFilterChange($event)" -->
             </div>
         </div>
     </div>
@@ -73,13 +93,22 @@
                         (ngModelChange)="onRoleChangeDropdown(i, selectedProject[i].roleInProject)" />
                     <div *ngIf="!account.admin && selectedProject[i] != null && selectedProject[i].projectId != 'null'" style="padding: 10px; width: auto;"> 
                         <div class="text-role" style="width: 100%; align-items: center;">The user has the role of
-                            <input type="text" class="role-on-project" [(ngModel)]="selectedProject[i].roleInProject"/>
+                            <!-- <input type="text" class="role-on-project" [(ngModel)]="selectedProject[i].roleInProject"/> -->
+                            <p-dropdown 
+                                [options]="roles" 
+                                [(ngModel)]="selectedProject[i].roleInProject" 
+                                placeholder="Select a role"
+                                itemTemplate="item">
+                                <ng-template let-item pTemplate="item">
+                                <span>{{item}}</span>
+                                </ng-template>
+                            </p-dropdown>
                             on <i><b>"{{selectedProject[i].name}}"</b></i>.</div>
                     </div>
                     <div *ngIf="!account.admin" class="button-container" style="width: auto; justify-items: flex-end;">
                         <button pButton type="button" icon="pi pi-check" label="Apply" class="p-button-success p-button-rounded apply-button" (click)="onApply(i, account)" [disabled]="!isConditionMet(i, account)"></button>
                     </div>
-                    <h3 class="col-10" *ngIf="account.admin" style="width:90%; font-style: italic; font-weight: 500; font-size: medium;">This user has admin permissions therefore you are not allowed to modify them.</h3>
+                    <h3 class="col-10" *ngIf="account.admin" style="width:85%; font-style: italic; font-weight: 500; font-size: medium;">This user has admin permissions therefore you are not allowed to modify them.</h3>
                 </div>
             </ng-container>
         </div>

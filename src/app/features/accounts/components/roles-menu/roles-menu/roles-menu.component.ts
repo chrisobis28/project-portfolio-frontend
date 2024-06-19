@@ -13,11 +13,12 @@ import { DropdownModule } from 'primeng/dropdown';
 import { Project, ProjectsToAccounts } from 'src/app/features/projects/models/project-models';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { DialogModule } from 'primeng/dialog';
 
 @Component({
   selector: 'app-roles-menu',
   standalone: true,
-  imports: [RouterModule, ButtonModule, CommonModule, FloatLabelModule, FormsModule, CheckboxModule, DropdownModule, ToastModule],
+  imports: [RouterModule, ButtonModule, CommonModule, FloatLabelModule, FormsModule, CheckboxModule, DropdownModule, ToastModule, DialogModule],
   providers: [MessageService],
   templateUrl: './roles-menu.component.html',
   styleUrl: './roles-menu.component.css'
@@ -41,6 +42,9 @@ export class RolesMenuComponent {
   searchUsername: string = '';
   previousSearchLength: number = 0;
   isPM: boolean[] = [];
+  showHelp: boolean = false;
+
+  roles: string[] = ['CONTENT_CREATOR', 'PM', 'EDITOR'];
 
   async ngOnInit(): Promise<void> {
     if(!this.storageService.isLoggedIn() || this.storageService.getRole() != "ROLE_ADMIN") {

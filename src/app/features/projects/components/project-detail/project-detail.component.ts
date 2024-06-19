@@ -136,7 +136,9 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   }
 
   getCollaborators(): string {
-    return this.collaborators.map(collaborator => `${collaborator.name} (${collaborator.role})`).join(', ');
+    return this.collaborators
+      .map(collaborator => `${collaborator.name} (<b>${collaborator.role}</b>)`)
+      .join(', ');
   }
   
 
@@ -394,5 +396,9 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
         })
       }
     })
+  }
+
+  isDarkColor(color: string): boolean {
+    return this.tagService.isDarkColor(color);
   }
 }

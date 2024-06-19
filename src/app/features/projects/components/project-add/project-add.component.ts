@@ -1,4 +1,4 @@
-import { Component , OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component , OnDestroy, OnInit } from '@angular/core';
 import { InputTextModule } from 'primeng/inputtext';
 import { AbstractControl, FormControl, FormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { FloatLabelModule } from 'primeng/floatlabel';
@@ -32,6 +32,7 @@ import {DialogModule} from "primeng/dialog";
 import {Router} from "@angular/router";
 import { AccountService } from 'src/app/features/accounts/services/accounts/account.service';
 import { CollaboratorTransfer } from '../../models/project-models';
+import { ColorPickerModule } from 'primeng/colorpicker';
 
 
 
@@ -44,6 +45,7 @@ import { CollaboratorTransfer } from '../../models/project-models';
     InputTextareaModule, ChipsModule, TableModule, TagModule,
     RatingModule, ButtonModule, CommonModule, FileUploadModule,
     DropdownModule, ToastModule, AutoCompleteModule, ChipModule, ReactiveFormsModule, DataViewModule, DialogModule,
+    ColorPickerModule
   ],
   providers: [ProjectService, MessageService]
 
@@ -59,7 +61,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   tags: Tag[] = [];
   newTagName: string = "";
   newTagColor: string = "";
-  selectedTags: string[] = []
+  selectedTags: Tag[] = []
   collaborators: Collaborator[] = []
   tagNames: string[] = [];
   selectedCollaborators: CollaboratorTransfer[] = []
@@ -75,6 +77,8 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   tagNameInput = new FormControl('', [Validators.required]);
   descriptionInput = new FormControl('', [Validators.required]);
   addedMediaList: FormData[] = [];
+  deleteDialogVisible = false;
+  showHelp: boolean = false;
 
   addCollaboratorVisible: boolean = false;
   newCollaboratorName: string = '';
@@ -106,7 +110,8 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     private collaboratorService: CollaboratorService,
     private tagService: TagService,
     private accountService: AccountService,
-    private readonly router: Router
+    private readonly router: Router,
+    private cd: ChangeDetectorRef
   ) {
   }
 
@@ -125,9 +130,9 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
       async msg => {
         const words = msg.split(" ")
         if (words[0] == "deleted") {
-          const tagName = this.tags.filter(x => x.tagId == words[1])[0].name
-          if (this.selectedTags.includes(tagName))
-            this.selectedTags.splice(this.selectedTags.indexOf(tagName), 1)
+          const tag = this.tags.filter(x => x.tagId == words[1])[0]
+          if (this.selectedTags.includes(tag))
+            this.selectedTags.splice(this.selectedTags.indexOf(tag), 1)
         }
         const newTags = await this.getAllTags();
         this.tags = newTags
@@ -197,11 +202,11 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
 
   async saveNewTag(): Promise<void> {
     if (this.newTagName.length == 0) {
-      this.messageService.add({severity: 'error', summary: 'Error', detail: 'The Tag Name cannot be empty'});
+      this.messageService.add({severity: 'error', summary: 'Error', detail: 'Please select a Tag Name'});
       return;
     }
     if (this.newTagColor.length == 0) {
-      this.messageService.add({severity: 'error', summary: 'Error', detail: 'The Tag Color cannot be empty'});
+      this.messageService.add({severity: 'error', summary: 'Error', detail: 'Please select a Tag Color'});
       return;
     }
     try {
@@ -216,7 +221,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
       newTag.name = this.newTagName;
       newTag.color = this.newTagColor;
       await firstValueFrom(this.tagService.createTag(newTag));
-      this.addTagVisible=false
+      this.addTagVisible=false;
       this.messageService.add({ severity: 'success', summary: 'Success', detail:"The tag was successfully added" });
     }
     catch (error) {
@@ -303,7 +308,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
 
       this.selectedCollaborators = []
 
-      const finalTags = this.tags.filter(x => this.selectedTags.includes(x.name))
+      const finalTags = this.tags.filter(x => this.selectedTags.includes(x));
 
       for(const tag of finalTags) {
         await firstValueFrom(this.tagService.addTagToProject(tag, createdProject.projectId))
@@ -461,6 +466,14 @@ removeMedia(index: number): void {
     this.collaboratorNameInput.reset();
     this.collaboratorRoleInput.reset();
     this.editIndex = null;
+  }
+
+  isDarkColor(color: string): boolean {
+    return this.tagService.isDarkColor(color);
+  }
+
+  showDeleteDialog(): void {
+    this.deleteDialogVisible = true;
   }
   
 }
