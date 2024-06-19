@@ -180,7 +180,7 @@
     </div>
     <div class="grid" *ngFor="let account of selectedAccounts; let i = index">
       <div class="col-4" style="font-size:large; margin-top: 12px;">{{ account.username }}</div>
-      <div class="col-4" style="font-size:large; margin-top: 12px;">{{ account.role }}</div>
+      <div class="col-4" style="font-size:large; margin-top: 12px;">{{ account.roleInProject }}</div>
       <div class="col-2" style="padding: 5px">
         <p-button icon="pi pi-pencil" label="Edit" class="p-button-warning" [style]="{'min-width': '120px'}" severity="info" (click)="editAccount(account, i)"></p-button>
       </div>

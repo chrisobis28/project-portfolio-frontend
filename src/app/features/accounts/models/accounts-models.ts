@@ -35,5 +35,5 @@ export enum RoleInProject {
 export interface AccountDisplay {
     username: string
     name: string
-    role: RoleInProject
+    roleInProject: string
 }

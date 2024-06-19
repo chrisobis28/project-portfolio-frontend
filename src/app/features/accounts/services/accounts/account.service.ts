@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import {Observable} from "rxjs";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import { Project } from 'src/app/features/projects/models/project-models';
-import { AccountTransfer, ProjectTransfer, RoleInProject } from '../../models/accounts-models';
+import { AccountTransfer, ProjectTransfer, RoleInProject, AccountDisplay } from '../../models/accounts-models';
 
 const API_URL = 'http://localhost:8080/account';
 
@@ -55,7 +55,7 @@ export class AccountService {
     return this.httpClient.post<Observable<any>>(url, httpOptions);
   }
 
-  addRoleOnProject(username: string, projectId: string, roleInProject: RoleInProject): Observable<any> {
+  addRoleOnProject(username: string, projectId: string, roleInProject: string): Observable<any> {
     const url = API_URL + `/${username}/${projectId}`;
     const body = '"' + roleInProject + '"'
     return this.httpClient.post<Observable<any>>(url, body, httpOptions);
@@ -93,6 +93,11 @@ export class AccountService {
   getAccountByName(name: string): Observable<string[]> {
     const url = API_URL + `/public/name/${name}`;
     return this.httpClient.get<string[]>(url, httpOptions);
+  }
+
+  getAccountsInProject(projectId: string): Observable<AccountDisplay[]> {
+    const url = API_URL + `/project/${projectId}`;
+    return this.httpClient.get<AccountDisplay[]>(url, httpOptions);
   }
 
 }

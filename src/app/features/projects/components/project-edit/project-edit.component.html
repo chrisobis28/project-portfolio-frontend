@@ -172,6 +172,108 @@
         <p-button (click)="saveNewCollaborator()" label="Add Collaborator" severity="primary" />
       </div>
     </p-dialog>
+
+        <!-- Existing Accounts Section -->
+        <h3>Accounts</h3>
+        <div class="lg:col-12 col-12">
+          <div class="p-fluid">
+            <div class="grid">
+              <div *ngIf="currentAccounts.length > 0" class="col-4"><strong>Username</strong></div>
+              <div *ngIf="currentAccounts.length > 0" class="col-4"><strong>Role</strong></div>
+              <div class="col-2"></div>
+              <div class="col-2"></div>
+            </div>
+            <div class="grid" *ngFor="let account of currentAccounts; let i = index">
+              <div class="col-4" style="font-size:large; margin-top: 12px;">{{ account.username }}</div>
+              <div class="col-4" style="font-size:large; margin-top: 12px;">
+                <p-dropdown 
+                  [options]="roles"
+                  [(ngModel)]="account.roleInProject"
+                  placeholder="Select Role"
+                  itemTemplate="item">
+                  <ng-template let-item pTemplate="item">
+                    <span>{{item}}</span>
+                  </ng-template>
+              </p-dropdown>
+
+              </div>
+              <div class="col-2" style="padding: 5px; display: flex; justify-content: center; align-items: center;">
+                <p-button icon="pi pi-trash" label="Delete" class="p-button-danger" [style]="{'min-width': '120px'}" severity="danger" (click)="removeCurrentAccount(account)"></p-button>
+              </div>
+            </div>
+          </div>
+          <div class="p-fluid">
+            <div class="grid">
+              <div *ngIf="selectedAccounts.length > 0" class="col-4"><strong>Username</strong></div>
+              <div *ngIf="selectedAccounts.length > 0" class="col-4"><strong>Role</strong></div>
+              <div class="col-2"></div>
+              <div class="col-2"></div>
+            </div>
+            <div class="grid" *ngFor="let account of selectedAccounts; let i = index">
+              <div class="col-4" style="font-size:large; margin-top: 12px;">{{ account.username }}</div>
+              <div class="col-4" style="font-size:large; margin-top: 12px;">{{ account.roleInProject }}</div>
+              <div class="col-2" style="padding: 5px">
+                <p-button icon="pi pi-pencil" label="Edit" class="p-button-warning" [style]="{'min-width': '120px'}" severity="info" (click)="editAccount(account, i)"></p-button>
+              </div>
+              <div class="col-2" style="padding: 5px">
+                <p-button icon="pi pi-trash" label="Delete" class="p-button-danger" [style]="{'min-width': '120px'}" severity="danger" (click)="removeAccount(i)"></p-button>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-content-center align-items-center mb-3" style="padding: 10px">
+            <p-button (click)="addAccountVisible = true" icon="pi pi-user-plus" label="Add Account" [style]="{'padding': '12px'}"></p-button>
+          </div>
+        </div>
+
+        
+        <p-dialog [(visible)]="addAccountVisible" [modal]="true" [style]="{ width: '30rem' }" header="Add Account">
+          <div class="dialog-content p-3">
+            <div class="dialog-info mb-4">
+              You are about to add a new account to the project. To add an account, please fill in the username field and select a role.
+            </div>
+            <div class="flex flex-column justify-content-center align-items-center gap-4 mb-4" style="margin-top: 50px">
+              <div class="input-container">
+                <p-autoComplete 
+                  [(ngModel)]="newAccountUsername" 
+                  [suggestions]="filteredAccounts" 
+                  (completeMethod)="filterAccounts($event)" 
+                  (onSelect)="onAccountSelect($event)" 
+                  [formControl]="accountUsernameInput" 
+                  dropdown="true" 
+                  [forceSelection]="true" 
+                  placeholder="Account Username"
+                  class="full-width">
+                </p-autoComplete>
+                <p-autoComplete 
+                  [(ngModel)]="newAccountName"
+                  [suggestions]="filteredAccountsByName"
+                  (completeMethod)="filterAccountsByName($event)"
+                  (onSelect)="onAccountNameSelect($event)"
+                  dropdown="true"
+                  [forceSelection]="false"
+                  placeholder="Search Account by Name"
+                  class="full-width">
+                </p-autoComplete>
+              </div>
+              <div class="input-container">
+                <p-dropdown 
+                  [(ngModel)]="newAccountRole" 
+                  [options]="roles" 
+                  placeholder="Select Role"
+                  itemTemplate="item">
+                  <ng-template let-item pTemplate="item">
+                    <span>{{item}}</span>
+                  </ng-template>
+                </p-dropdown>
+              </div>
+            </div>
+          </div>
+          <div class="dialog-actions flex justify-content-end gap-2 p-3">
+            <p-button (click)="cancelAddAccount()" label="Cancel" severity="danger" class="p-button-outlined" />
+            <p-button (click)="saveNewAccount()" label="Add Account" severity="primary" />
+          </div>
+        </p-dialog>
+        
     
 
     <div class="linkUpload">

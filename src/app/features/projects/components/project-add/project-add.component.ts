@@ -92,15 +92,15 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   addAccountVisible: boolean = false;
   newAccountUsername: string = '';
   newAccountName: string = '';
-  newAccountRole: RoleInProject = RoleInProject.CONTENT_CREATOR;
+  newAccountRole: string = 'CONTENT_CREATOR';
   accountUsernameInput = new FormControl('', Validators.required);
   filteredAccounts: string[] = []
   filteredAccountsByName: string[] = []
   selectedAccounts: AccountDisplay[] = []
-  roles: { label: string, value: RoleInProject }[] = [
-    { label: 'Project Manager', value: RoleInProject.PM },
-    { label: 'Editor', value: RoleInProject.EDITOR },
-    { label: 'Content Creator', value: RoleInProject.CONTENT_CREATOR }
+  roles: { label: string, value: string }[] = [
+    { label: 'Project Manager', value: 'PM' },
+    { label: 'Editor', value: 'EDITOR' },
+    { label: 'Content Creator', value: 'CONTENT_CREATOR' },
   ];
 
   wsTagsSubscription: Subscription = new Subscription()
@@ -223,7 +223,6 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     const selectedUsernames = this.selectedAccounts.map(account => account.username);
     this.filteredAccounts = this.filteredAccounts.filter(account =>
         !selectedUsernames.includes(account) &&
-        account.includes(query) &&
         account!== this.currentUser
     );
 }
@@ -361,7 +360,7 @@ filterAccountsByName(event: any) {
       }
 
       for(const account of this.selectedAccounts) {
-        await firstValueFrom(this.accountService.addRoleOnProject(account.username, createdProject.projectId, account.role))
+        await firstValueFrom(this.accountService.addRoleOnProject(account.username, createdProject.projectId, account.roleInProject))
       }
 
       this.selectedCollaborators = []
@@ -543,7 +542,7 @@ removeMedia(index: number): void {
 
   editAccount(account: AccountDisplay, index: number) {
     this.newAccountUsername = account.username;
-    this.newAccountRole = account.role;
+    this.newAccountRole = account.roleInProject;
     this.editIndexAccount = index;
     this.showAddAccountDialog();
   }
@@ -570,7 +569,7 @@ removeMedia(index: number): void {
     const newAccount: AccountDisplay = {
       username: this.newAccountUsername,
       name: '',
-      role: this.newAccountRole,
+      roleInProject: this.newAccountRole,
     };
 
     if (this.editIndexAccount !== null) {
@@ -582,14 +581,14 @@ removeMedia(index: number): void {
 
     this.addAccountVisible = false;
     this.newAccountUsername = '';
-    this.newAccountRole = RoleInProject.CONTENT_CREATOR;
+    this.newAccountRole = 'CONTENT_CREATOR'
     this.accountUsernameInput.reset();
   }
 
   cancelAddAccount() {
     this.addAccountVisible = false;
     this.newAccountUsername = '';
-    this.newAccountRole = RoleInProject.CONTENT_CREATOR;
+    this.newAccountRole = 'CONTENT_CREATOR'
     this.accountUsernameInput.reset();
     this.editIndexAccount = null;
   }
