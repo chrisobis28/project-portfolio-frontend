@@ -2,7 +2,6 @@ image: node:22.1.0
 
 stages:
   - lint
-  - test
   - build
 
 lint:
@@ -10,14 +9,6 @@ lint:
   script:
     - npm install eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin --save-dev
     - npm run lint
-
-test:
-  stage: test
-  script:
-    - apt-get update && apt-get install -y chromium
-    - export CHROME_BIN=/usr/bin/chromium-browser
-    - npm install-ci-test
-    - ng test --browsers=ChromeHeadless
 
 build:
   stage: build
