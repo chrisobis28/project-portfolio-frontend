@@ -32,6 +32,8 @@ import {DialogModule} from "primeng/dialog";
 import {Router} from "@angular/router";
 import { AccountService } from 'src/app/features/accounts/services/accounts/account.service';
 import { CollaboratorTransfer } from '../../models/project-models';
+import { AccountDisplay, RoleInProject } from 'src/app/features/accounts/models/accounts-models';
+import { StorageService } from 'src/app/features/accounts/services/authentication/storage.service';
 
 
 
@@ -63,7 +65,9 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   collaborators: Collaborator[] = []
   tagNames: string[] = [];
   selectedCollaborators: CollaboratorTransfer[] = []
-  editIndex: number | null = null;
+  editIndexCollaborator: number | null = null;
+  editIndexAccount: number | null = null;
+  currentUser: string = '';
   links: Link[] = [];
   templates!: Template[];
   templateNames: string[] = [];
@@ -85,8 +89,28 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   ]);
   collaboratorRoleInput = new FormControl('', Validators.required);
 
+  addAccountVisible: boolean = false;
+  newAccountUsername: string = '';
+  newAccountName: string = '';
+  newAccountRole: RoleInProject = RoleInProject.CONTENT_CREATOR;
+  accountUsernameInput = new FormControl('', Validators.required);
+  filteredAccounts: string[] = []
+  filteredAccountsByName: string[] = []
+  selectedAccounts: AccountDisplay[] = []
+  roles: { label: string, value: RoleInProject }[] = [
+    { label: 'Project Manager', value: RoleInProject.PM },
+    { label: 'Editor', value: RoleInProject.EDITOR },
+    { label: 'Content Creator', value: RoleInProject.CONTENT_CREATOR }
+  ];
+
   wsTagsSubscription: Subscription = new Subscription()
   wsCollaboratorsSubscription: Subscription = new Subscription()
+  wsAccountSubscription: Subscription = new Subscription()
+
+  wsAccountWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/accounts",
+    deserializer: msg => String(msg.data)
+  })
 
   tagsWebSocket: WebSocketSubject<any> = webSocket({
     url: "ws://localhost:8080/topic/tags",
@@ -106,6 +130,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     private collaboratorService: CollaboratorService,
     private tagService: TagService,
     private accountService: AccountService,
+    private storageService: StorageService,
     private readonly router: Router
   ) {
   }
@@ -115,6 +140,8 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
       this.wsTagsSubscription.unsubscribe()
     if (this.wsCollaboratorsSubscription)
       this.wsCollaboratorsSubscription.unsubscribe()
+    if (this.wsAccountSubscription)
+      this.wsAccountSubscription.unsubscribe()
   }
 
   async ngOnInit() {
@@ -144,6 +171,12 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
       }
     )
 
+    this.wsAccountSubscription = this.wsAccountWebSocket.subscribe(
+      async msg => {
+        this.filteredAccounts = await firstValueFrom(this.accountService.getAllUsernames())
+      }
+    )
+
     this.selectedTags = []
     this.selectedCollaborators = []
     this.titleInput.setValue("")
@@ -157,6 +190,8 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     this.templates = await this.getAllTemplates()
     this.templateNames = await this.getAllTemplateNames()
     this.collaborators = await this.getAllCollaborators()
+    this.filteredAccounts = await firstValueFrom(this.accountService.getAllUsernames())
+    this.currentUser = this.storageService.getUser()
   }
 
   async getAllTemplates(): Promise<Template[]> {
@@ -182,6 +217,30 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
       .filter(collaborator => collaborator.name.toLowerCase().includes(query))
       .sort((a, b) => a.name.localeCompare(b.name));
   }
+
+  filterAccounts(event: any) {
+    const query = (event as AutoCompleteCompleteEvent).query;
+    const selectedUsernames = this.selectedAccounts.map(account => account.username);
+    this.filteredAccounts = this.filteredAccounts.filter(account =>
+        !selectedUsernames.includes(account) &&
+        account.includes(query) &&
+        account!== this.currentUser
+    );
+}
+
+
+filterAccountsByName(event: any) {
+  const query = (event as AutoCompleteCompleteEvent).query;
+  if (query.length < 1) {
+    this.filteredAccountsByName = [];
+    return;
+  }
+  this.accountService.getAccountByName(query).subscribe((result: string[]) => {
+    const selectedUsernames = this.selectedAccounts.map(account => account.username);
+    this.filteredAccountsByName = result.filter(account => account !== this.currentUser && !selectedUsernames.includes(account));
+  });
+}
+
   
 
   onTagSelect(event: any) {
@@ -301,6 +360,10 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
         await firstValueFrom(this.collaboratorService.createAndAddCollaboratorToProject(collaborator, createdProject.projectId))
       }
 
+      for(const account of this.selectedAccounts) {
+        await firstValueFrom(this.accountService.addRoleOnProject(account.username, createdProject.projectId, account.role))
+      }
+
       this.selectedCollaborators = []
 
       const finalTags = this.tags.filter(x => this.selectedTags.includes(x.name))
@@ -411,7 +474,7 @@ removeMedia(index: number): void {
   editCollaborator(collaborator: CollaboratorTransfer, index: number) {
     this.newCollaboratorName = collaborator.name;
     this.newCollaboratorRole = collaborator.role;
-    this.editIndex = index;
+    this.editIndexCollaborator = index;
     this.showAddCollaboratorDialog();
   }
 
@@ -426,7 +489,7 @@ removeMedia(index: number): void {
     }
 
     const isDuplicate = this.selectedCollaborators.some((collaborator, index) => 
-      collaborator.name.toLowerCase() === this.newCollaboratorName.toLowerCase() && index !== this.editIndex
+      collaborator.name.toLowerCase() === this.newCollaboratorName.toLowerCase() && index !== this.editIndexCollaborator
     );
 
     if (isDuplicate) {
@@ -440,9 +503,9 @@ removeMedia(index: number): void {
       role: this.newCollaboratorRole,
     };
 
-    if (this.editIndex !== null) {
-      this.selectedCollaborators[this.editIndex] = newCollaborator;
-      this.editIndex = null;
+    if (this.editIndexCollaborator !== null) {
+      this.selectedCollaborators[this.editIndexCollaborator] = newCollaborator;
+      this.editIndexCollaborator = null;
     } else {
       this.selectedCollaborators.push(newCollaborator);
     }
@@ -460,8 +523,77 @@ removeMedia(index: number): void {
     this.newCollaboratorRole = '';
     this.collaboratorNameInput.reset();
     this.collaboratorRoleInput.reset();
-    this.editIndex = null;
+    this.editIndexCollaborator = null;
   }
+
+  onAccountSelect(event: any) {
+    this.newAccountUsername = event.value;
+    this.accountUsernameInput.setValue(this.newAccountUsername);
+  }
+
+  onAccountNameSelect(event: any) {
+    this.newAccountUsername = event.value;
+    this.accountUsernameInput.setValue(this.newAccountUsername);
+  }
+  
+
+  showAddAccountDialog() {
+    this.addAccountVisible = true;
+  }
+
+  editAccount(account: AccountDisplay, index: number) {
+    this.newAccountUsername = account.username;
+    this.newAccountRole = account.role;
+    this.editIndexAccount = index;
+    this.showAddAccountDialog();
+  }
+
+  removeAccount(index: number) {
+    this.selectedAccounts.splice(index, 1);
+  }
+
+  async saveNewAccount() {
+    if (this.accountUsernameInput.invalid) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Invalid account username' });
+      return;
+    }
+
+    const isDuplicate = this.selectedAccounts.some((account, index) => 
+      account.username.toLowerCase() === this.newAccountUsername.toLowerCase() && index !== this.editIndexAccount
+    );
+
+    if (isDuplicate) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'An account with the same username already exists' });
+      return;
+    }
+
+    const newAccount: AccountDisplay = {
+      username: this.newAccountUsername,
+      name: '',
+      role: this.newAccountRole,
+    };
+
+    if (this.editIndexAccount !== null) {
+      this.selectedAccounts[this.editIndexAccount] = newAccount;
+      this.editIndexAccount = null;
+    } else {
+      this.selectedAccounts.push(newAccount);
+    }
+
+    this.addAccountVisible = false;
+    this.newAccountUsername = '';
+    this.newAccountRole = RoleInProject.CONTENT_CREATOR;
+    this.accountUsernameInput.reset();
+  }
+
+  cancelAddAccount() {
+    this.addAccountVisible = false;
+    this.newAccountUsername = '';
+    this.newAccountRole = RoleInProject.CONTENT_CREATOR;
+    this.accountUsernameInput.reset();
+    this.editIndexAccount = null;
+  }
+  
   
 }
 
