@@ -27,13 +27,13 @@
     </div>
     <div class="card flex justify-content-start ">
       <p-floatLabel class="min-w-screen" id="templatecomponent">
-        <p-dropdown
-          (onClear)="removeTemplate()"
-          [(ngModel)]="selectedTemplateName"
-          [options]="templateNames"
-          [showClear]="true"
-          inputId="float-label"
-        />
+        <p-dropdown 
+            [options]="templateNames"
+            [(ngModel)]="selectedTemplateName"
+            (onChange)="onTemplateSelect($event)"
+            [showClear]="true"
+            (onClear)="clearTemplateFields()"
+            inputId="float-label" />
         <label>Select a Template</label>
       </p-floatLabel>
     </div>
@@ -129,6 +129,33 @@
         <div class="col-10"></div>
       </div>
       <div class="card">
+        <p-dataView #dv [value]="templateLinks">
+          <ng-template let-templateLinks pTemplate="list">
+            <div *ngFor="let link of templateLinks;let i = index" class="col-12" class="col-12">
+              <div class="grid row-gap-2">
+                <div class="col-12 md:col-6 lg:col-5">
+                  <p-floatLabel>
+                    <input [(ngModel)]="link.name" [ngClass]="{'error': !link.name}" pInputText
+                           style="width: 85%;" [disabled]="true"/>
+                    <label>Link display name</label>
+                  </p-floatLabel>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                  <p-floatLabel>
+                    <input [(ngModel)]="link.url" [ngClass]="{'error': !link.url}" pInputText
+                           style="width: 85%;"/>
+                    <label>Link address(URL)</label>
+                  </p-floatLabel>
+                </div>
+                <div class="flex justify-content-center col-12 md:col-6 lg:col-3">
+                  <p-button (click)="removeLink(i)" icon="pi pi-trash" label="Delete" severity="danger" [disabled]="true">
+                  </p-button>
+                </div>
+              </div>
+            </div>
+
+          </ng-template>
+        </p-dataView>
         <p-dataView #dv [value]="links">
           <ng-template let-links pTemplate="list">
             <div *ngFor="let link of links;let i = index" class="col-12" class="col-12">
@@ -169,6 +196,44 @@
         <div class="col-10"></div>
       </div>
       <div class="card">
+        <p-dataView #dv [value]="editTemplateMediaList">
+          <ng-template let-editTemplateMediaList pTemplate="list">
+            <div *ngFor="let media of editTemplateMediaList; let i = index" class="col-12" class="col-12">
+              <div *ngIf="media.delete==false">
+              <div class="grid">
+                <div class="col-12 md:col-6 lg:col-3 ">
+                  <h4>{{ media.media.path }}</h4>
+                </div>
+                <div class="col-12 md:col-6 lg:col-3 ">
+                  <p-floatLabel>
+                    <input [(ngModel)]="media.media.name" [ngClass]="{'error': media.name == ''}" pInputText style="width: 100%;" [disabled]="true"/>
+                    <label>Media display name</label>
+                  </p-floatLabel>
+                </div>
+                <div class="col-6 md:col-6 lg:col-3 flex justify-content-center">
+                  <p-button (onClick)="downloadDocument(media.mediaId)" icon="pi pi-download" label="Download"/>
+                </div>
+                <div class="col-6 md:col-6 lg:col-3 flex justify-content-center">
+                  <p-fileUpload
+                    #form
+                    (uploadHandler)="changeTemplateMedia($event, form, i)"
+                    [auto]="true"
+                    [multiple]="true"
+                    chooseIcon="pi pi-sync"
+                    chooseLabel="Change"
+                    customUpload="true"
+                    maxFileSize="1000000"
+                    mode="basic"
+                    name="demo[]">
+                    <ng-template pTemplate="empty"></ng-template>
+                  </p-fileUpload>
+                </div>
+              </div>
+              </div>
+            </div>
+
+          </ng-template>
+        </p-dataView>
         <p-dataView #dv [value]="editMediaList">
           <ng-template let-editMediaList pTemplate="list">
             <div *ngFor="let media of editMediaList; let i = index" class="col-12" class="col-12">
@@ -179,7 +244,7 @@
                 </div>
                 <div class="col-12 md:col-6 lg:col-3 ">
                   <p-floatLabel>
-                    <input [(ngModel)]="media.media.name" [ngClass]="{'error': !media.name}" pInputText style="width: 100%;"/>
+                    <input [(ngModel)]="media.media.name" [ngClass]="{'error': media.name == ''}" pInputText style="width: 100%;"/>
                     <label>Media display name</label>
                   </p-floatLabel>
                 </div>
@@ -215,7 +280,9 @@
     </div>
     <div class="card">
       <div class="flex justify-content-end">
-        <p-button (click)="cancel()" class="p-button-secondary" label="Cancel" severity="danger"></p-button>
+        <a [routerLink]="['/project-detail', projectId]">
+          <p-button (click)="cancel()" class="p-button-secondary" label="Cancel" severity="danger"></p-button>
+        </a>
         <a [routerLink]="['/project-detail', projectId]">
           <button
             (click)="saveProject()"

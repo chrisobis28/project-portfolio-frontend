@@ -49,6 +49,7 @@ import {Router} from "@angular/router";
 export class ProjectAddComponent implements OnInit, OnDestroy {
 
   media: Media[] = [];
+  templateMedia: Media[] = []
   mediaNames: string[] = [];
   addTagVisible: boolean = false;
   project!: Project;
@@ -62,9 +63,11 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   tagNames: string[] = [];
   selectedCollaborators: string[] = []
   links: Link[] = [];
+  templateLinks: Link[] = [];
   templates!: Template[];
   templateNames: string[] = [];
-  selectedTemplate: string | undefined;
+  selectedTemplateName: string | undefined;
+  currentTemplate: Template | undefined;
   filteredTags: Tag[] = [];
   filteredCollaborators: Collaborator[] = []
   titleInput = new FormControl('', [Validators.required]);
@@ -72,6 +75,9 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   tagNameInput = new FormControl('', [Validators.required]);
   descriptionInput = new FormControl('', [Validators.required]);
   addedMediaList: FormData[] = [];
+  templateMediaNames: string[] = [];
+
+  addedTemplateMediaList: FormData[] = [];
 
   wsTagsSubscription: Subscription = new Subscription()
   wsCollaboratorsSubscription: Subscription = new Subscription()
@@ -184,6 +190,33 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     this.messageService.add({severity: 'info', summary: 'Success', detail: 'File Uploaded with Basic Mode'});
   }
 
+  onTemplateSelect(event: any) {
+    this.clearTemplateFields()
+    this.selectedTemplateName = event.value;
+    this.currentTemplate = this.templates.find(template => template.templateName === this.selectedTemplateName);
+    console.log(this.currentTemplate?.templateName)
+    if(this.currentTemplate != undefined) {
+      this.description = this.currentTemplate.standardDescription;
+      this.currentTemplate.templateAdditions.forEach(addition => {
+        if (addition.media === true) {
+          this.uploadTemplateFile(addition.templateAdditionName);
+        } else {
+          this.addTemplateLink(addition.templateAdditionName)
+        }
+      });
+    }
+  }
+
+  clearTemplateFields() {
+    this.selectedTemplateName = undefined;
+    this.currentTemplate = undefined;
+    this.description = '';
+    this.templateLinks = [];
+    this.templateMedia = [];
+    this.templateMediaNames = [];
+    this.addedTemplateMediaList = [];
+  }
+
   async saveNewTag(): Promise<void> {
     if (this.newTagName.length == 0) {
       this.messageService.add({severity: 'error', summary: 'Error', detail: 'The Tag Name cannot be empty'});
@@ -231,11 +264,17 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Description can not be empty' });
         return;
       }
-      if(this.media.length == 0){
+      if(this.media.length == 0 && this.templateMedia.length == 0){
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not be empty' });
         return
       }
       for (const medianName of this.mediaNames) {
+        if(medianName.length < 1) {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not have an empty display name' });
+          return
+        }
+      }
+      for (const medianName of this.templateMediaNames) {
         if(medianName.length < 1) {
           this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not have an empty display name' });
           return
@@ -252,17 +291,31 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
         }
       }
 
+      for (const link of this.templateLinks) {
+        if(link.name.length < 1) {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Template links can not have an empty title' });
+          return
+        }
+        if(link.url.length < 1) {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Template links can not have an empty url' });
+          return
+        }
+      }
+
       return;
     }
     try {
       this.titleInput.setErrors({ invalid: false });
       this.descriptionInput.setErrors({ invalid: false });
+      var templateToBeAdded = null;
+      if (this.currentTemplate != undefined) templateToBeAdded = this.currentTemplate;
+      console.log(templateToBeAdded?.templateName)
       const project: Project = {
         projectId: "",
         title: this.title,
         description: this.description,
         archived: false,
-        template: null,
+        template: templateToBeAdded,
         media: [],
         projectsToAccounts: [],
         projectsToCollaborators: [],
@@ -280,10 +333,19 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
       this.title = ""
       this.description = ""
 
+      if (this.currentTemplate != undefined) {
+        await firstValueFrom(this.projectService.updateProjectTemplate(createdProject.projectId, this.currentTemplate))
+      } 
+
       for (const link of this.links) {
         await firstValueFrom(this.linkService.addLinkToProject(link, createdProject.projectId))
       }
       this.links = []
+
+      for (const link of this.templateLinks) {
+        await firstValueFrom(this.linkService.addLinkToProject(link, createdProject.projectId))
+      }
+      this.templateLinks = []
 
       const finalCollaborators = this.collaborators.filter(x => this.selectedCollaborators.includes(x.name))
       for(const collaborator of finalCollaborators) {
@@ -306,6 +368,13 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
       }
       this.addedMediaList = []
       this.media = []
+
+      for (const [index, templateMedia] of this.addedTemplateMediaList.entries()) {
+        templateMedia.append('name', this.templateMedia[index].name);
+        await firstValueFrom(this.mediaService.addDocumentToProject(createdProject.projectId, templateMedia));
+      }
+      this.addedTemplateMediaList = []
+      this.templateMedia = []
       this.messageService.add({ severity: 'Success', summary: 'Success', detail: "The project was successfully saved!"});
       await this.router.navigate(['/project-detail/', createdProject.projectId])
     } catch (error) {
@@ -323,7 +392,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   }
 
   isAnyLinkFieldEmpty(): boolean {
-    return this.links.some(link => link.name == '' || link.url == '');
+    return this.links.some(link => link.name == '' || link.url == '') || this.templateLinks.some(link => link.name == '' || link.url == '');
   }
 
   addLink() {
@@ -331,26 +400,48 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     this.links.push(link);
   }
 
+  addTemplateLink(nameOfLink: string) {
+    const link: Link = { linkId: '', name: nameOfLink, url: '', requestLinkProjects: [] };
+    this.templateLinks.push(link);
+  }
+
   removeLink(index: number): void {
     this.links.splice(index, 1);
   }
 
-getNamesForTags(tags: Tag[]): string[] {
-  return tags.map(x => x.name)
-}
+  getNamesForTags(tags: Tag[]): string[] {
+    return tags.map(x => x.name)
+  }
 
-getNamesForCollaborators(collaborators: Collaborator[]): string[] {
-  return collaborators.map(x => x.name)
-}
+  getNamesForCollaborators(collaborators: Collaborator[]): string[] {
+    return collaborators.map(x => x.name)
+  }
 
-getAllCollaborators(): Promise<Collaborator[]> {
-  return firstValueFrom(this.collaboratorService.getAllCollaborators())
-}
+  getAllCollaborators(): Promise<Collaborator[]> {
+    return firstValueFrom(this.collaboratorService.getAllCollaborators())
+  }
 
-isTitleDescriptionAndMediaValid(): boolean{
-  return this.title.length > 0 && this.description.length > 0
-  && this.media.length > 0
-}
+  isTitleDescriptionAndMediaValid(): boolean{
+    return this.title.length > 0 && this.description.length > 0
+    && (this.media.length > 0 || this.templateMedia.length > 0)
+  }
+
+  uploadTemplateFile(nameOfMedia: string) {
+    const emptyFile = nameOfMedia;
+    const formData = new FormData();
+    formData.append('emptyFile', emptyFile);
+    this.templateMediaNames.push(emptyFile);
+    this.addedTemplateMediaList.push(formData);
+    this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media added! The media will be uploaded when the edit will be saved!'});
+    let newMedia:Media = {
+      mediaId:'',
+      name:nameOfMedia,
+      path: '',
+      project:this.project,
+      requestMediaProjects:[]
+    }
+    this.templateMedia.push(newMedia)
+  }
 
   async uploadFile(event: FileUploadHandlerEvent, form: FileUpload) {
     const file = event.files[0];
@@ -370,7 +461,15 @@ isTitleDescriptionAndMediaValid(): boolean{
     form.clear();
   }
 
-downloadDocument(index: number){
+  downloadTemplateDocument(index: number){
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(<File>this.addedTemplateMediaList[index].get('file'));
+    link.download = this.templateMedia[index].path; // Adjust filename based on actual file type
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  downloadDocument(index: number){
     const link = document.createElement('a');
     link.href = URL.createObjectURL(<File>this.addedMediaList[index].get('file'));
     link.download = this.media[index].path; // Adjust filename based on actual file type
@@ -378,13 +477,29 @@ downloadDocument(index: number){
     document.body.removeChild(link);
   }
 
-removeMedia(index: number): void {
-  this.mediaNames.splice(index);
-  this.media.splice(index);
-  this.addedMediaList.splice(index);
-}
+  removeMedia(index: number): void {
+    this.mediaNames.splice(index);
+    this.media.splice(index);
+    this.addedMediaList.splice(index);
+  }
   showAddTagDialog() {
     this.addTagVisible = true;
+  }
+
+  changeTemplateMedia(event: FileUploadHandlerEvent, form: FileUpload, index: number) {
+    const file = event.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    this.addedTemplateMediaList[index] = formData;
+    this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media changed successfully! The media will be saved when the save button is clicked!'});
+    let newMedia:Media = {
+      mediaId:'',
+      name: this.templateMediaNames[index],
+      path:file.name,
+      project:this.project,
+      requestMediaProjects:[]
+    }
+    this.templateMedia[index] = newMedia
   }
 }
 

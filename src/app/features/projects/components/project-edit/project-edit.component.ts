@@ -63,6 +63,8 @@ export class ProjectEditComponent implements OnInit {
   addCollaborators: Collaborator[] = []
   removeCollaborators: Collaborator[] = []
 
+  toBeDeletedTemplateEditMedia: EditMedia[] = [];
+
   platformTags: Tag[] = [];
   selectedTags: Tag[] = []
   selectedTagNames: string[] = []
@@ -70,13 +72,15 @@ export class ProjectEditComponent implements OnInit {
   addTags:Tag[] =[]
   removeTags:Tag[] =[]
   links: Link[] = [];
+  templateLinks: Link[] = [];
   templates!: Template[];
   templateNames: string[] = [];
   selectedTemplateName: string | undefined;
-  selectedTemplate: Template | null = null;
+  selectedTemplate: Template | undefined ;
   deleteLinkList: Link[] = [];
 
-  editMediaList: EditMedia[] = []
+  editMediaList: EditMedia[] = [];
+  editTemplateMediaList: EditMedia[] = [];
 
   tags: Tag[] | undefined;
   colaborators: Collaborator[] | undefined;
@@ -190,7 +194,15 @@ export class ProjectEditComponent implements OnInit {
                 file:null,
                 delete:false
               }
-              this.editMediaList.push(editMedia)
+              if (this.selectedTemplate != undefined) {
+                if (this.selectedTemplate.templateAdditions.some(addition => addition.templateAdditionName === mediaObject.name)) {
+                  this.editTemplateMediaList.push(editMedia)
+                } else {
+                  this.editMediaList.push(editMedia)
+                }
+              } else {
+                this.editMediaList.push(editMedia)
+              }
             }
         }
           }
@@ -203,20 +215,24 @@ export class ProjectEditComponent implements OnInit {
         if(msg == "all" || msg == this.projectId) {
           if(this.projectId){
             const newLinks = await this.getLinksByProjectId(this.projectId)
-            this.links = newLinks
+            for (const linkObject of newLinks) {
+              if (this.selectedTemplate != undefined) {
+                if (this.selectedTemplate.templateAdditions.some(addition => addition.templateAdditionName === linkObject.name)) {
+                  this.templateLinks.push(linkObject)
+                } else {
+                  this.links.push(linkObject)
+                }
+              } else {
+                this.links.push(linkObject)
+              }
+            }
           }
         }
       }
      )
 
-
-
      //should define here the collaborators and tags websocket such that it updates autocomplete
      //as in project-add components. The autocomplete is done on dev, we do it after we merge this with dev
-
-
-
-
 
   }
 
@@ -228,8 +244,22 @@ export class ProjectEditComponent implements OnInit {
     this.platformCollaborators = await this.getAllCollaborators()
 
     if (this.projectId) {
+      this.selectedTemplate = await firstValueFrom(this.projectService.getTemplateByProjectId(this.projectId));
+      if (this.selectedTemplate != undefined) {
+        this.selectedTemplateName = this.selectedTemplate.templateName
+      }
       this.linkService.getLinksByProjectId(this.projectId).subscribe((response: Link[]) => {
-        this.links = response
+        for (const linkObject of response) {
+          if (this.selectedTemplate != undefined) {
+            if (this.selectedTemplate.templateAdditions.some(addition => addition.templateAdditionName === linkObject.name)) {
+              this.templateLinks.push(linkObject)
+            } else {
+              this.links.push(linkObject)
+            }
+          } else {
+            this.links.push(linkObject)
+          }
+        }
       });
       this.mediaService.getDocumentsByProjectId(this.projectId).subscribe((response: Media[]) => {
         for (const mediaObject of response) {
@@ -240,16 +270,23 @@ export class ProjectEditComponent implements OnInit {
               file:null,
               delete:false
             }
-            this.editMediaList.push(editMedia)
+            if (this.selectedTemplate != undefined) {
+              if (this.selectedTemplate.templateAdditions.some(addition => addition.templateAdditionName === mediaObject.name)) {
+                this.editTemplateMediaList.push(editMedia)
+              } else {
+                this.editMediaList.push(editMedia)
+              }
+            } else {
+              this.editMediaList.push(editMedia)
+            }
           }
         }
       });
+      
       this.projectService.getProjectById(this.projectId).subscribe((response: Project) => {
         this.project = response;
         this.title = this.project.title;
         this.description = this.project.description;
-        this.selectedTemplate = this.project.template;
-        this.selectedTemplateName = this.project.template?.templateName;
       });
       this.tagService.getTagsByProjectId(this.projectId).subscribe((response: Tag[]) => {
         this.selectedTags = response;
@@ -314,6 +351,11 @@ export class ProjectEditComponent implements OnInit {
     ))
   }
 
+  isTitleDescriptionAndMediaValid(): boolean{
+    return this.title.length > 0 && this.description.length > 0
+    && (this.editMediaList.length > 0 || this.editTemplateMediaList.length > 0)
+  }
+
   async saveProject(): Promise<void> {
 
     if(this.projectId == null) {
@@ -326,22 +368,74 @@ export class ProjectEditComponent implements OnInit {
       return;
     }
 
+    // if(!this.isTitleDescriptionAndMediaValid()) {
+    //   if(this.title.length == 0){
+    //     this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Title can not be empty' });
+    //     return;
+    //   }
+    //   if(this.description.length == 0){
+    //     this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Description can not be empty' });
+    //     return;
+    //   }
+    //   if(this.editMediaList.length == 0 && this.editTemplateMediaList.length == 0){
+    //     this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not be empty' });
+    //     return
+    //   }
+    //   for (const editMed of this.editMediaList) {
+    //     if(editMed.media!.name.length < 1) {
+    //       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not have an empty display name' });
+    //       return
+    //     }
+    //   }
+    //   for (const editTempMed of this.editTemplateMediaList) {
+    //     if(editTempMed.media!.name.length < 1) {
+    //       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not have an empty display name' });
+    //       return
+    //     }
+    //   }
+    //   for (const link of this.links) {
+    //     if(link.name.length < 1) {
+    //       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Links can not have an empty title' });
+    //       return
+    //     }
+    //     if(link.url.length < 1) {
+    //       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Links can not have an empty url' });
+    //       return
+    //     }
+    //   }
+
+    //   for (const link of this.templateLinks) {
+    //     if(link.name.length < 1) {
+    //       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Template links can not have an empty title' });
+    //       return
+    //     }
+    //     if(link.url.length < 1) {
+    //       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Template links can not have an empty url' });
+    //       return
+    //     }
+    //   }
+
+    //   return;
+    // }
+
     try {
       const thumbnail: MediaFileContent = {
         filePath: '',
         fileContent: '',
         fileName:''
       }
-
-      const foundTemplate = this.templates.find(x => x.templateName === this.selectedTemplateName);
-      this.selectedTemplate = foundTemplate !== undefined ? foundTemplate : null;
+      console.log("try was entered")
+      // const foundTemplate = this.templates.find(x => x.templateName === this.selectedTemplateName);
+      // this.selectedTemplate = foundTemplate !== undefined ? foundTemplate : null;
+      var templateToBeAdded = null;
+      if (this.selectedTemplate != undefined) templateToBeAdded = this.selectedTemplate;
 
       const prj: Project = {
         projectId: "",
         title: this.title,
         description: this.description,
         archived: false,
-        template: this.selectedTemplate,
+        template: templateToBeAdded,
         media: [],
         projectsToAccounts: [],
         projectsToCollaborators: [],
@@ -361,6 +455,12 @@ export class ProjectEditComponent implements OnInit {
       this.addCollaborators = this.platformCollaborators.filter(x=>this.selectedCollaboratorNames.includes(x.name) && !this.selectedCollaborators.flatMap(x=>x.name).includes(x.name));
 
       const createdProject = await firstValueFrom(this.projectService.editProject(this.projectId, prj));
+
+      if (this.selectedTemplate != undefined) {
+        await firstValueFrom(this.projectService.updateProjectTemplate(createdProject.projectId, this.selectedTemplate))
+      } else {
+        await firstValueFrom(this.projectService.updateProjectTemplate(createdProject.projectId, null))
+      }
 
       for (const collaborator of this.removeCollaborators) {
         await firstValueFrom(this.collaboratorService.deleteCollaboratorFromProject(collaborator,this.projectId))
@@ -384,10 +484,19 @@ export class ProjectEditComponent implements OnInit {
         }
       }
 
+      for (const link of this.templateLinks) {
+        if(link.linkId == '') {
+          await firstValueFrom(this.linkService.addLinkToProject(link, createdProject.projectId))
+        } else {
+          await firstValueFrom(this.linkService.editLinkOfProject(link))
+        }
+      }
+
       for (const link of this.deleteLinkList) {
         await firstValueFrom(this.linkService.deleteLinkById(link.linkId));
       }
       this.deleteLinkList = []
+
       for (const editMedia of this.editMediaList) {
           if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
           {
@@ -406,6 +515,50 @@ export class ProjectEditComponent implements OnInit {
         }
       }
       this.editMediaList = []
+
+      for (const editMedia of this.editMediaList) {
+          if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
+          {
+            await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as String)));
+          }
+          else if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
+          {
+            const formData = new FormData();
+            formData.append('file', editMedia.file);
+            formData.append('name', editMedia.media.name);
+            await firstValueFrom(this.mediaService.addDocumentToProject(this.project.projectId, formData));
+          } else if (editMedia.media != null && editMedia.media.mediaId!='') {
+            await firstValueFrom(this.mediaService.editMedia(editMedia.media));
+          }
+      }
+      this.editMediaList = []
+
+      for (const editMedia of this.editTemplateMediaList) {
+        if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
+        {
+          await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as String)));
+        }
+        else if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
+        {
+          const formData = new FormData();
+          formData.append('file', editMedia.file);
+          formData.append('name', editMedia.media.name);
+          await firstValueFrom(this.mediaService.addDocumentToProject(this.project.projectId, formData));
+        }
+        else if(editMedia.media != null && editMedia.media.mediaId!='') {
+          await firstValueFrom(this.mediaService.editMedia(editMedia.media));
+        }
+      }
+      this.editTemplateMediaList = []
+
+      for (const editMedia of this.toBeDeletedTemplateEditMedia) {
+        if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
+        {
+          await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as String)));
+        }
+      }
+      this.toBeDeletedTemplateEditMedia = []
+
       await this.router.navigate(['/project-detail/', this.projectId])
 
     } catch (error) {
@@ -418,8 +571,9 @@ export class ProjectEditComponent implements OnInit {
   }
 
   isAnyLinkFieldEmpty(): boolean {
-    return this.links.some(link => link.name == '' || link.url == '');
+    return this.links.some(link => link.name == '' || link.url == '') || this.templateLinks.some(link => link.name == '' || link.url == '');
   }
+
   addLink() {
     const link: Link = { linkId: '', name: '', url: '', requestLinkProjects: [] };
     this.links.push(link);
@@ -434,9 +588,24 @@ export class ProjectEditComponent implements OnInit {
      this.editMediaList[index].delete=true
    }
 
-  removeTemplate(): void {
-    this.selectedTemplateName = ''
-    this.selectedTemplate = null;}
+  clearTemplateFields() {
+    for (const link of this.templateLinks) {
+      if (link.linkId != '')
+        this.deleteLinkList.push(link)
+    }
+    for (const editTempMed of this.editTemplateMediaList) {
+      if (editTempMed.media != null && editTempMed.media.mediaId!='') {
+        editTempMed.delete = true;
+        this.toBeDeletedTemplateEditMedia.push(editTempMed);
+      }
+    }
+    this.selectedTemplateName = undefined;
+    this.selectedTemplate = undefined;
+    this.description = '';
+    this.templateLinks = [];
+    this.editTemplateMediaList = [];
+    
+  }
 
   downloadFile(media: MediaFileContent) {
    this.mediaService.downloadFile(media);
@@ -512,6 +681,67 @@ export class ProjectEditComponent implements OnInit {
     catch (error) {
       console.error('Error saving the new tag', error);
       this.messageService.add({ severity: 'error', summary: 'Error', detail: (error as Error).message });
+    }
+  }
+
+  changeTemplateMedia(event: FileUploadHandlerEvent, form: FileUpload, index: number) {
+    const file = event.files[0];
+    this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media changed successfully! The media will be saved when the save button is clicked!'});
+    let newMedia:Media = {
+      mediaId:'',
+      name: this.editTemplateMediaList[index].media!.name,
+      path:file.name,
+      project:this.project,
+      requestMediaProjects:[]
+    }
+    const newEditMedia:EditMedia={
+      media:newMedia,
+      mediaFileContent:null,
+      file:file,
+      delete:false
+    }
+    this.editTemplateMediaList[index] = newEditMedia
+    form.clear()
+  }
+
+  uploadEmptyTemplateMedia(mediaName: string) {
+    const file = null;
+    this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media changed successfully! The media will be saved when the save button is clicked!'});
+    let newMedia:Media = {
+      mediaId:'',
+      name: mediaName,
+      path: '',
+      project:this.project,
+      requestMediaProjects:[]
+    }
+    const newEditMedia:EditMedia={
+      media:newMedia,
+      mediaFileContent:null,
+      file:file,
+      delete:false
+    }
+    this.editTemplateMediaList.push(newEditMedia);
+  }
+
+  addTemplateLink(nameOfLink: string) {
+    const link: Link = { linkId: '', name: nameOfLink, url: '', requestLinkProjects: [] };
+    this.templateLinks.push(link);
+  }
+
+  onTemplateSelect(event: any) {
+    this.clearTemplateFields()
+    this.selectedTemplateName = event.value;
+    this.selectedTemplate = this.templates.find(template => template.templateName === this.selectedTemplateName);
+    
+    if(this.selectedTemplate != undefined) {
+      this.description = this.selectedTemplate.standardDescription;
+      this.selectedTemplate.templateAdditions.forEach(addition => {
+        if (addition.media === true) {
+          this.uploadEmptyTemplateMedia(addition.templateAdditionName);
+        } else {
+          this.addTemplateLink(addition.templateAdditionName)
+        }
+      });
     }
   }
 }

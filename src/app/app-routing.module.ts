@@ -7,8 +7,8 @@ import { ProjectCardComponent } from './features/projects/components/project-car
 import { ProjectEditComponent } from './features/projects/components/project-edit/project-edit.component';
 import { LoginMenuComponent } from './features/accounts/components/login-menu/login-menu.component';
 import { AuthGuard } from './core/auth.guard';
-import { ProjectTemplateComponent } from './features/projects/components/project-template/project-template.component';
 import { RolesMenuComponent } from './features/accounts/components/roles-menu/roles-menu/roles-menu.component';
+import { ProjectTemplateComponent } from './features/projects/components/project-template/project-template.component';
 
 const routes: Routes = [
   { path: '', component: ProjectsComponent },

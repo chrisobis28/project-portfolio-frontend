@@ -24,6 +24,7 @@ export interface Media {
     project: Project
     requestMediaProjects: RequestMediaProject[]
 }
+
 export interface EditMedia {
   media:Media|null
   mediaFileContent:MediaFileContent|null
