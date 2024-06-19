@@ -146,15 +146,15 @@
         </div>
         <div class="flex flex-column justify-content-center align-items-center gap-4 mb-4" style="margin-top: 50px">
           <div class="input-container">
-            <p-autoComplete 
-              [(ngModel)]="newCollaboratorName" 
-              [suggestions]="filteredCollaborators" 
-              (completeMethod)="filterCollaborators($event)" 
-              (onSelect)="onCollaboratorSelect($event)" 
-              field="name" 
-              [formControl]="collaboratorNameInput" 
-              dropdown="true" 
-              [forceSelection]="false" 
+            <p-autoComplete
+              [(ngModel)]="newCollaboratorName"
+              [suggestions]="filteredCollaborators"
+              (completeMethod)="filterCollaborators($event)"
+              (onSelect)="onCollaboratorSelect($event)"
+              field="name"
+              [formControl]="collaboratorNameInput"
+              dropdown="true"
+              [forceSelection]="false"
               placeholder="Collaborator Name"
               class="full-width">
             </p-autoComplete>
@@ -172,7 +172,7 @@
         <p-button (click)="saveNewCollaborator()" label="Add Collaborator" severity="primary" />
       </div>
     </p-dialog>
-    
+
 
     <div class="linkUpload">
       <div class=" grid flex">
@@ -235,7 +235,7 @@
                   </p-floatLabel>
                 </div>
                 <div class="col-6 md:col-6 lg:col-3 flex justify-content-center">
-                  <p-button (onClick)="downloadDocument(media.mediaId)" icon="pi pi-download" label="Download"/>
+                  <p-button (onClick)="downloadDocument(media.media.mediaId)" icon="pi pi-download" label="Download"/>
                 </div>
                 <div class="col-6 md:col-6 lg:col-3 flex justify-content-center">
                   <p-button (click)="removeMedia(i)" icon="pi pi-trash" label="Delete" severity="danger"/>
