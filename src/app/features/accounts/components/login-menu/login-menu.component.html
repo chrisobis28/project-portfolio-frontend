@@ -12,7 +12,28 @@
             <a [routerLink]="['']">
               <p-button label="Home" ></p-button>
             </a>
+            <p-button *ngIf="!((usernameL.invalid || passwordL.invalid) && loginSubmitted) && 
+            !(registerSubmitted && (usernameR.invalid || passwordR.invalid || nameR.invalid))" 
+            [style]='{"margin-left":"0.3%"}' severity="success" (click)="showHelp = true" icon="pi pi-question"></p-button>
+            <p-button *ngIf="((usernameL.invalid || passwordL.invalid) && loginSubmitted) || 
+            (registerSubmitted && (usernameR.invalid || passwordR.invalid || nameR.invalid))" 
+            [style]='{"margin-left":"0.3%"}' severity="danger" (click)="showHelp = true" icon="pi pi-question"></p-button>
         </div>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end;">
+          <p-dialog [(visible)]="showHelp" [modal]="true" [style]="{ width: '30rem' }" header="Helper Menu - Login / Registration">
+            <div class="dialog-content p-3">
+              <p class="dialog-info mb-4 ">A <b>Username</b> must consist of alphanumeric characters only and be between 5 to 20 characters long.</p>
+              <p class="dialog-info mb-4 ">A <b>Name</b> must consist of alphanumeric characters only, be separated only by whitespaces 
+                and be between 1 to 50 characters long.</p>
+              <p class="dialog-info mb-4 ">A <b>Password</b> must contain at least one digit, one lowercase letter, one uppercase letter, one special character, 
+                and whitespaces and be at least 8 characters long.</p>
+            </div>
+            <div class="dialog-actions flex justify-content-end gap-2 p-3">
+              <p-button (click)="showHelp = false" label="Understood" severity="success" class="p-button-outlined" />
+            </div>
+          </p-dialog>
     </div>
 
     <div class="container">
