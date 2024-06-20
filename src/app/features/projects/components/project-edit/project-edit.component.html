@@ -63,30 +63,36 @@
       <div class="grid align-items-center">
         <div class="lg:col-9 col-12">
           <div class="p-fluid">
-      <p-floatLabel>
-        <p-autoComplete (completeMethod)="filterTags($event)" [(ngModel)]="selectedTagNames"
-                        [forceSelection]="true" [multiple]="true" [suggestions]="getNamesForTags(filteredTags)">
-        </p-autoComplete>
+            <p-floatLabel style="width: 100%;">
+              <p-autoComplete
+                [(ngModel)]="selectedTags"
+                [suggestions]="filteredTags"
+                (completeMethod)="filterTags($event)"
+                [multiple]="true"
+                field="name"
+                [panelStyle]="{'width': 'auto', 'min-width': '200px', 'max-width': '100%'}">
 
-        <label>Tags</label>
-      </p-floatLabel>
+                <ng-template let-tag pTemplate="tagTemplate">
+                  <div class="tag-item" [style.background]="tag.color" [style.color]="isDarkColor(tag.color) ? 'white' : 'black'">
+                    <span>{{ tag.name }}</span>
+                  </div>
+                </ng-template>
+              </p-autoComplete>
+              <label>Tags</label>
+            </p-floatLabel>
           </div>
         </div>
         <div class="lg:col-3 col-12 flex justify-content-center align-items-center">
           <p-button (click)="showAddTagDialog()" icon="pi pi-tags" label="Add platform tag"></p-button>
-          <p-dialog [(visible)]="addTagVisible" [modal]="true" [style]="{ width: '30rem' }" header="Add Platform Tag">
+          <p-dialog [(visible)]="addTagVisible" [modal]="true" [style]="{ width: '30rem', height: '25rem' }" header="Add Platform Tag">
             <div class="dialog-content p-3">
               <p class="dialog-info mb-4 ">You are about to add a new tag to the platform. To add a tag to a project please proceed to the previous step.</p>
-              <div class="flex flex-column justify-content-center align-items-center gap-4 mb-4">
+              <div class="flex justify-content-center align-items-center gap-4 mb-4">
+                <p-colorPicker [(ngModel)]="newTagColor"/>
                 <p-floatLabel>
                   <input pInputText id="newTagNameInput" [(ngModel)]="newTagName" [ngClass]="{'error': !newTagName}"
                          [formControl]="tagNameInput" style="width: 100%; max-width: 20rem;" />
                   <label for="newTagNameInput">Tag Name</label>
-                </p-floatLabel>
-                <p-floatLabel>
-                  <input pInputText id="newTagColorInput" [(ngModel)]="newTagColor" [ngClass]="{'error': !newTagColor}"
-                         [formControl]="tagColorInput" style="width: 100%; max-width: 20rem;" />
-                  <label for="newTagColorInput">Tag Color</label>
                 </p-floatLabel>
               </div>
             </div>
@@ -129,7 +135,15 @@
             <p-button icon="pi pi-pencil" label="Edit" class="p-button-warning" [style]="{'min-width': '120px'}" severity="info" (click)="editCollaborator(collaborator, i)"></p-button>
           </div>
           <div class="col-2" style="padding: 5px">
-            <p-button icon="pi pi-trash" label="Delete" class="p-button-danger" [style]="{'min-width': '120px'}" severity="danger" (click)="removeCollaborator(i)"></p-button>
+            <p-button icon="pi pi-trash" label="Delete" class="p-button-danger" [style]="{'min-width': '120px'}" severity="danger" (click)="showDeleteDialog()"></p-button>
+            <p-dialog [(visible)]="deleteDialogVisible" [modal]="true" [style]="{ width: '25rem' }" header="Delete Collaborator">
+              <span class="p-text-secondary block mb-5">You are about to delete <b><i>{{collaborator.name}}</i></b> from the project. Please be careful as this action cannot be undone. Please confirm your action.</span>
+              <div class="flex justify-content-end gap-2">
+                <p-button (click)="deleteDialogVisible = false" label="Cancel" severity="secondary"/>
+                <p-button (click)="removeCollaborator(i); deleteDialogVisible = false" icon="pi pi-trash" label="Confirm"
+                          severity="danger"/>
+              </div>
+            </p-dialog>
           </div>
         </div>
       </div>
@@ -139,12 +153,13 @@
       </div>
     </div>
 
-    <p-dialog [(visible)]="addCollaboratorVisible" [modal]="true" [style]="{ width: '30rem' }" header="Add Collaborator">
+    <p-dialog [(visible)]="addCollaboratorVisible" [modal]="true" [style]="{ width: '35%', 'min-width': '300px' }" header="Collaborator"
+      class="flex justify-content-center align-items-center">
       <div class="dialog-content p-3">
         <div class="dialog-info mb-4">
           You are about to add a new collaborator to the project. To add a collaborator, please fill in the name and role fields.
         </div>
-        <div class="flex flex-column justify-content-center align-items-center gap-4 mb-4" style="margin-top: 50px">
+        <div class="flex flex-column justify-content-center align-items-center gap-4 mb-4" style="height: 50%">
           <div class="input-container">
             <p-autoComplete 
               [(ngModel)]="newCollaboratorName" 
@@ -153,23 +168,23 @@
               (onSelect)="onCollaboratorSelect($event)" 
               field="name" 
               [formControl]="collaboratorNameInput" 
-              dropdown="true" 
-              [forceSelection]="false" 
+              [forceSelection]="false"
               placeholder="Collaborator Name"
-              class="full-width">
+              class="full-width"
+              emptyMessage="Press Tab to confirm!">
             </p-autoComplete>
           </div>
           <div class="input-container">
             <p-floatLabel>
-              <input pInputText id="newCollaboratorRoleInput" [(ngModel)]="newCollaboratorRole" [formControl]="collaboratorRoleInput" class="full-width" />
+              <input pInputText id="newCollaboratorRoleInput" [(ngModel)]="newCollaboratorRole" [formControl]="collaboratorRoleInput" />
               <label for="newCollaboratorRoleInput">Collaborator Role</label>
             </p-floatLabel>
           </div>
         </div>
       </div>
-      <div class="dialog-actions flex justify-content-end gap-2 p-3">
+      <div class="dialog-actions flex justify-content-center gap-2">
         <p-button (click)="cancelAddCollaborator()" label="Cancel" severity="danger" class="p-button-outlined" />
-        <p-button (click)="saveNewCollaborator()" label="Add Collaborator" severity="primary" />
+        <p-button (click)="saveNewCollaborator()" label="Confirm" severity="success" />
       </div>
     </p-dialog>
 
@@ -316,8 +331,9 @@
     </div>
     <div class="mediaUpload">
       <div class=" grid flex">
-        <div class="col-2">
+        <div class="col-8 align-items-center gap-5">
           <h3>Media</h3>
+          <p style="color: gray;"> Keep in mind that the first .PNG or .JPEG uploaded will be the thumbnail!</p>
         </div>
         <div class="col-10"></div>
       </div>
@@ -368,7 +384,9 @@
     </div>
     <div class="card">
       <div class="flex justify-content-end">
-        <p-button (click)="cancel()" class="p-button-secondary" label="Cancel" severity="danger"></p-button>
+        <a [routerLink]="['/project-detail', projectId]">
+          <p-button (click)="cancel()" class="p-button-secondary" label="Cancel" severity="danger"></p-button>
+        </a>
         <a [routerLink]="['/project-detail', projectId]">
           <button
             (click)="saveProject()"
