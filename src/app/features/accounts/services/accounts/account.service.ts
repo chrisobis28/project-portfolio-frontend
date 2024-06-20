@@ -51,7 +51,7 @@ export class AccountService {
 
   deleteAccount(username: string): Observable<void> {
     const url = API_URL + `/${username}`;
-    return this.httpClient.post<void>(url, httpOptions);
+    return this.httpClient.delete<Observable<any>>(url, httpOptions);
   }
 
   addRoleOnProject(username: string, projectId: string, roleInProject: string): Observable<void> {
