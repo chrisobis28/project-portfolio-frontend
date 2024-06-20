@@ -193,7 +193,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     this.wsMediaProjectSubscription = this.mediaProjectWebSocket.subscribe(
      async msg => {
        if(msg == this.projectId) {
-         const mediaFileData = await this.getMediaContentByProjectId(this.projectId);
+         const mediaFileData = await this.getMediaContentByProjectId();
          this.images = mediaFileData.filter(media => media.filePath && (media.filePath.endsWith(".jpg") || media.filePath.endsWith(".png")));
          this.bibTeX = mediaFileData.find(media => media.filePath && media.filePath.endsWith(".bib"));
          this.project.thumbnail = this.images[0];
