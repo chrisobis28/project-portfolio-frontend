@@ -27,7 +27,7 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import{ MediaService} from "../../services/media/media.service";
 import { DropdownModule } from 'primeng/dropdown';
-import { Subscription, firstValueFrom, map } from 'rxjs';
+import { Subscription, firstValueFrom, map, timeout } from 'rxjs';
 import { LinkService } from '../../services/link/link.service';
 import { CollaboratorService } from '../../services/collaborator/collaborator.service';
 import { TemplateService } from '../../services/template/template.service';
@@ -37,6 +37,7 @@ import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 import {AutoCompleteCompleteEvent, AutoCompleteModule} from "primeng/autocomplete";
 import {DataViewModule} from "primeng/dataview";
 import {DialogModule} from "primeng/dialog";
+import { ColorPickerModule } from 'primeng/colorpicker';
 @Component({
   selector: 'app-project-edit',
   templateUrl: './project-edit.component.html',
@@ -45,7 +46,7 @@ import {DialogModule} from "primeng/dialog";
   imports: [FormsModule, InputTextModule, FloatLabelModule,
     InputTextareaModule, ChipsModule, TableModule, TagModule,
     RatingModule, ButtonModule, CommonModule, FileUploadModule,
-    DropdownModule, ToastModule, RouterLink, AutoCompleteModule, DataViewModule, DialogModule, ReactiveFormsModule],
+    DropdownModule, ToastModule, RouterLink, AutoCompleteModule, DataViewModule, DialogModule, ReactiveFormsModule, ColorPickerModule],
   providers: [ProjectService, MessageService]
 })
 
@@ -57,6 +58,7 @@ export class ProjectEditComponent implements OnInit {
   newTagName: string = "";
   newTagColor: string = "";
   addTagVisible: boolean = false;
+  deleteDialogVisible = false;
   platformCollaborators: Collaborator[] = [];
   projectCollaborators: CollaboratorTransfer[] = []
   editIndex: number | null = null;
@@ -64,6 +66,7 @@ export class ProjectEditComponent implements OnInit {
   filteredCollaborators: Collaborator[] = []
   removeCollaborators: string[] = []
   selectedCollaborators: CollaboratorTransfer[] = [];
+  initialTags: Tag[] = [];
 
   addCollaboratorVisible: boolean = false;
   newCollaboratorName: string = '';
@@ -144,6 +147,10 @@ export class ProjectEditComponent implements OnInit {
       this.wsTagsSubscription.unsubscribe()
     if (this.wsCollaboratorsSubscription)
       this.wsCollaboratorsSubscription.unsubscribe()
+    if(this.wsTagsProjectSubscription)
+      this.wsTagsProjectSubscription.unsubscribe()
+    if(this.wsCollaboratorsProjectSubscription)
+      this.wsCollaboratorsProjectSubscription.unsubscribe()
   }
 
   async ngOnInit() {
@@ -188,6 +195,8 @@ export class ProjectEditComponent implements OnInit {
             const newTags  = await this.getTagsByProjectId(this.projectId)
             this.tags = newTags
             this.tagnames = newTags.map(x => x.name);
+            this.selectedTags = newTags;
+            this.selectedTagNames = newTags.map(x => x.name);
           }
         }
       }
@@ -234,27 +243,32 @@ export class ProjectEditComponent implements OnInit {
       }
     )
 
+    this.wsTagsSubscription = this.tagsWebSocket.subscribe(
+      async msg => {
+        if(msg == "tag added") {
+          this.platformTags = await this.getAllTags();
+        }
+      }
+    )
 
-     //should define here the collaborators and tags websocket such that it updates autocomplete
+
+     //should define here the collaborators websocket such that it updates autocomplete
      //as in project-add components. The autocomplete is done on dev, we do it after we merge this with dev
-
-
-
 
 
   }
 
   async initializeFields() {
     this.projectId = this.route.snapshot.paramMap.get('id');
-    this.templates = await this.getAllTemplates()
-    this.templateNames = await this.getAllTemplateNames()
+    this.templates = await this.getAllTemplates();
+    this.templateNames = await this.getAllTemplateNames();
     this.platformTags = await this.getAllTags();
-    this.collaborators = await this.getAllCollaborators()
-    this.platformCollaborators = await this.getAllCollaborators()
+    this.collaborators = await this.getAllCollaborators();
+    this.platformCollaborators = await this.getAllCollaborators();
 
     if (this.projectId) {
       this.linkService.getLinksByProjectId(this.projectId).subscribe((response: Link[]) => {
-        this.links = response
+        this.links = response;
       });
       this.mediaService.getDocumentsByProjectId(this.projectId).subscribe((response: Media[]) => {
         for (const mediaObject of response) {
@@ -265,7 +279,7 @@ export class ProjectEditComponent implements OnInit {
               file:null,
               delete:false
             }
-            this.editMediaList.push(editMedia)
+            this.editMediaList.push(editMedia);
           }
         }
       });
@@ -277,12 +291,15 @@ export class ProjectEditComponent implements OnInit {
         this.selectedTemplateName = this.project.template?.templateName;
       });
       this.tagService.getTagsByProjectId(this.projectId).subscribe((response: Tag[]) => {
-        this.selectedTags = response;
-        this.selectedTagNames = this.selectedTags.map(x => x.name)
+        this.tags = response;
+        this.initialTags = response;
+        this.tagnames = this.tags.map(x => x.name);
+        this.selectedTags = this.tags;
+        this.selectedTagNames = this.tagnames;
       });
       this.collaboratorService.getCollaboratorsByProjectId(this.projectId).subscribe((response: CollaboratorTransfer[]) => {
-        this.projectCollaborators = response
-        this.selectedCollaboratorNames = this.projectCollaborators.map(x => x.name)
+        this.projectCollaborators = response;
+        this.selectedCollaboratorNames = this.projectCollaborators.map(x => x.name);
         this.selectedCollaborators = [...this.projectCollaborators];
       });
     } else {
@@ -293,18 +310,18 @@ export class ProjectEditComponent implements OnInit {
     return firstValueFrom(this.tagService.getAllTags());
   }
   getAllCollaborators(): Promise<Collaborator[]> {
-    return firstValueFrom(this.collaboratorService.getAllCollaborators())
+    return firstValueFrom(this.collaboratorService.getAllCollaborators());
   }
 
   async getProjectById(id: string): Promise<Project> {
-    return firstValueFrom(this.projectService.getProjectById(id))
+    return firstValueFrom(this.projectService.getProjectById(id));
   }
   getNamesForCollaborators(collaborators: Collaborator[]): string[] {
-    return collaborators.map(x => x.name)
+    return collaborators.map(x => x.name);
   }
 
   async getCollaboratorsByProjectId(id: string): Promise<CollaboratorTransfer[]> {
-    return firstValueFrom(this.collaboratorService.getCollaboratorsByProjectId(id))
+    return firstValueFrom(this.collaboratorService.getCollaboratorsByProjectId(id));
   }
 
   filterCollaborators(event: any) {
@@ -384,8 +401,12 @@ export class ProjectEditComponent implements OnInit {
         thumbnail: thumbnail
       };
 
-      this.removeTags = this.selectedTags.filter(x=>!this.selectedTagNames.includes(x.name));
-      this.addTags = this.platformTags.filter(x=>this.selectedTagNames.includes(x.name) && !this.selectedTags.flatMap(x=>x.name).includes(x.name));
+      this.removeTags = this.initialTags.filter(tag => !this.selectedTags.includes(tag));
+      this.addTags = this.selectedTags.filter(tag => !this.initialTags.includes(tag));
+    
+      // this.removeTags = this.selectedTags.filter(x=>!this.selectedTagNames.includes(x.name));
+      // this.removeTags = this.tags.filter(x=>!this.selectedTags.includes(x));
+      // this.addTags = this.platformTags.filter(x=>this.selectedTagNames.includes(x.name) && !this.selectedTags.flatMap(x=>x.name).includes(x.name));
 
       // this.removeCollaborators = this.projectCollaborators.filter(x=>!this.selectedCollaboratorNames.includes(x.name)).map(x => x.collaboratorId);
       // this.addCollaborators = this.platformCollaborators.filter(x=>this.selectedCollaboratorNames.includes(x.name) && !this.projectCollaborators.flatMap(x=>x.name).includes(x.name));
@@ -435,7 +456,7 @@ export class ProjectEditComponent implements OnInit {
           await firstValueFrom(this.mediaService.editMedia(editMedia.media));
         }
       }
-      this.editMediaList = []
+      this.editMediaList = [] 
       await this.router.navigate(['/project-detail/', this.projectId])
 
     } catch (error) {
@@ -445,6 +466,7 @@ export class ProjectEditComponent implements OnInit {
   }
 
   cancel(): void {
+    this.router.navigateByUrl("http://localhost:4200/project-detail/" + this.projectId);
   }
 
   isAnyLinkFieldEmpty(): boolean {
@@ -614,5 +636,13 @@ export class ProjectEditComponent implements OnInit {
     this.collaboratorNameInput.reset();
     this.collaboratorRoleInput.reset();
     this.editIndex = null;
+  }
+
+  isDarkColor(color: string): boolean {
+    return this.tagService.isDarkColor(color);
+  }
+
+  showDeleteDialog(): void {
+    this.deleteDialogVisible = true;
   }
 }

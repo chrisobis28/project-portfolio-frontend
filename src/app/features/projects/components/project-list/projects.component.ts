@@ -31,6 +31,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
   isLoggedIn: boolean = false;
   username: string = '';
   role: Nullable<string> = '';
+  showHelp: boolean = false;
 
 
   wsProjectsSubscription: Subscription = new Subscription();
@@ -312,5 +313,19 @@ export class ProjectsComponent implements OnInit, OnDestroy {
           })
         }
       })
+    }
+
+    isDarkColor(color: string): boolean {
+      return this.tagService.isDarkColor(color);
+    }
+
+    filterTagsOnClick(tagName: string): void {
+      this.selectedTagNames.push(tagName);
+      this.onTagSelectedFilterChanged();
+    }
+
+    parseWriting(names: string[]): string {
+      if (names == null) return '';
+      return names.join(', ');
     }
   }

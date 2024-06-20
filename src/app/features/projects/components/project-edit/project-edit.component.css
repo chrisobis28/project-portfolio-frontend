@@ -38,10 +38,28 @@
 }
 
 .input-container {
-  width: 100%;
   max-width: 20rem;
 }
 
 .full-width {
   width: 100%;
 }
+
+.tag-name {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .tag-item {
+    display: inline-block;
+    background-color: #ccc;
+    padding: 5px 10px;
+    border-radius: 20px;
+    margin: 5px;
+    white-space: nowrap;
+  }
+  
+  .tag-item span {
+    display: inline-block;
+    vertical-align: middle;
+  }
