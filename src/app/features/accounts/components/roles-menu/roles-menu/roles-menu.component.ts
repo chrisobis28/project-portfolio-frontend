@@ -7,13 +7,14 @@ import { AccountTransfer, ProjectTransfer } from '../../../models/accounts-model
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { FormsModule } from '@angular/forms';
 import { AccountService } from '../../../services/accounts/account.service';
-import { Observable, debounceTime, filter, firstValueFrom, fromEvent } from 'rxjs';
+import { Observable, Subscription, debounceTime, filter, firstValueFrom, fromEvent } from 'rxjs';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DropdownModule } from 'primeng/dropdown';
 import { Project, ProjectsToAccounts } from 'src/app/features/projects/models/project-models';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
+import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 
 @Component({
   selector: 'app-roles-menu',
@@ -42,9 +43,23 @@ export class RolesMenuComponent {
   searchUsername: string = '';
   previousSearchLength: number = 0;
   isPM: boolean[] = [];
+  showDeleteDialog: boolean = false;
   showHelp: boolean = false;
 
   roles: string[] = ['CONTENT_CREATOR', 'PM', 'EDITOR'];
+
+  wsAccountsSubscription: Subscription = new Subscription();
+  wsAccountsProjectsSubscription: Subscription = new Subscription();
+
+  accountsWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/accounts",
+    deserializer: msg => String(msg.data)
+  });
+
+  acountsProjectsWebSocket: WebSocketSubject<any> = webSocket({
+    url: "ws://localhost:8080/topic/accounts/project",
+    deserializer: msg => String(msg.data)
+  });
 
   async ngOnInit(): Promise<void> {
     if(!this.storageService.isLoggedIn() || this.storageService.getRole() != "ROLE_ADMIN") {
@@ -55,6 +70,32 @@ export class RolesMenuComponent {
     this.innerWidth = window.innerWidth;
     this.previousSearchLength = 0;
     this.username = this.storageService.getUser();
+    await this.getAccountsFromServer();
+
+    this.wsAccountsProjectsSubscription = this.acountsProjectsWebSocket.subscribe(
+      async (msg: string) => {
+        console.log(msg);
+        if(msg.includes("update") || msg.includes("delete") || msg.includes("add")) {
+          const username = msg.split(' ')[2];
+          this.accounts.filter(x => x.username == username).forEach(async x => {
+            x.projects = await this.getProjects(x.username);
+            x.projects.push({ projectId: 'null', name: 'None of the above', roleInProject: "nothing" });
+          });
+        }
+      }
+    );
+
+    this.wsAccountsSubscription = this.accountsWebSocket.subscribe(
+      async msg => {
+        console.log(msg);
+        if(msg.startsWith("add") || msg.startsWith("delete") || msg.startsWith("edit")) {
+          await this.getAccountsFromServer();
+        }
+      }
+    );
+  }
+
+  async getAccountsFromServer(): Promise<void> {
     this.accountService.getAccounts().subscribe({
       next: (data: AccountTransfer[]) => {
         this.accounts = data.filter(x => x.username != this.username);
@@ -69,6 +110,13 @@ export class RolesMenuComponent {
         console.error('Error fetching media files', err);
       }
     })
+  }
+
+  ngOnDestroy(): void {
+    if(this.wsAccountsProjectsSubscription)
+      this.wsAccountsProjectsSubscription.unsubscribe();
+    if(this.wsAccountsSubscription)
+      this.wsAccountsSubscription.unsubscribe();
   }
 
   @HostListener('window:resize', ['$even'])
@@ -139,5 +187,17 @@ export class RolesMenuComponent {
 
   checkRole(role: string): boolean {
     return role == 'CONTENT_CREATOR' || role == 'PM' || role == 'EDITOR';
+  }
+
+  removeAccount(username: string): void {
+    this.accountService.deleteAccount(username).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Account deleted successfully.'});
+        this.showDeleteDialog = false;
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not delete account.'});
+      }
+    });
   }
 }
