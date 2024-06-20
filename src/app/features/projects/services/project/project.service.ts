@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable} from '@angular/core';
 import { Observable } from 'rxjs';
-import {Collaborator, Link, Media, Project, Tag, Template} from '../../models/project-models';
+import {Project, Template} from '../../models/project-models';
 
 @Injectable({
   providedIn: 'root'
@@ -26,12 +26,12 @@ export class ProjectService {
     return this.httpClient.post<Project>(this.API_URL, body);
   }
 
-  editProject(id: String, body: Project): Observable<Project> {
+  editProject(id: string, body: Project): Observable<Project> {
     return this.httpClient.put<Project>(this.API_URL + `${id}`, body);
   }
 
-  deleteProject(id: String): Observable<Object> {
-    return this.httpClient.delete<Object>(this.API_URL + `${id}`);
+  deleteProject(id: string): Observable<string> {
+    return this.httpClient.delete<string>(this.API_URL + `${id}`);
   }
 
   updateProjectTemplate(id: String, body: Template | null): Observable<Project> {

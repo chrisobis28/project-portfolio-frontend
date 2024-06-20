@@ -10,6 +10,7 @@ import { ToastModule } from 'primeng/toast';
 import { ButtonModule } from 'primeng/button';
 import { Router, RouterModule } from '@angular/router';
 import {ConfirmDialogModule} from 'primeng/confirmdialog';
+import { DialogModule } from 'primeng/dialog';
 
 @Component({
   selector: 'app-login-menu',
@@ -21,7 +22,8 @@ import {ConfirmDialogModule} from 'primeng/confirmdialog';
     ToastModule,
     ButtonModule,
     RouterModule,
-    ConfirmDialogModule],
+    ConfirmDialogModule,
+    DialogModule],
   templateUrl: './login-menu.component.html',
   styleUrl: './login-menu.component.css',
   providers: [MessageService, ConfirmationService]
@@ -56,7 +58,7 @@ export class LoginMenuComponent implements OnInit {
   ]);
   nameR = new FormControl('', [
     Validators.required,
-    Validators.pattern('^[a-zA-Z_]{1,50}$')
+    Validators.pattern('^[a-zA-Z ]{1,50}$')
   ]);
 
   loginForm: FormGroup = new FormGroup({});
@@ -75,6 +77,7 @@ export class LoginMenuComponent implements OnInit {
   isUsernameFocusedRegister = false;
   isPasswordFocusedRegister = false;
   isNameFocusedRegister = false;
+  showHelp = false;
 
   messages1: Message[] = [];
 

@@ -9,7 +9,7 @@ import {TagModule} from 'primeng/tag';
 import {ButtonModule} from 'primeng/button';
 import {CarouselModule} from 'primeng/carousel';
 import {ChipModule} from 'primeng/chip';
-import {Collaborator, Link, Media, MediaFileContent, Project, Tag} from "../../models/project-models";
+import {Link, Media, MediaFileContent, Project, Tag} from "../../models/project-models";
 import {ActivatedRoute, RouterLink} from '@angular/router';
 import {DividerModule} from 'primeng/divider';
 import {ProjectService} from "../../services/project/project.service";
@@ -26,6 +26,7 @@ import { firstValueFrom, Subscription } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import {ConfirmDialogModule} from "primeng/confirmdialog";
 import {ConfirmationService, MessageService} from "primeng/api";
+import { CollaboratorTransfer } from '../../models/project-models';
 import {ImageModule} from "primeng/image";
 import {GalleriaModule} from "primeng/galleria";
 @Component({
@@ -65,7 +66,24 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     thumbnail: { fileName: '', filePath: '' ,fileContent:''},
     template: null
   };
-  collaborators: Collaborator[] = [];
+  responsiveOptions = [
+    {
+      breakpoint: '1199px',
+      numVisible: 1,
+      numScroll: 1
+    },
+    {
+      breakpoint: '991px',
+      numVisible: 2,
+      numScroll: 1
+    },
+    {
+      breakpoint: '767px',
+      numVisible: 1,
+      numScroll: 1
+    }
+  ];
+  collaborators: CollaboratorTransfer[] = [];
   links: Link[] = [];
   tags: Tag[] = [];
   isMobile: boolean;
@@ -75,30 +93,30 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   isLoggedIn: boolean = false;
 
 
-  wsProjectsSubscription: Subscription = new Subscription()
-  wsCollaboratorsProjectSubscription: Subscription = new Subscription()
-  wsTagsProjectSubscription: Subscription = new Subscription()
-  wsLinksProjectSubscription: Subscription = new Subscription()
-  wsMediaProjectSubscription: Subscription = new Subscription()
+  wsProjectsSubscription: Subscription = new Subscription();
+  wsCollaboratorsProjectSubscription: Subscription = new Subscription();
+  wsTagsProjectSubscription: Subscription = new Subscription();
+  wsLinksProjectSubscription: Subscription = new Subscription();
+  wsMediaProjectSubscription: Subscription = new Subscription();
 
 
-  projectsWebSocket: WebSocketSubject<any> = webSocket({
+  projectsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/projects",
     deserializer: msg => String(msg.data)
   })
-  collaboratorsProjectWebSocket: WebSocketSubject<any> = webSocket({
+  collaboratorsProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/collaborators/project",
     deserializer: msg => String(msg.data)
   })
-  tagsProjectWebSocket: WebSocketSubject<any> = webSocket({
+  tagsProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/tags/project",
     deserializer: msg => String(msg.data)
   })
-  linksProjectWebSocket: WebSocketSubject<any> = webSocket({
+  linksProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/link/project",
     deserializer: msg => String(msg.data)
   })
-  mediaProjectWebSocket: WebSocketSubject<any> = webSocket({
+  mediaProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/media/project",
     deserializer: msg => String(msg.data)
   })
@@ -117,70 +135,76 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     this.isMobile = window.innerWidth <= 767;
   }
 
-  getCollaboratorNames(): string {
-    return this.collaborators.map(obj => obj.name).join(', ');
+  getCollaborators(): string {
+    return this.collaborators
+      .map(collaborator => `${collaborator.name} (<b>${collaborator.role}</b>)`)
+      .join(', ');
   }
+
 
    async ngOnInit() {
 
-    this.initializeProject()
+    await this.initializeProject();
 
     this.wsProjectsSubscription = this.projectsWebSocket.subscribe(
      async msg => {
-       const words = msg.split(" ")
+       const words = msg.split(" ");
        if(words[1] == this.projectId) {
          switch (words[0]) {
            case "edited" : {
-             const newProject = await this.getProjectById(this.projectId)
-             this.project.title = newProject.title
+             const newProject = await this.getProjectById(this.projectId);
+             this.project.title = newProject.title;
              this.projectDescription = newProject.description.split(/\r?\n|\r|\n/g);
-             return
+             return;
            }
            case "deleted" : {
-             this.router.navigate(['/'])
-             return
+             this.router.navigate(['/']);
+             return;
            }
          }
        }
      }
-    )
+    );
 
     this.wsCollaboratorsProjectSubscription = this.collaboratorsProjectWebSocket.subscribe(
      async msg => {
        if(msg == "all" || msg == this.projectId) {
-         this.collaborators = await this.getCollaboratorsByProjectId(this.projectId)
+         this.collaborators = await this.getCollaboratorsByProjectId(this.projectId);
        }
      }
-    )
+    );
+
     this.wsTagsProjectSubscription = this.tagsProjectWebSocket.subscribe(
      async msg => {
-       if(msg == "all" || msg == this.projectId) {
-         this.tags = await this.getTagsByProjectId(this.projectId)
-       }
+      if(msg == "all" || msg == this.projectId) {
+        this.tags = await this.getTagsByProjectId(this.projectId);
+      }
      }
-    )
+    );
+    
     this.wsLinksProjectSubscription = this.linksProjectWebSocket.subscribe(
      async msg => {
        if(msg == "all" || msg == this.projectId) {
-         this.links = await this.getLinksByProjectId(this.projectId)
+         this.links = await this.getLinksByProjectId(this.projectId);
        }
      }
-    )
+    );
+
     this.wsMediaProjectSubscription = this.mediaProjectWebSocket.subscribe(
      async msg => {
        if(msg == this.projectId) {
-         const mediaFileData = await this.getMediaContentByProjectId(this.projectId)
+         const mediaFileData = await this.getMediaContentByProjectId();
          this.images = mediaFileData.filter(media => media.filePath && (media.filePath.endsWith(".jpg") || media.filePath.endsWith(".png")));
          this.bibTeX = mediaFileData.find(media => media.filePath && media.filePath.endsWith(".bib"));
          this.project.thumbnail = this.images[0];
-         const documentData = await this.getDocumentsByProjectId(this.projectId)
+         const documentData = await this.getDocumentsByProjectId(this.projectId);
          this.documents = documentData.filter(media => media.path && !(
            media.path.endsWith(".jpg") ||
            media.path.endsWith(".png")
          ));
        }
      }
-    )
+    );
 
     this.isLoggedIn = this.storageService.isLoggedIn();
       if(this.isLoggedIn) {
@@ -229,7 +253,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       this.wsLinksProjectSubscription.unsubscribe()
   }
 
-  initializeProject(): void {
+  async initializeProject(): Promise<void> {
     this.route.params.subscribe(params => {
       this.projectId = (params['id']);
       this.projectService.getProjectById(params['id']).subscribe((responseProject: Project) => {
@@ -239,11 +263,12 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       this.linkService.getLinksByProjectId(params['id']).subscribe((responseLinks: Link[]) => {
         this.links = responseLinks;
       });
-      this.collaboratorService.getCollaboratorsByProjectId(params['id']).subscribe((responseCollaborators: Collaborator[]) => {
+      this.collaboratorService.getCollaboratorsByProjectId(params['id']).subscribe((responseCollaborators: CollaboratorTransfer[]) => {
         this.collaborators = responseCollaborators;
       });
       this.tagService.getTagsByProjectId(params['id']).subscribe((responseTags: Tag[]) => {
         this.tags = responseTags;
+        console.log(this.tags);
       });
     });
     this.mediaService.getMediasContentByProjectId(this.projectId).subscribe({
@@ -252,7 +277,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
          this.project.thumbnail = this.images[0];
          this.bibTeX = data.find(media => media.filePath && media.filePath.endsWith(".bib"));
        },
-       error: (err: any) => {
+       error: (err: unknown) => {
          console.error('Error fetching media files', err);
        }
      })
@@ -263,7 +288,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
              media.path.endsWith(".png")
            ));
          },
-         error: (err: any) => {
+         error: (err: unknown) => {
            console.error('Error fetching media files', err);
          }
        }
@@ -274,7 +299,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     return firstValueFrom(this.projectService.getProjectById(id))
   }
 
-  async getCollaboratorsByProjectId(id: string): Promise<Collaborator[]> {
+  async getCollaboratorsByProjectId(id: string): Promise<CollaboratorTransfer[]> {
     return firstValueFrom(this.collaboratorService.getCollaboratorsByProjectId(id))
   }
 
@@ -286,7 +311,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     return firstValueFrom(this.linkService.getLinksByProjectId(id))
   }
 
-  async getMediaContentByProjectId(id: string): Promise<MediaFileContent[]> {
+  async getMediaContentByProjectId(): Promise<MediaFileContent[]> {
     return firstValueFrom(this.mediaService.getMediasContentByProjectId(this.projectId))
   }
 
@@ -332,7 +357,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     });
     return formattedBibtex.join('\n');
   }
-  downloadDocument(mediaId: string){
+  async downloadDocument(mediaId: string){
     let mediaFile : MediaFileContent = {
       fileName:"",
       filePath:"",
@@ -343,7 +368,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
         mediaFile = data;
         this.downloadFile(mediaFile);
        },
-       error: (err:any) => {
+       error: (err:unknown) => {
          console.error('Error fetching media files', err);
        }
      })
@@ -352,7 +377,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     this.visible = true;
   }
   deleteProject(projectId:string){
-    this.projectService.deleteProject(projectId).subscribe(response => {});
+    this.projectService.deleteProject(projectId).subscribe(() => {});
     this.router.navigateByUrl('');
   }
   getColorCode(color: string): string {
@@ -370,10 +395,14 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
             return;
           },
           error: err => {
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not be logged out.' });
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not be logged out.: ' + err.message });
           }
         })
       }
     })
+  }
+
+  isDarkColor(color: string): boolean {
+    return this.tagService.isDarkColor(color);
   }
 }

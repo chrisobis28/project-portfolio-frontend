@@ -22,7 +22,7 @@ export class TemplateService {
     return this.httpClient.post<Template>(this.API_URL, body);
   }
 
-  addTemplateAddition(name: String, body: TemplateAddition): Observable<TemplateAddition> {
+  addTemplateAddition(name: string, body: TemplateAddition): Observable<TemplateAddition> {
     return this.httpClient.post<TemplateAddition>(this.API_URL + `/${name}`, body)
   }
 }
