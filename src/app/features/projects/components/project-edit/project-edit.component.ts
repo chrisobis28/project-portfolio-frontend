@@ -28,7 +28,7 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import{ MediaService} from "../../services/media/media.service";
 import { DropdownModule } from 'primeng/dropdown';
-import { Subscription, firstValueFrom, map, timeout } from 'rxjs';
+import { Subscription, firstValueFrom, map} from 'rxjs';
 import { LinkService } from '../../services/link/link.service';
 import { CollaboratorService } from '../../services/collaborator/collaborator.service';
 import { TemplateService } from '../../services/template/template.service';

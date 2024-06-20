@@ -8,7 +8,7 @@ import { FloatLabelModule } from 'primeng/floatlabel';
 import { FormsModule } from '@angular/forms';
 import { AccountService } from '../../../services/accounts/account.service';
 import { firstValueFrom} from 'rxjs';
-import { Observable, Subscription, debounceTime, filter, firstValueFrom, fromEvent } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DropdownModule } from 'primeng/dropdown';
 import { MessageService } from 'primeng/api';
@@ -51,12 +51,12 @@ export class RolesMenuComponent {
   wsAccountsSubscription: Subscription = new Subscription();
   wsAccountsProjectsSubscription: Subscription = new Subscription();
 
-  accountsWebSocket: WebSocketSubject<any> = webSocket({
+  accountsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/accounts",
     deserializer: msg => String(msg.data)
   });
 
-  acountsProjectsWebSocket: WebSocketSubject<any> = webSocket({
+  acountsProjectsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/accounts/project",
     deserializer: msg => String(msg.data)
   });
