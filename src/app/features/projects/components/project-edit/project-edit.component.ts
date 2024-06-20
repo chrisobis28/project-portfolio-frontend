@@ -15,7 +15,8 @@ import {
   Project,
   Tag,
   Template,
-  CollaboratorSelectEvent
+  CollaboratorSelectEvent,
+  TemplateSelectEvent
 } from '../../models/project-models';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -480,7 +481,7 @@ export class ProjectEditComponent implements OnInit {
         fileName:''
       }
       
-      var templateToBeAdded = null;
+      let templateToBeAdded = null;
       if (this.selectedTemplate != undefined) templateToBeAdded = this.selectedTemplate;
     
 
@@ -583,7 +584,7 @@ export class ProjectEditComponent implements OnInit {
       for (const editMedia of this.editTemplateMediaList) {
         if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
         {
-          await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as String)));
+          await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as string)));
         }
         else if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
         {
@@ -726,7 +727,7 @@ export class ProjectEditComponent implements OnInit {
   changeTemplateMedia(event: FileUploadHandlerEvent, form: FileUpload, index: number) {
     const file = event.files[0];
     this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media changed successfully! The media will be saved when the save button is clicked!'});
-    let newMedia:Media = {
+    const newMedia:Media = {
       mediaId:'',
       name: this.editTemplateMediaList[index].media!.name,
       path:file.name,
@@ -746,7 +747,7 @@ export class ProjectEditComponent implements OnInit {
   uploadEmptyTemplateMedia(mediaName: string) {
     const file = null;
     this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media changed successfully! The media will be saved when the save button is clicked!'});
-    let newMedia:Media = {
+    const newMedia:Media = {
       mediaId:'',
       name: mediaName,
       path: '',
@@ -767,7 +768,7 @@ export class ProjectEditComponent implements OnInit {
     this.templateLinks.push(link);
   }
 
-  onTemplateSelect(event: any) {
+  onTemplateSelect(event: TemplateSelectEvent) {
     this.clearTemplateFields()
     this.selectedTemplateName = event.value;
     this.selectedTemplate = this.templates.find(template => template.templateName === this.selectedTemplateName);
@@ -862,5 +863,5 @@ export class ProjectEditComponent implements OnInit {
   showDeleteDialog(): void {
     this.deleteDialogVisible = true;
   }
-  
+
 }

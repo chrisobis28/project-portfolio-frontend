@@ -137,3 +137,6 @@ export interface CollaboratorSelectEvent {
     value: CollaboratorTransfer
 }
 
+export interface TemplateSelectEvent {
+    value: string
+}

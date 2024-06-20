@@ -4,7 +4,7 @@ import { FormControl, FormsModule, Validators } from '@angular/forms';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ChipsModule } from 'primeng/chips';
-import { Collaborator, Link, Media, Project, Tag, Template, CollaboratorSelectEvent } from '../../models/project-models';
+import { Collaborator, Link, Media, Project, Tag, Template, CollaboratorSelectEvent, TemplateSelectEvent } from '../../models/project-models';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { RatingModule } from 'primeng/rating';
@@ -192,7 +192,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  onTemplateSelect(event: any) {
+  onTemplateSelect(event: TemplateSelectEvent) {
     this.clearTemplateFields()
     this.selectedTemplateName = event.value;
     this.currentTemplate = this.templates.find(template => template.templateName === this.selectedTemplateName);
@@ -309,7 +309,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     try {
       this.titleInput.setErrors({ invalid: false });
       this.descriptionInput.setErrors({ invalid: false });
-      var templateToBeAdded = null;
+      let templateToBeAdded = null;
       if (this.currentTemplate != undefined) templateToBeAdded = this.currentTemplate;
       console.log(templateToBeAdded?.templateName)
       const project: Project = {
@@ -436,7 +436,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     this.templateMediaNames.push(emptyFile);
     this.addedTemplateMediaList.push(formData);
     this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media added! The media will be uploaded when the edit will be saved!'});
-    let newMedia:Media = {
+    const newMedia:Media = {
       mediaId:'',
       name:nameOfMedia,
       path: '',
@@ -495,7 +495,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     formData.append('file', file);
     this.addedTemplateMediaList[index] = formData;
     this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media changed successfully! The media will be saved when the save button is clicked!'});
-    let newMedia:Media = {
+    const newMedia:Media = {
       mediaId:'',
       name: this.templateMediaNames[index],
       path:file.name,

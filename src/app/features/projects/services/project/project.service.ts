@@ -34,11 +34,11 @@ export class ProjectService {
     return this.httpClient.delete<string>(this.API_URL + `${id}`);
   }
 
-  updateProjectTemplate(id: String, body: Template | null): Observable<Project> {
+  updateProjectTemplate(id: string, body: Template | null): Observable<Project> {
     return this.httpClient.put<Project>(this.API_URL + `${id}` + '/template/', body);
   }
   
-  getTemplateByProjectId(id: String): Observable<Template> {
+  getTemplateByProjectId(id: string): Observable<Template> {
     return this.httpClient.get<Template>(this.API_URL + `${id}` + '/template/');
   }
 
