@@ -12,7 +12,6 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { AuthenticationService } from 'src/app/features/accounts/services/authentication/authentication.service';
 import { Nullable } from 'primeng/ts-helpers';
 
-import { WebsocketService } from '../../services/websocket/websocket.service';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 @Component({
   selector: 'app-projects',
@@ -41,23 +40,23 @@ export class ProjectsComponent implements OnInit, OnDestroy {
   wsMediaProjectSubscription: Subscription = new Subscription()
 
 
-  projectsWebSocket: WebSocketSubject<any> = webSocket({
+  projectsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/projects",
     deserializer: msg => String(msg.data)
   })
-  collaboratorsProjectWebSocket: WebSocketSubject<any> = webSocket({
+  collaboratorsProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/collaborators/project",
     deserializer: msg => String(msg.data)
   })
-  tagsWebSocket: WebSocketSubject<any> = webSocket({
+  tagsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/tags",
     deserializer: msg => String(msg.data)
   })
-  tagsProjectWebSocket: WebSocketSubject<any> = webSocket({
+  tagsProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/tags/project",
     deserializer: msg => String(msg.data)
   })
-  mediaProjectWebSocket: WebSocketSubject<any> = webSocket({
+  mediaProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/media/project",
     deserializer: msg => String(msg.data)
   })
@@ -123,7 +122,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     )
 
     this.wsTagsSubscription = this.tagsWebSocket.subscribe(
-      async msg => {
+      async () => {
             console.log("refreshing entire tag list")
             this.tagNames = await this.getAllTagNames()
       }
@@ -308,7 +307,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
               return;
             },
             error: err => {
-              this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not be logged out.' });
+              this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not be logged out: ' + err.message });
             }
           })
         }

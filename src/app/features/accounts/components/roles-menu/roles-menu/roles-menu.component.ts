@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener } from '@angular/core';
+import { Component,HostListener } from '@angular/core';
 import { StorageService } from '../../../services/authentication/storage.service';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -7,10 +7,10 @@ import { AccountTransfer, ProjectTransfer } from '../../../models/accounts-model
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { FormsModule } from '@angular/forms';
 import { AccountService } from '../../../services/accounts/account.service';
-import { Observable, Subscription, debounceTime, filter, firstValueFrom, fromEvent } from 'rxjs';
+import { firstValueFrom} from 'rxjs';
+import { Subscription } from 'rxjs';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DropdownModule } from 'primeng/dropdown';
-import { Project, ProjectsToAccounts } from 'src/app/features/projects/models/project-models';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
@@ -51,12 +51,12 @@ export class RolesMenuComponent {
   wsAccountsSubscription: Subscription = new Subscription();
   wsAccountsProjectsSubscription: Subscription = new Subscription();
 
-  accountsWebSocket: WebSocketSubject<any> = webSocket({
+  accountsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/accounts",
     deserializer: msg => String(msg.data)
   });
 
-  acountsProjectsWebSocket: WebSocketSubject<any> = webSocket({
+  acountsProjectsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/accounts/project",
     deserializer: msg => String(msg.data)
   });

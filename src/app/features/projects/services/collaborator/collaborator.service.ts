@@ -26,8 +26,8 @@ export class CollaboratorService {
     const body = "role1"
     return this.httpClient.post<Collaborator>(this.API_URL + `${projectId}` + "/" + `${collaborator.collaboratorId}`, body);
   }
-  deleteCollaboratorFromProject(projectId: string, collaboratorId: string): Observable<String> {
-    return this.httpClient.delete<String>(this.API_URL + `${projectId}` + "/" + `${collaboratorId}`,{ responseType: 'text' as 'json'});
+  deleteCollaboratorFromProject(projectId: string, collaboratorId: string): Observable<string> {
+    return this.httpClient.delete<string>(this.API_URL + `${projectId}` + "/" + `${collaboratorId}`,{ responseType: 'text' as 'json'});
   }
 
   createAndAddCollaboratorToProject(collaborator: CollaboratorTransfer, projectId: string): Observable<CollaboratorTransfer> {

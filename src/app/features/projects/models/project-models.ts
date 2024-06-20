@@ -132,3 +132,7 @@ export interface WebSocketStringMessage {
     message: string
 }
 
+export interface CollaboratorSelectEvent {
+    value: CollaboratorTransfer
+}
+
