@@ -493,7 +493,7 @@ export class ProjectEditComponent implements OnInit {
    this.mediaService.downloadFile(media);
   }
 
-  downloadDocument(mediaId: string) {
+  async downloadDocument(mediaId: string) {
     let mediaFile: MediaFileContent = {
       fileName: "",
       filePath: "",
@@ -598,7 +598,7 @@ export class ProjectEditComponent implements OnInit {
       return;
     }
 
-    const isDuplicate = this.selectedCollaborators.some((collaborator, index) => 
+    const isDuplicate = this.selectedCollaborators.some((collaborator, index) =>
       collaborator.name.toLowerCase() === this.newCollaboratorName.toLowerCase() && index !== this.editIndex
     );
 

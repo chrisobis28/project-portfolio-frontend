@@ -140,7 +140,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       .map(collaborator => `${collaborator.name} (<b>${collaborator.role}</b>)`)
       .join(', ');
   }
-  
+
 
    async ngOnInit() {
 
@@ -357,7 +357,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     });
     return formattedBibtex.join('\n');
   }
-  downloadDocument(mediaId: string){
+  async downloadDocument(mediaId: string){
     let mediaFile : MediaFileContent = {
       fileName:"",
       filePath:"",
