@@ -153,7 +153,6 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
       }
     )
 
-    this.selectedTags = []
     this.selectedCollaborators = []
     this.titleInput.setValue("")
     this.descriptionInput.setValue("")
@@ -355,22 +354,19 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
         await firstValueFrom(this.collaboratorService.createAndAddCollaboratorToProject(collaborator, createdProject.projectId))
       }
 
-      this.selectedCollaborators = []
+      this.selectedCollaborators = [];
 
-      const finalTags = this.tags.filter(x => this.selectedTags.includes(x));
-
-      for(const tag of finalTags) {
-        await firstValueFrom(this.tagService.addTagToProject(tag, createdProject.projectId))
+      for(const tag of this.selectedTags) {
+        await firstValueFrom(this.tagService.addTagToProject(tag, createdProject.projectId));
       }
-
-      this.selectedTags = []
 
       for (const [index, media] of this.addedMediaList.entries()) {
         media.append('name', this.media[index].name);
         await firstValueFrom(this.mediaService.addDocumentToProject(createdProject.projectId, media));
       }
-      this.addedMediaList = []
-      this.media = []
+      this.addedMediaList = [];
+      this.media = [];
+      this.selectedTags = [];
 
       for (const [index, templateMedia] of this.addedTemplateMediaList.entries()) {
         templateMedia.append('name', this.templateMedia[index].name);
