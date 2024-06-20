@@ -24,6 +24,7 @@ export interface Media {
     project: Project
     requestMediaProjects: RequestMediaProject[]
 }
+
 export interface EditMedia {
   media:Media|null
   mediaFileContent:MediaFileContent|null
@@ -136,3 +137,6 @@ export interface CollaboratorSelectEvent {
     value: CollaboratorTransfer
 }
 
+export interface TemplateSelectEvent {
+    value: string
+}
