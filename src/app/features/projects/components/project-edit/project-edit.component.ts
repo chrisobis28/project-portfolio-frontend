@@ -368,55 +368,57 @@ export class ProjectEditComponent implements OnInit {
       return;
     }
 
-    // if(!this.isTitleDescriptionAndMediaValid()) {
-    //   if(this.title.length == 0){
-    //     this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Title can not be empty' });
-    //     return;
-    //   }
-    //   if(this.description.length == 0){
-    //     this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Description can not be empty' });
-    //     return;
-    //   }
-    //   if(this.editMediaList.length == 0 && this.editTemplateMediaList.length == 0){
-    //     this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not be empty' });
-    //     return
-    //   }
-    //   for (const editMed of this.editMediaList) {
-    //     if(editMed.media!.name.length < 1) {
-    //       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not have an empty display name' });
-    //       return
-    //     }
-    //   }
-    //   for (const editTempMed of this.editTemplateMediaList) {
-    //     if(editTempMed.media!.name.length < 1) {
-    //       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not have an empty display name' });
-    //       return
-    //     }
-    //   }
-    //   for (const link of this.links) {
-    //     if(link.name.length < 1) {
-    //       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Links can not have an empty title' });
-    //       return
-    //     }
-    //     if(link.url.length < 1) {
-    //       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Links can not have an empty url' });
-    //       return
-    //     }
-    //   }
+    if(!this.isTitleDescriptionAndMediaValid()) {
+      if(this.title.length == 0){
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Title can not be empty' });
+        return;
+      }
+      if(this.description.length == 0){
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Description can not be empty' });
+        return;
+      }
+      if(this.editMediaList.length == 0 && this.editTemplateMediaList.length == 0){
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not be empty' });
+        return
+      }
+      
 
-    //   for (const link of this.templateLinks) {
-    //     if(link.name.length < 1) {
-    //       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Template links can not have an empty title' });
-    //       return
-    //     }
-    //     if(link.url.length < 1) {
-    //       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Template links can not have an empty url' });
-    //       return
-    //     }
-    //   }
+      return;
+    }
 
-    //   return;
-    // }
+    for (const editMed of this.editMediaList) {
+      if(editMed.media!.name.length < 1 || editMed.media?.path == '') {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not have an empty display name' });
+        return
+      }
+    }
+    for (const editTempMed of this.editTemplateMediaList) {
+      if(editTempMed.media!.name.length < 1 || editTempMed.media?.path == '') {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Template Media can not have an empty display name' });
+        return
+      }
+    }
+    for (const link of this.links) {
+      if(link.name.length < 1) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Links can not have an empty title' });
+        return
+      }
+      if(link.url.length < 1) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Links can not have an empty url' });
+        return
+      }
+    }
+
+    for (const link of this.templateLinks) {
+      if(link.name.length < 1) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Template links can not have an empty title' });
+        return
+      }
+      if(link.url.length < 1) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Template links can not have an empty url' });
+        return
+      }
+    }
 
     try {
       const thumbnail: MediaFileContent = {
@@ -425,10 +427,15 @@ export class ProjectEditComponent implements OnInit {
         fileName:''
       }
       console.log("try was entered")
-      // const foundTemplate = this.templates.find(x => x.templateName === this.selectedTemplateName);
-      // this.selectedTemplate = foundTemplate !== undefined ? foundTemplate : null;
+      
       var templateToBeAdded = null;
       if (this.selectedTemplate != undefined) templateToBeAdded = this.selectedTemplate;
+      
+      console.log(templateToBeAdded)
+
+      console.log(this.links)
+      console.log(this.templateLinks)
+      console.log(this.deleteLinkList)
 
       const prj: Project = {
         projectId: "",
@@ -451,16 +458,22 @@ export class ProjectEditComponent implements OnInit {
       this.removeTags = this.selectedTags.filter(x=>!this.selectedTagNames.includes(x.name));
       this.addTags = this.platformTags.filter(x=>this.selectedTagNames.includes(x.name) && !this.selectedTags.flatMap(x=>x.name).includes(x.name));
 
+      console.log("got after tags")
       this.removeCollaborators = this.selectedCollaborators.filter(x=>!this.selectedCollaboratorNames.includes(x.name));
       this.addCollaborators = this.platformCollaborators.filter(x=>this.selectedCollaboratorNames.includes(x.name) && !this.selectedCollaborators.flatMap(x=>x.name).includes(x.name));
+      console.log("got after collaborators")
 
       const createdProject = await firstValueFrom(this.projectService.editProject(this.projectId, prj));
 
-      if (this.selectedTemplate != undefined) {
-        await firstValueFrom(this.projectService.updateProjectTemplate(createdProject.projectId, this.selectedTemplate))
+      console.log("got after project")
+
+      if (this.selectedTemplate == undefined) {
+        firstValueFrom(this.projectService.removeTemplateFromProject(createdProject.projectId, "delete-template"))
       } else {
-        await firstValueFrom(this.projectService.updateProjectTemplate(createdProject.projectId, null))
+        firstValueFrom(this.projectService.updateProjectTemplate(createdProject.projectId, this.selectedTemplate))
       }
+      console.log("got after template")
+
 
       for (const collaborator of this.removeCollaborators) {
         await firstValueFrom(this.collaboratorService.deleteCollaboratorFromProject(collaborator,this.projectId))
@@ -468,14 +481,17 @@ export class ProjectEditComponent implements OnInit {
       for (const collaborator of this.addCollaborators) {
         await firstValueFrom(this.collaboratorService.addCollaboratorToProject(collaborator,this.projectId))
       }
+      console.log("got after collabs2")
+
       for (const tag of this.removeTags) {
         await firstValueFrom(this.tagService.removeTagFromProject(tag,this.projectId))
       }
       for (const tag of this.addTags) {
         await firstValueFrom(this.tagService.addTagToProject(tag,this.projectId));
       }
+      console.log("got after tags2")
 
-
+      console.log(this.links)
       for (const link of this.links) {
         if(link.linkId == '') {
           await firstValueFrom(this.linkService.addLinkToProject(link, createdProject.projectId))
@@ -483,6 +499,10 @@ export class ProjectEditComponent implements OnInit {
           await firstValueFrom(this.linkService.editLinkOfProject(link))
         }
       }
+      console.log("got after links" + this.links)
+      this.links = []
+
+      console.log(this.templateLinks)
 
       for (const link of this.templateLinks) {
         if(link.linkId == '') {
@@ -492,10 +512,15 @@ export class ProjectEditComponent implements OnInit {
         }
       }
 
+      console.log("got after templLinks" + this.templateLinks)
+      this.templateLinks = []
+
       for (const link of this.deleteLinkList) {
         await firstValueFrom(this.linkService.deleteLinkById(link.linkId));
       }
       this.deleteLinkList = []
+
+
 
       for (const editMedia of this.editMediaList) {
           if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
@@ -516,22 +541,8 @@ export class ProjectEditComponent implements OnInit {
       }
       this.editMediaList = []
 
-      for (const editMedia of this.editMediaList) {
-          if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
-          {
-            await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as String)));
-          }
-          else if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
-          {
-            const formData = new FormData();
-            formData.append('file', editMedia.file);
-            formData.append('name', editMedia.media.name);
-            await firstValueFrom(this.mediaService.addDocumentToProject(this.project.projectId, formData));
-          } else if (editMedia.media != null && editMedia.media.mediaId!='') {
-            await firstValueFrom(this.mediaService.editMedia(editMedia.media));
-          }
-      }
-      this.editMediaList = []
+      console.log("got after editMed")
+
 
       for (const editMedia of this.editTemplateMediaList) {
         if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
@@ -551,13 +562,7 @@ export class ProjectEditComponent implements OnInit {
       }
       this.editTemplateMediaList = []
 
-      for (const editMedia of this.toBeDeletedTemplateEditMedia) {
-        if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
-        {
-          await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as String)));
-        }
-      }
-      this.toBeDeletedTemplateEditMedia = []
+      
 
       await this.router.navigate(['/project-detail/', this.projectId])
 
@@ -590,21 +595,20 @@ export class ProjectEditComponent implements OnInit {
 
   clearTemplateFields() {
     for (const link of this.templateLinks) {
-      if (link.linkId != '')
-        this.deleteLinkList.push(link)
+      if (!this.links.some(l => l.name == link.name))
+        this.links.push(link)
     }
     for (const editTempMed of this.editTemplateMediaList) {
-      if (editTempMed.media != null && editTempMed.media.mediaId!='') {
-        editTempMed.delete = true;
-        this.toBeDeletedTemplateEditMedia.push(editTempMed);
+      if (!this.editMediaList.some(m => m.media?.name == editTempMed.media?.name)) {
+        if (editTempMed.media != null && editTempMed.media.mediaId!='') {
+          this.editMediaList.push(editTempMed);
+        }
       }
     }
     this.selectedTemplateName = undefined;
     this.selectedTemplate = undefined;
-    this.description = '';
     this.templateLinks = [];
     this.editTemplateMediaList = [];
-    
   }
 
   downloadFile(media: MediaFileContent) {
