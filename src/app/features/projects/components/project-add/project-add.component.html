@@ -236,52 +236,59 @@
 </div>
 
 <!-- Add Account Dialog -->
-<p-dialog [(visible)]="addAccountVisible" [modal]="true" [style]="{ width: '30rem' }" header="Add Account">
-  <div class="dialog-content p-3">
-    <div class="dialog-info mb-4">
-      You are about to add a new account to the project. To add an account, please fill in the username field and select a role.
+<p-dialog [(visible)]="addAccountVisible" [modal]="true" [style]="{ width: '35%', 'min-width': '300px' }" header="Account"
+    class="flex justify-content-center align-items-center">
+    <div class="dialog-content p-3">
+        <div class="dialog-info mb-4">
+            You are about to add a new account to the project. To add an account, please fill in the username field and select a role.
+        </div>
+        <div class="flex flex-column justify-content-center align-items-center gap-4 mb-4" style="height: 50%">
+            <div class="input-container full-width">
+                <p-autoComplete 
+                    [(ngModel)]="newAccountUsername" 
+                    [suggestions]="filteredAccounts" 
+                    (completeMethod)="filterAccounts($event)" 
+                    (onSelect)="onAccountSelect($event)" 
+                    [formControl]="accountUsernameInput" 
+                    dropdown="true" 
+                    [forceSelection]="true" 
+                    placeholder="Account Username"
+                    class="full-width">
+                </p-autoComplete>
+            </div>
+            <div class="input-container full-width">
+                <p-dropdown 
+                    [(ngModel)]="newAccountRole" 
+                    [options]="roles" 
+                    optionLabel="label" 
+                    optionValue="value" 
+                    placeholder="Select Role" 
+                    class="full-width">
+                </p-dropdown>
+            </div>
+        </div>
     </div>
-    <div class="flex flex-column justify-content-center align-items-center gap-4 mb-4" style="margin-top: 50px">
-      <div class="input-container">
-        <p-autoComplete 
-          [(ngModel)]="newAccountUsername" 
-          [suggestions]="filteredAccounts" 
-          (completeMethod)="filterAccounts($event)" 
-          (onSelect)="onAccountSelect($event)" 
-          [formControl]="accountUsernameInput" 
-          dropdown="true" 
-          [forceSelection]="true" 
-          placeholder="Account Username"
-          class="full-width">
-        </p-autoComplete>
-        <p-autoComplete 
-          [(ngModel)]="newAccountName"
-          [suggestions]="filteredAccountsByName"
-          (completeMethod)="filterAccountsByName($event)"
-          (onSelect)="onAccountNameSelect($event)"
-          dropdown="true"
-          [forceSelection]="false"
-          placeholder="Search Account by Name"
-          class="full-width">
-        </p-autoComplete>
-      </div>
-      <div class="input-container">
-        <p-dropdown 
-          [(ngModel)]="newAccountRole" 
-          [options]="roles" 
-          optionLabel="label" 
-          optionValue="value" 
-          placeholder="Select Role" 
-          class="full-width">
-        </p-dropdown>
-      </div>
+    <div class="dialog-actions flex justify-content-center gap-2">
+        <p-button (click)="cancelAddAccount()" label="Cancel" severity="danger" class="p-button-outlined" />
+        <p-button (click)="saveNewAccount()" label="Confirm" severity="success" />
     </div>
-  </div>
-  <div class="dialog-actions flex justify-content-end gap-2 p-3">
-    <p-button (click)="cancelAddAccount()" label="Cancel" severity="danger" class="p-button-outlined" />
-    <p-button (click)="saveNewAccount()" label="Add Account" severity="primary" />
-  </div>
 </p-dialog>
+
+<style>
+  .full-width {
+    width: 100%;
+  }
+  .p-autocomplete .p-autocomplete-panel, 
+  .p-dropdown .p-dropdown-panel {
+    width: 100% !important;
+  }
+  .p-autocomplete input, 
+  .p-dropdown input {
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+</style>
+
 
     
   </div>

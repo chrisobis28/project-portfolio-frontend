@@ -31,9 +31,13 @@ import {DialogModule} from "primeng/dialog";
 import {Router} from "@angular/router";
 import { AccountService } from 'src/app/features/accounts/services/accounts/account.service';
 import { CollaboratorTransfer } from '../../models/project-models';
-import { AccountDisplay, RoleInProject } from 'src/app/features/accounts/models/accounts-models';
+import { AccountDisplay } from 'src/app/features/accounts/models/accounts-models';
 import { StorageService } from 'src/app/features/accounts/services/authentication/storage.service';
 import { ColorPickerModule } from 'primeng/colorpicker';
+
+export interface UsernameSelectEvent{
+  value: string;
+}
 
 
 
@@ -103,8 +107,8 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   newAccountName: string = '';
   newAccountRole: string = 'CONTENT_CREATOR';
   accountUsernameInput = new FormControl('', Validators.required);
-  filteredAccounts: string[] = []
-  filteredAccountsByName: string[] = []
+  allAccounts: string[] = [];
+  filteredAccounts: string[] = [];
   selectedAccounts: AccountDisplay[] = []
   roles: { label: string, value: string }[] = [
     { label: 'Project Manager', value: 'PM' },
@@ -116,7 +120,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   wsCollaboratorsSubscription: Subscription = new Subscription()
   wsAccountSubscription: Subscription = new Subscription()
 
-  wsAccountWebSocket: WebSocketSubject<any> = webSocket({
+  wsAccountWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/accounts",
     deserializer: msg => String(msg.data)
   })
@@ -181,8 +185,8 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     )
 
     this.wsAccountSubscription = this.wsAccountWebSocket.subscribe(
-      async msg => {
-        this.filteredAccounts = await firstValueFrom(this.accountService.getAllUsernames())
+      async () => {
+        this.allAccounts = await firstValueFrom(this.accountService.getAllUsernames())
       }
     )
 
@@ -199,7 +203,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     this.templates = await this.getAllTemplates()
     this.templateNames = await this.getAllTemplateNames()
     this.collaborators = await this.getAllCollaborators()
-    this.filteredAccounts = await firstValueFrom(this.accountService.getAllUsernames())
+    this.allAccounts = await firstValueFrom(this.accountService.getAllUsernames())
     this.currentUser = this.storageService.getUser()
   }
 
@@ -227,27 +231,20 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  filterAccounts(event: any) {
-    const query = (event as AutoCompleteCompleteEvent).query;
-    const selectedUsernames = this.selectedAccounts.map(account => account.username);
-    this.filteredAccounts = this.filteredAccounts.filter(account =>
-        !selectedUsernames.includes(account) &&
-        account!== this.currentUser
-    );
+  filterAccounts(event: unknown) {
+    const query = (event as AutoCompleteCompleteEvent).query.toLowerCase();
+    const selectedUsernames = this.selectedAccounts.map(account => account.username.toLowerCase());
+    const currentUser = this.currentUser.toLowerCase();
+
+    this.filteredAccounts = this.allAccounts
+        .filter(account => 
+            !selectedUsernames.includes(account.toLowerCase()) &&
+            account.toLowerCase().startsWith(query) && 
+            account.toLowerCase() !== currentUser
+        );
 }
 
 
-filterAccountsByName(event: any) {
-  const query = (event as AutoCompleteCompleteEvent).query;
-  if (query.length < 1) {
-    this.filteredAccountsByName = [];
-    return;
-  }
-  this.accountService.getAccountByName(query).subscribe((result: string[]) => {
-    const selectedUsernames = this.selectedAccounts.map(account => account.username);
-    this.filteredAccountsByName = result.filter(account => account !== this.currentUser && !selectedUsernames.includes(account));
-  });
-}
 
 
   onTemplateSelect(event: TemplateSelectEvent) {
@@ -632,15 +629,11 @@ filterAccountsByName(event: any) {
     this.editIndexCollaborator = null;
   }
 
-  onAccountSelect(event: any) {
+  onAccountSelect(event: UsernameSelectEvent) {
     this.newAccountUsername = event.value;
     this.accountUsernameInput.setValue(this.newAccountUsername);
   }
 
-  onAccountNameSelect(event: any) {
-    this.newAccountUsername = event.value;
-    this.accountUsernameInput.setValue(this.newAccountUsername);
-  }
   
 
   showAddAccountDialog() {

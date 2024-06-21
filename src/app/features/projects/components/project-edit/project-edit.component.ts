@@ -42,6 +42,11 @@ import { AccountDisplay } from 'src/app/features/accounts/models/accounts-models
 import { AccountService } from 'src/app/features/accounts/services/accounts/account.service';
 import { StorageService } from 'src/app/features/accounts/services/authentication/storage.service';
 import { ColorPickerModule } from 'primeng/colorpicker';
+
+export interface UsernameSelectEvent{
+  value: string;
+}
+
 @Component({
   selector: 'app-project-edit',
   templateUrl: './project-edit.component.html',
@@ -89,7 +94,7 @@ export class ProjectEditComponent implements OnInit {
   newAccountRole: string = 'CONTENT_CREATOR';
   accountUsernameInput = new FormControl('', Validators.required);
   filteredAccounts: string[] = []
-  filteredAccountsByName: string[] = []
+  allAccounts: string[] = []
   currentAccounts: AccountDisplay[] = []
   selectedAccounts: AccountDisplay[] = []
   removeAccounts: string[] = []
@@ -128,7 +133,7 @@ export class ProjectEditComponent implements OnInit {
   wsMediaProjectSubscription: Subscription = new Subscription()
   wsAccountSubscription: Subscription = new Subscription()
 
-  wsAccountWebSocket: WebSocketSubject<any> = webSocket({
+  wsAccountWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/accounts",
     deserializer: msg => String(msg.data)
   })
@@ -220,8 +225,8 @@ export class ProjectEditComponent implements OnInit {
      )
 
      this.wsAccountSubscription = this.wsAccountWebSocket.subscribe(
-      async msg => {
-        this.filteredAccounts = await firstValueFrom(this.accountService.getAllUsernames())
+      async () => {
+        this.allAccounts = await firstValueFrom(this.accountService.getAllUsernames())
       }
     )
 
@@ -320,7 +325,7 @@ export class ProjectEditComponent implements OnInit {
     this.platformTags = await this.getAllTags();
     this.collaborators = await this.getAllCollaborators()
     this.platformCollaborators = await this.getAllCollaborators()
-    this.filteredAccounts = await firstValueFrom(this.accountService.getAllUsernames())
+    this.allAccounts = await firstValueFrom(this.accountService.getAllUsernames())
     this.currentUser = this.storageService.getUser()
 
     if (this.projectId) {
@@ -412,30 +417,21 @@ export class ProjectEditComponent implements OnInit {
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  filterAccounts(event: any) {
-    const query = (event as AutoCompleteCompleteEvent).query;
-    const currentUsernames = this.currentAccounts.map(account => account.username);
-    const selectedUsernames = this.selectedAccounts.map(account => account.username);
-    this.filteredAccounts = this.filteredAccounts.filter(account =>
-        !currentUsernames.includes(account) &&
-        !selectedUsernames.includes(account) &&
-        account!== this.currentUser
-    );
+  filterAccounts(event: unknown) {
+    const query = (event as AutoCompleteCompleteEvent).query.toLowerCase();
+    const selectedUsernames = this.selectedAccounts.map(account => account.username.toLowerCase());
+    const existingUsernames = this.currentAccounts.map(account => account.username.toLowerCase());
+    const currentUser = this.currentUser.toLowerCase();
+
+    this.filteredAccounts = this.allAccounts
+        .filter(account => 
+            !selectedUsernames.includes(account.toLowerCase()) &&
+            !existingUsernames.includes(account.toLowerCase()) &&
+            account.toLowerCase().startsWith(query) && 
+            account.toLowerCase() !== currentUser
+        );
 }
 
-
-filterAccountsByName(event: any) {
-  const query = (event as AutoCompleteCompleteEvent).query;
-  if (query.length < 1) {
-    this.filteredAccountsByName = [];
-    return;
-  }
-  this.accountService.getAccountByName(query).subscribe((result: string[]) => {
-    const currentUsernames = this.currentAccounts.map(account => account.username);
-    const selectedUsernames = this.selectedAccounts.map(account => account.username);
-    this.filteredAccountsByName = result.filter(account => account !== this.currentUser && !selectedUsernames.includes(account) && !currentUsernames.includes(account));
-  });
-}
 
   getNamesForTags(tags: Tag[]): string[] {
     return tags.map(x => x.name)
@@ -934,22 +930,16 @@ filterAccountsByName(event: any) {
   }
 
   removeCurrentAccount(account: AccountDisplay) {
-    if (confirm('Are you sure you want to remove this account from the project?')) {
+    if (confirm('Are you sure you want to remove ' + account.username + ' from the project?')) {
       this.currentAccounts = this.currentAccounts.filter(acc => acc.username !== account.username);
       this.removeAccounts.push(account.username);
     }
   }
 
-  onAccountSelect(event: any) {
+  onAccountSelect(event: UsernameSelectEvent) {
     this.newAccountUsername = event.value;
     this.accountUsernameInput.setValue(this.newAccountUsername);
   }
-
-  onAccountNameSelect(event: any) {
-    this.newAccountUsername = event.value;
-    this.accountUsernameInput.setValue(this.newAccountUsername);
-  }
-  
 
   showAddAccountDialog() {
     this.addAccountVisible = true;

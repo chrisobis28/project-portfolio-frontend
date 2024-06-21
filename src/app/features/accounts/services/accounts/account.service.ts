@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {Observable} from "rxjs";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
-import { AccountTransfer, ProjectTransfer, RoleInProject, AccountDisplay, Account } from '../../models/accounts-models';
+import { AccountTransfer, ProjectTransfer, AccountDisplay, Account } from '../../models/accounts-models';
 
 const API_URL = 'http://localhost:8080/account';
 
@@ -57,7 +57,7 @@ export class AccountService {
   addRoleOnProject(username: string, projectId: string, roleInProject: string): Observable<void> {
     const url = API_URL + `/${username}/${projectId}`;
     const body = '"' + roleInProject + '"'
-    return this.httpClient.post<Observable<any>>(url, body, httpOptions);
+    return this.httpClient.post<void>(url, body, httpOptions);
   }
 
   deleteRoleOnProject(username: string, projectId: string): Observable<void> {
