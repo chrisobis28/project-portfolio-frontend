@@ -26,7 +26,7 @@ export class TagService {
   addTagToProject(tag: Tag, projectId: string): Observable<Tag> {
     return this.httpClient.post<Tag>(this.API_URL+ `${projectId}` + "/" + `${tag.tagId}`, "")
   }
-  removeTagFromProject(tag: Tag,projectId:string): Observable<String> {
+  removeTagFromProject(tag: Tag,projectId:string): Observable<string> {
     return this.httpClient.delete<string>(this.API_URL+ `${projectId}` + "/" + `${tag.tagId}`)
   }
 
@@ -49,6 +49,20 @@ export class TagService {
       default:
         return "rgba(111, 118, 133, 0.45)"
     }
+  }
+
+  isDarkColor(color: string): boolean {
+    const hexToRgb = (hex: string) =>
+      hex.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i
+      ,(m, r, g, b) => '#' + r + r + g + g + b + b)
+      .substring(1).match(/.{2}/g)!
+      .map(x => parseInt(x, 16));
+  
+    const [r, g, b] = hexToRgb(color);
+
+    const brightness = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  
+    return brightness < 128;
   }
 
 }

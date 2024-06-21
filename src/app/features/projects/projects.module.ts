@@ -2,7 +2,6 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProjectsComponent } from './components/project-list/projects.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ProjectAddComponent } from './components/project-add/project-add.component';
 import { ProjectCardComponent } from "./components/project-card/project-card.component";
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -17,9 +16,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ChipsModule } from 'primeng/chips';
 import { ChipModule } from 'primeng/chip';
 import { MultiSelectModule } from 'primeng/multiselect';
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule} from '@angular/router';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
+import { DialogModule } from 'primeng/dialog';
 
 @NgModule({
     declarations: [
@@ -48,7 +48,8 @@ import { ToastModule } from 'primeng/toast';
         ChipsModule,
         ChipModule,
         MultiSelectModule,
-        RouterModule
+        RouterModule,
+        DialogModule
     ]
 })
 export class ProjectsModule { }

@@ -1,12 +1,21 @@
+image: node:22.1.0
+
 stages:
+  - lint
   - build
+
+lint:
+  stage: lint
+  script:
+    - npm install eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin --save-dev
+    - npm run lint
 
 build:
   stage: build
-  image: node:22.1.0
   script:
-      - npm install -g @angular/cli
-      - npm install
+    - npm install -g @angular/cli
+    - npm install
+    - npm run build
   artifacts:
     paths:
       - dist/

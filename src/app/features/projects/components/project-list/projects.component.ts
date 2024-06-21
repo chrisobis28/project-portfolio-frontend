@@ -12,7 +12,6 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { AuthenticationService } from 'src/app/features/accounts/services/authentication/authentication.service';
 import { Nullable } from 'primeng/ts-helpers';
 
-import { WebsocketService } from '../../services/websocket/websocket.service';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 @Component({
   selector: 'app-projects',
@@ -25,12 +24,13 @@ export class ProjectsComponent implements OnInit, OnDestroy {
   filteredData: Project[] = [];
   layout: DataView["layout"] = "list";
   projectName: string = '';
-  projectCollaborator: string = ''
-  tagNames: string[] = []
-  selectedTagNames: string[] = []
+  projectCollaborator: string = '';
+  tagNames: string[] = [];
+  selectedTagNames: string[] = [];
   isLoggedIn: boolean = false;
   username: string = '';
   role: Nullable<string> = '';
+  showHelp: boolean = false;
 
 
   wsProjectsSubscription: Subscription = new Subscription();
@@ -40,23 +40,23 @@ export class ProjectsComponent implements OnInit, OnDestroy {
   wsMediaProjectSubscription: Subscription = new Subscription()
 
 
-  projectsWebSocket: WebSocketSubject<any> = webSocket({
+  projectsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/projects",
     deserializer: msg => String(msg.data)
   })
-  collaboratorsProjectWebSocket: WebSocketSubject<any> = webSocket({
+  collaboratorsProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/collaborators/project",
     deserializer: msg => String(msg.data)
   })
-  tagsWebSocket: WebSocketSubject<any> = webSocket({
+  tagsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/tags",
     deserializer: msg => String(msg.data)
   })
-  tagsProjectWebSocket: WebSocketSubject<any> = webSocket({
+  tagsProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/tags/project",
     deserializer: msg => String(msg.data)
   })
-  mediaProjectWebSocket: WebSocketSubject<any> = webSocket({
+  mediaProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/media/project",
     deserializer: msg => String(msg.data)
   })
@@ -122,7 +122,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     )
 
     this.wsTagsSubscription = this.tagsWebSocket.subscribe(
-      async msg => {
+      async () => {
             console.log("refreshing entire tag list")
             this.tagNames = await this.getAllTagNames()
       }
@@ -285,17 +285,19 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     this.filteredData = this.filterByTags(this.filteredData)
   }
 
-     getImageSrc(project:Project): string {
-       if(project.thumbnail == undefined)
-         return 'https://as2.ftcdn.net/v2/jpg/01/25/64/11/1000_F_125641180_KxdtmpD15Ar5h8jXXrE5vQLcusX8z809.jpg'
-      return `data:${project.thumbnail.filePath};base64,${project.thumbnail.fileContent}`;
-    }
+  getImageSrc(project:Project): string {
+    if(project.thumbnail == undefined)
+      return 'https://as2.ftcdn.net/v2/jpg/01/25/64/11/1000_F_125641180_KxdtmpD15Ar5h8jXXrE5vQLcusX8z809.jpg'
+    const type = project.thumbnail.filePath.substring(project.thumbnail.filePath.lastIndexOf('.') + 1);
+    return `data:image/${type};base64,${project.thumbnail.fileContent}`;
+  }
 
 
 
     logout() {
+      const username = this.storageService.getUser();
       this.confirmationService.confirm({
-        message: "Are you sure you want to log out of the account " + this.storageService.getUser() + "?",
+        message: "Are you sure you want to log out of the account " + username + "?",
         accept: () => {
           this.authenticationService.logout().subscribe({
             next: () => {
@@ -305,10 +307,24 @@ export class ProjectsComponent implements OnInit, OnDestroy {
               return;
             },
             error: err => {
-              this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not be logged out.' });
+              this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not be logged out: ' + err.message });
             }
           })
         }
       })
+    }
+
+    isDarkColor(color: string): boolean {
+      return this.tagService.isDarkColor(color);
+    }
+
+    filterTagsOnClick(tagName: string): void {
+      this.selectedTagNames.push(tagName);
+      this.onTagSelectedFilterChanged();
+    }
+
+    parseWriting(names: string[]): string {
+      if (names == null) return '';
+      return names.join(', ');
     }
   }
