@@ -212,7 +212,8 @@ export class ProjectEditComponent implements OnInit {
         if(msg == "all" || msg == this.projectId) {
           if(this.projectId){
             this.editMediaList=[]
-          const newMedia = await this.getDocumentsByProjectId(this.projectId)
+            this.editTemplateMediaList=[]
+            const newMedia = await this.getDocumentsByProjectId(this.projectId)
             for (const mediaObject of newMedia) {
             {
               const editMedia:EditMedia = {
@@ -241,6 +242,8 @@ export class ProjectEditComponent implements OnInit {
       async msg => {
         if(msg == "all" || msg == this.projectId) {
           if(this.projectId){
+            this.links=[]
+            this.templateLinks=[]
             const newLinks = await this.getLinksByProjectId(this.projectId)
             for (const linkObject of newLinks) {
               if (this.selectedTemplate != undefined) {
@@ -294,6 +297,8 @@ export class ProjectEditComponent implements OnInit {
       if (this.selectedTemplate != undefined) {
         this.selectedTemplateName = this.selectedTemplate.templateName
       }
+      this.templateLinks = [];
+      this.links = [];
       this.linkService.getLinksByProjectId(this.projectId).subscribe((response: Link[]) => {
         for (const linkObject of response) {
           if (this.selectedTemplate != undefined) {
@@ -308,6 +313,8 @@ export class ProjectEditComponent implements OnInit {
         }
       });
       this.mediaService.getDocumentsByProjectId(this.projectId).subscribe((response: Media[]) => {
+        this.editMediaList = [];
+        this.editTemplateMediaList = [];
         for (const mediaObject of response) {
           {
             const editMedia:EditMedia = {
@@ -412,6 +419,12 @@ export class ProjectEditComponent implements OnInit {
 
   async saveProject(): Promise<void> {
 
+    console.log(this.links);
+    console.log(this.templateLinks)
+    console.log(this.deleteLinkList)
+    console.log(this.editMediaList)
+    console.log(this.editTemplateMediaList)
+
     if(this.projectId == null) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Project id is null, cannot be saved' });
       return;
@@ -435,7 +448,6 @@ export class ProjectEditComponent implements OnInit {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not be empty' });
         return
       }
-      
 
       return;
     }
@@ -515,6 +527,7 @@ export class ProjectEditComponent implements OnInit {
 
       const createdProject = await firstValueFrom(this.projectService.editProject(this.projectId, prj));
 
+      console.log(this.editTemplateMediaList)
       if (this.selectedTemplate == undefined) {
         firstValueFrom(this.projectService.removeTemplateFromProject(createdProject.projectId, "delete-template"))
       } else {
@@ -535,7 +548,6 @@ export class ProjectEditComponent implements OnInit {
       for (const tag of this.addTags) {
         await firstValueFrom(this.tagService.addTagToProject(tag,this.projectId));
       }
-      
 
       for (const link of this.links) {
         if(link.linkId == '') {
@@ -556,10 +568,29 @@ export class ProjectEditComponent implements OnInit {
       this.templateLinks = []
 
       for (const link of this.deleteLinkList) {
-        await firstValueFrom(this.linkService.deleteLinkById(link.linkId));
+        firstValueFrom(this.linkService.deleteLinkById(link.linkId));
       }
       this.deleteLinkList = []
 
+      for (const editMedia of this.editTemplateMediaList) {
+        if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
+        {
+          console.log("not good1")
+          await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as string)));
+        }
+        else if(editMedia.delete == false && editMedia.media != null && editMedia.file != null && editMedia.media.mediaId == "")
+        {
+          console.log("good")
+          const formData = new FormData();
+          formData.append('file', editMedia.file);
+          formData.append('name', editMedia.media.name);
+          await firstValueFrom(this.mediaService.addDocumentToProject(this.project.projectId, formData));
+        }
+        else if(editMedia.media != null && editMedia.media.mediaId!='') {
+          console.log("not good2")
+          await firstValueFrom(this.mediaService.editMedia(editMedia.media));
+        }
+      }
 
       for (const editMedia of this.editMediaList) {
           if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
@@ -578,26 +609,13 @@ export class ProjectEditComponent implements OnInit {
           await firstValueFrom(this.mediaService.editMedia(editMedia.media));
         }
       }
-      this.editMediaList = []
+      
 
 
-      for (const editMedia of this.editTemplateMediaList) {
-        if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
-        {
-          await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as string)));
-        }
-        else if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
-        {
-          const formData = new FormData();
-          formData.append('file', editMedia.file);
-          formData.append('name', editMedia.media.name);
-          await firstValueFrom(this.mediaService.addDocumentToProject(this.project.projectId, formData));
-        }
-        else if(editMedia.media != null && editMedia.media.mediaId!='') {
-          await firstValueFrom(this.mediaService.editMedia(editMedia.media));
-        }
-      }
+      console.log(this.editTemplateMediaList)
+      console.log("paul")
       this.editTemplateMediaList = []
+      this.editMediaList = []
 
       await this.router.navigate(['/project-detail/', this.projectId])
 
@@ -631,11 +649,11 @@ export class ProjectEditComponent implements OnInit {
 
   clearTemplateFields() {
     for (const link of this.templateLinks) {
-      if (!this.links.some(l => l.name == link.name))
+      if (link.url != '')
         this.links.push(link)
     }
     for (const editTempMed of this.editTemplateMediaList) {
-      if (!this.editMediaList.some(m => m.media?.name == editTempMed.media?.name)) {
+      if (!this.editMediaList.some(m => m.media!.name == editTempMed.media!.name)) {
         if (editTempMed.media != null && editTempMed.media.mediaId!='') {
           this.editMediaList.push(editTempMed);
         }
@@ -764,8 +782,15 @@ export class ProjectEditComponent implements OnInit {
   }
 
   addTemplateLink(nameOfLink: string) {
-    const link: Link = { linkId: '', name: nameOfLink, url: '', requestLinkProjects: [] };
-    this.templateLinks.push(link);
+    const foundLink = this.links.find(link => link.name === nameOfLink)
+    if (foundLink != undefined) {
+      const index = this.links.findIndex(l => l == foundLink);
+      this.links.splice(index, 1);
+      this.templateLinks.push(foundLink);
+    } else {
+      const link: Link = { linkId: '', name: nameOfLink, url: '', requestLinkProjects: [] };
+      this.templateLinks.push(link);
+    }
   }
 
   onTemplateSelect(event: TemplateSelectEvent) {
