@@ -212,6 +212,7 @@ export class ProjectEditComponent implements OnInit {
         if(msg == "all" || msg == this.projectId) {
           if(this.projectId){
             this.editMediaList=[]
+            this.editTemplateMediaList=[]
           const newMedia = await this.getDocumentsByProjectId(this.projectId)
             for (const mediaObject of newMedia) {
             {
@@ -328,7 +329,7 @@ export class ProjectEditComponent implements OnInit {
           }
         }
       });
-      
+
       this.projectService.getProjectById(this.projectId).subscribe((response: Project) => {
         this.project = response;
         this.title = this.project.title;
@@ -435,7 +436,7 @@ export class ProjectEditComponent implements OnInit {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not be empty' });
         return
       }
-      
+
 
       return;
     }
@@ -480,10 +481,10 @@ export class ProjectEditComponent implements OnInit {
         fileContent: '',
         fileName:''
       }
-      
+
       let templateToBeAdded = null;
       if (this.selectedTemplate != undefined) templateToBeAdded = this.selectedTemplate;
-    
+
 
       const prj: Project = {
         projectId: "",
@@ -505,7 +506,7 @@ export class ProjectEditComponent implements OnInit {
 
       this.removeTags = this.initialTags.filter(tag => !this.selectedTags.includes(tag));
       this.addTags = this.selectedTags.filter(tag => !this.initialTags.includes(tag));
-    
+
       // this.removeTags = this.selectedTags.filter(x=>!this.selectedTagNames.includes(x.name));
       // this.removeTags = this.tags.filter(x=>!this.selectedTags.includes(x));
       // this.addTags = this.platformTags.filter(x=>this.selectedTagNames.includes(x.name) && !this.selectedTags.flatMap(x=>x.name).includes(x.name));
@@ -535,7 +536,7 @@ export class ProjectEditComponent implements OnInit {
       for (const tag of this.addTags) {
         await firstValueFrom(this.tagService.addTagToProject(tag,this.projectId));
       }
-      
+
 
       for (const link of this.links) {
         if(link.linkId == '') {
@@ -772,7 +773,7 @@ export class ProjectEditComponent implements OnInit {
     this.clearTemplateFields()
     this.selectedTemplateName = event.value;
     this.selectedTemplate = this.templates.find(template => template.templateName === this.selectedTemplateName);
-    
+
     if(this.selectedTemplate != undefined) {
       this.description = this.selectedTemplate.standardDescription;
       this.selectedTemplate.templateAdditions.forEach(addition => {

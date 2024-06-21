@@ -19,6 +19,7 @@ const routes: Routes = [
   { path: 'template', component: ProjectTemplateComponent },
   { path: 'login', component: LoginMenuComponent, canActivate: [AuthGuard] },
   { path: 'roles-menu', component: RolesMenuComponent },
+  { path: ':id', component: ProjectsComponent },
   { path: '**', redirectTo: '' }
 ];
 

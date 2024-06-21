@@ -52,7 +52,7 @@
       </div>
     </p-dialog>
   </div>
-  
+
 </div>
     <div class="flex justify-content-between">
       <div class="flex align-items-center">
@@ -137,7 +137,7 @@
         </div>
         <div class="flex justify-content-center align-items-center gap-2 flex-wrap">
           <ng-container *ngFor="let tag of tags">
-            <p-chip [style]="{'background': tag.color, 
+            <p-chip [style]="{'background': tag.color,
                               'color': isDarkColor(tag.color) ? 'white' : 'black'}" icon="pi pi-tags"
                                 label="{{tag.name}}" />
           </ng-container>
