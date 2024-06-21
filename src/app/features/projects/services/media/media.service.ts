@@ -28,7 +28,6 @@ export class MediaService {
     return this.httpClient.put<Media>(this.API_URL,media);
   }
   editMediaTemplate(mediaId:string,document:FormData){
-    console.log("cacat");
     return this.httpClient.put<Media>(this.API_URL+mediaId,document);
   }
   downloadFile(media: MediaFileContent) {
