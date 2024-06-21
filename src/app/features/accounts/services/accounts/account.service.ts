@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {Observable} from "rxjs";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
-import { AccountTransfer, ProjectTransfer, Account } from '../../models/accounts-models';
+import { AccountTransfer, ProjectTransfer, AccountDisplay, Account } from '../../models/accounts-models';
 
 const API_URL = 'http://localhost:8080/account';
 
@@ -56,7 +56,7 @@ export class AccountService {
 
   addRoleOnProject(username: string, projectId: string, roleInProject: string): Observable<void> {
     const url = API_URL + `/${username}/${projectId}`;
-    const body = { role: roleInProject };
+    const body = '"' + roleInProject + '"'
     return this.httpClient.post<void>(url, body, httpOptions);
   }
 
@@ -82,6 +82,21 @@ export class AccountService {
   getProjects(username: string): Observable<ProjectTransfer[]> {
     const url = API_URL + `/role/${username}`;
     return this.httpClient.get<ProjectTransfer[]>(url, httpOptions);
+  }
+
+  getAllUsernames(): Observable<string[]> {
+    const url = API_URL + `/usernames`;
+    return this.httpClient.get<string[]>(url, httpOptions);
+  }
+
+  getAccountByName(name: string): Observable<string[]> {
+    const url = API_URL + `/public/name/${name}`;
+    return this.httpClient.get<string[]>(url, httpOptions);
+  }
+
+  getAccountsInProject(projectId: string): Observable<AccountDisplay[]> {
+    const url = API_URL + `/project/${projectId}`;
+    return this.httpClient.get<AccountDisplay[]>(url, httpOptions);
   }
 
 }
