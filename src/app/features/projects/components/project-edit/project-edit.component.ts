@@ -797,7 +797,7 @@ export class ProjectEditComponent implements OnInit {
   }
 
   changeTemplateMedia(event: FileUploadHandlerEvent, form: FileUpload, index: number) {
-      let newMediaId: string = this.editTemplateMediaList[index].media?.mediaId || "";
+      const newMediaId: string = this.editTemplateMediaList[index].media?.mediaId || "";
       const file = event.files[0];
       this.messageService.add({
         severity: 'info',
