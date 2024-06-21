@@ -43,7 +43,7 @@ export class RolesMenuComponent {
   searchUsername: string = '';
   previousSearchLength: number = 0;
   isPM: boolean[] = [];
-  showDeleteDialog: boolean = false;
+  showDeleteDialog: boolean[] = [];
   showHelp: boolean = false;
 
   roles: string[] = ['CONTENT_CREATOR', 'PM', 'EDITOR'];
@@ -71,6 +71,7 @@ export class RolesMenuComponent {
     this.previousSearchLength = 0;
     this.username = this.storageService.getUser();
     await this.getAccountsFromServer();
+    this.showDeleteDialog = new Array(this.accounts.length).fill(false);
 
     this.wsAccountsProjectsSubscription = this.acountsProjectsWebSocket.subscribe(
       async (msg: string) => {
@@ -189,11 +190,11 @@ export class RolesMenuComponent {
     return role == 'CONTENT_CREATOR' || role == 'PM' || role == 'EDITOR';
   }
 
-  removeAccount(username: string): void {
+  removeAccount(username: string, i: number): void {
     this.accountService.deleteAccount(username).subscribe({
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Account deleted successfully.'});
-        this.showDeleteDialog = false;
+        this.showDeleteDialog[i] = false;
       },
       error: () => {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not delete account.'});

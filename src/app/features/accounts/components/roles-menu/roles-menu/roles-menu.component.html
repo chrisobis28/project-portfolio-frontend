@@ -23,7 +23,7 @@
         </div>
 
         <div style="display: flex; justify-content: flex-end;">
-            <p-dialog [(visible)]="showHelp" [modal]="true" [style]="{ width: '40%' }" header="Helper Menu - Admin Roles">
+            <p-dialog [(visible)]="showHelp" [modal]="true" [style]="{ width: '50%' }" header="Helper Menu - Admin Roles">
               <div class="dialog-content p-3">
                 <p class="dialog-info mb-4 ">The <b>roles page</b> is the <b>admin</b>'s way into viewing and modifying the <b>permissions</b> of all accounts currently on the platform. 
                     The page allows the authorized user to search individuals by <b>username</b> and whether they are registered as <b>Project Managers</b>, 
@@ -73,13 +73,13 @@
                 [ngClass]="{'container-user-expanded': this.innerWidth < 1050 || (selectedProject[i] && selectedProject[i].projectId != 'null')}"
                 *ngIf="criteriaIsMet(account)"
                 style="padding: 5px;">
-                    <p-button (click)="showDeleteDialog = true" severity="danger" icon="pi pi-trash" class="p-button-outlined" />
-                    <p-dialog [(visible)]="showDeleteDialog" [modal]="true" [style]="{ width: '25rem' }" header="Delete Account">
+                    <p-button (click)="showDeleteDialog[i] = true" severity="danger" icon="pi pi-trash" class="p-button-outlined" />
+                    <p-dialog [(visible)]="showDeleteDialog[i]" [modal]="true" [style]="{ width: '25rem' }" header="Delete Account">
                         <span class="p-text-secondary block mb-5">You are about to delete <b><i>{{account.username}}</i></b> from the platform. 
                             Please be careful as this action cannot be undone. Please confirm your action.</span>
                         <div class="flex justify-content-end gap-2">
-                          <p-button (click)="showDeleteDialog = false" label="Cancel" severity="secondary"/>
-                          <p-button (click)="removeAccount(account.username)" icon="pi pi-trash" label="Confirm"
+                          <p-button (click)="showDeleteDialog[i] = false" label="Cancel" severity="secondary"/>
+                          <p-button (click)="removeAccount(account.username, i)" icon="pi pi-trash" label="Confirm"
                                     severity="danger"/>
                         </div>
                     </p-dialog>

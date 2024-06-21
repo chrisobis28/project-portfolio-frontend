@@ -32,6 +32,7 @@ import {Router} from "@angular/router";
 import { AccountService } from 'src/app/features/accounts/services/accounts/account.service';
 import { CollaboratorTransfer } from '../../models/project-models';
 import { ColorPickerModule } from 'primeng/colorpicker';
+import { AccountDisplay, AccountSelectEvent } from 'src/app/features/accounts/models/accounts-models';
 
 
 
@@ -80,10 +81,16 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
   descriptionInput = new FormControl('', [Validators.required]);
   addedMediaList: FormData[] = [];
   templateMediaNames: string[] = [];
+  accounts: AccountDisplay[] = [];
+  selectedAccounts: AccountDisplay[] = [];
+  filteredAccounts: AccountDisplay[] = [];
+  addAccountVisible: boolean = false;
 
   addedTemplateMediaList: FormData[] = [];
   deleteDialogVisible = false;
   showHelp: boolean = false;
+
+  roles: string[] = ["CONTENT_CREATOR", "EDITOR", "PM"];
 
   addCollaboratorVisible: boolean = false;
   newCollaboratorName: string = '';
@@ -93,6 +100,11 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     Validators.pattern('^[a-zA-Z ]{1,50}$')
   ]);
   collaboratorRoleInput = new FormControl('', Validators.required);
+
+  newAccountUsername: string = '';
+  newAccountRole: string = '';
+  addAccountsVisible: boolean = false;
+  editIndexAccounts: number | null = null;
 
   wsTagsSubscription: Subscription = new Subscription()
   wsCollaboratorsSubscription: Subscription = new Subscription()
@@ -189,6 +201,23 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     this.filteredCollaborators = this.collaborators
       .filter(collaborator => collaborator.name.toLowerCase().includes(query))
       .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  filterAccounts(event: unknown) {
+    const query = (event as AutoCompleteCompleteEvent).query.toLowerCase();
+    this.filteredAccounts = this.accounts
+      .filter(account => account.username.toLowerCase().includes(query))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  filter(filteredAccounts: AccountDisplay[], selectedAccounts: AccountDisplay[]) {
+    this.filteredAccounts.filter(x => !selectedAccounts.includes(x));
+  }
+
+  onAccountSelect(event: AccountSelectEvent) {
+    const accountSelected = event.value;
+    this.newAccountUsername = accountSelected.username;
+    this.newAccountRole = accountSelected.roleInProject;
   }
 
   onTemplateSelect(event: TemplateSelectEvent) {
@@ -378,7 +407,7 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
       await this.router.navigate(['/project-detail/', createdProject.projectId])
     } catch (error) {
       console.error('Error saving project or links', error);
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: (error as Error).message });
+      this.messageService.add({ severity: 'error', summary: 'Error', detail:"Could not create project, your title is already in use." });
     }
   }
 
@@ -518,8 +547,23 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     this.showAddCollaboratorDialog();
   }
 
+  editAccount(account: AccountDisplay, index: number) {
+    this.newAccountUsername = account.name;
+    this.newAccountRole = account.roleInProject;
+    this.editIndexAccounts = index;
+    this.showAddAccountDialog();
+  }
+
+  showAddAccountDialog() {
+    this.addAccountsVisible = true;
+  }
+
   removeCollaborator(index: number) {
     this.selectedCollaborators.splice(index, 1);
+  }
+
+  removeAccount(index: number) {
+    this.selectedAccounts.splice(index, 1);
   }
 
   async saveNewCollaborator() {
@@ -557,12 +601,52 @@ export class ProjectAddComponent implements OnInit, OnDestroy {
     this.collaboratorRoleInput.reset();
   }
 
+  async saveNewAccount() {
+    if (this.collaboratorNameInput.invalid || this.collaboratorRoleInput.invalid) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Invalid collaborator name or role' });
+      return;
+    }
+
+    const isDuplicate = this.selectedCollaborators.some((collaborator, index) => 
+      collaborator.name.toLowerCase() === this.newCollaboratorName.toLowerCase() && index !== this.editIndex
+    );
+
+    if (isDuplicate) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'A collaborator with the same name already exists' });
+      return;
+    }
+
+    const newAccount: AccountDisplay = {
+      name: 
+      username: this.newCollaboratorName,
+      roleInProject: this.newCollaboratorRole
+    };
+
+    if (this.editIndex !== null) {
+      this.selectedAccounts[this.editIndex] = newAccount;
+      this.editIndex = null;
+    } else {
+      this.selectedAccounts.push(newAccount);
+    }
+
+    this.addAccountVisible = false;
+    this.newAccountUsername = '';
+    this.newAccountRole = '';
+  }
+
   cancelAddCollaborator() {
     this.addCollaboratorVisible = false;
     this.newCollaboratorName = '';
     this.newCollaboratorRole = '';
     this.collaboratorNameInput.reset();
     this.collaboratorRoleInput.reset();
+    this.editIndex = null;
+  }
+
+  cancelAddAccount() {
+    this.addAccountVisible = false;
+    this.newAccountUsername = '';
+    this.newAccountRole = '';
     this.editIndex = null;
   }
 

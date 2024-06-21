@@ -14,6 +14,12 @@ export  interface Account {
     role: string
 }
 
+export interface AccountDisplay {
+    username: string
+    name: string
+    roleInProject: string
+}
+
 export interface ProjectTransfer {
     projectId: string
     name: string
@@ -29,4 +35,8 @@ export interface RegisterUserRequest {
 export interface LoginUserRequest {
     username: Nullable<string>
     password: Nullable<string>
+}
+
+export interface AccountSelectEvent {
+    value: AccountDisplay
 }
