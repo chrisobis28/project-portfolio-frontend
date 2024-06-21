@@ -9,7 +9,7 @@ import {TagModule} from 'primeng/tag';
 import {ButtonModule} from 'primeng/button';
 import {CarouselModule} from 'primeng/carousel';
 import {ChipModule} from 'primeng/chip';
-import {Collaborator, Link, Media, MediaFileContent, Project, Tag} from "../../models/project-models";
+import {Link, Media, MediaFileContent, Project, Tag} from "../../models/project-models";
 import {ActivatedRoute, RouterLink} from '@angular/router';
 import {DividerModule} from 'primeng/divider';
 import {ProjectService} from "../../services/project/project.service";
@@ -100,23 +100,23 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   wsMediaProjectSubscription: Subscription = new Subscription();
 
 
-  projectsWebSocket: WebSocketSubject<any> = webSocket({
+  projectsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/projects",
     deserializer: msg => String(msg.data)
   })
-  collaboratorsProjectWebSocket: WebSocketSubject<any> = webSocket({
+  collaboratorsProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/collaborators/project",
     deserializer: msg => String(msg.data)
   })
-  tagsProjectWebSocket: WebSocketSubject<any> = webSocket({
+  tagsProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/tags/project",
     deserializer: msg => String(msg.data)
   })
-  linksProjectWebSocket: WebSocketSubject<any> = webSocket({
+  linksProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/link/project",
     deserializer: msg => String(msg.data)
   })
-  mediaProjectWebSocket: WebSocketSubject<any> = webSocket({
+  mediaProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/media/project",
     deserializer: msg => String(msg.data)
   })
@@ -140,7 +140,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       .map(collaborator => `${collaborator.name} (<b>${collaborator.role}</b>)`)
       .join(', ');
   }
-  
+
 
    async ngOnInit() {
 
@@ -193,7 +193,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     this.wsMediaProjectSubscription = this.mediaProjectWebSocket.subscribe(
      async msg => {
        if(msg == this.projectId) {
-         const mediaFileData = await this.getMediaContentByProjectId(this.projectId);
+         const mediaFileData = await this.getMediaContentByProjectId();
          this.images = mediaFileData.filter(media => media.filePath && (media.filePath.endsWith(".jpg") || media.filePath.endsWith(".png")));
          this.bibTeX = mediaFileData.find(media => media.filePath && media.filePath.endsWith(".bib"));
          this.project.thumbnail = this.images[0];
@@ -277,7 +277,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
          this.project.thumbnail = this.images[0];
          this.bibTeX = data.find(media => media.filePath && media.filePath.endsWith(".bib"));
        },
-       error: (err: any) => {
+       error: (err: unknown) => {
          console.error('Error fetching media files', err);
        }
      })
@@ -288,7 +288,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
              media.path.endsWith(".png")
            ));
          },
-         error: (err: any) => {
+         error: (err: unknown) => {
            console.error('Error fetching media files', err);
          }
        }
@@ -311,7 +311,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     return firstValueFrom(this.linkService.getLinksByProjectId(id))
   }
 
-  async getMediaContentByProjectId(id: string): Promise<MediaFileContent[]> {
+  async getMediaContentByProjectId(): Promise<MediaFileContent[]> {
     return firstValueFrom(this.mediaService.getMediasContentByProjectId(this.projectId))
   }
 
@@ -357,7 +357,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     });
     return formattedBibtex.join('\n');
   }
-  downloadDocument(mediaId: string){
+  async downloadDocument(mediaId: string){
     let mediaFile : MediaFileContent = {
       fileName:"",
       filePath:"",
@@ -368,7 +368,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
         mediaFile = data;
         this.downloadFile(mediaFile);
        },
-       error: (err:any) => {
+       error: (err:unknown) => {
          console.error('Error fetching media files', err);
        }
      })
@@ -377,7 +377,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     this.visible = true;
   }
   deleteProject(projectId:string){
-    this.projectService.deleteProject(projectId).subscribe(response => {});
+    this.projectService.deleteProject(projectId).subscribe(() => {});
     this.router.navigateByUrl('');
   }
   getColorCode(color: string): string {
@@ -395,7 +395,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
             return;
           },
           error: err => {
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not be logged out.' });
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not be logged out.: ' + err.message });
           }
         })
       }

@@ -14,7 +14,9 @@ import {
   MediaFileContent,
   Project,
   Tag,
-  Template
+  Template,
+  CollaboratorSelectEvent,
+  TemplateSelectEvent
 } from '../../models/project-models';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -22,17 +24,16 @@ import { RatingModule } from 'primeng/rating';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProjectService } from '../../services/project/project.service';
-import {FileUpload, FileUploadEvent, FileUploadHandlerEvent, FileUploadModule} from 'primeng/fileupload';
+import {FileUpload, FileUploadHandlerEvent, FileUploadModule} from 'primeng/fileupload';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import{ MediaService} from "../../services/media/media.service";
 import { DropdownModule } from 'primeng/dropdown';
-import { Subscription, firstValueFrom, map, timeout } from 'rxjs';
+import { Subscription, firstValueFrom, map} from 'rxjs';
 import { LinkService } from '../../services/link/link.service';
 import { CollaboratorService } from '../../services/collaborator/collaborator.service';
 import { TemplateService } from '../../services/template/template.service';
 import { TagService } from '../../services/tag/tag.service';
-import { Serializer } from '@angular/compiler';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 import {AutoCompleteCompleteEvent, AutoCompleteModule} from "primeng/autocomplete";
 import {DataViewModule} from "primeng/dataview";
@@ -93,6 +94,7 @@ export class ProjectEditComponent implements OnInit {
   selectedAccounts: AccountDisplay[] = []
   removeAccounts: string[] = []
   roles: string[] = ['CONTENT_CREATOR', 'EDITOR', 'PM'];
+  toBeDeletedTemplateEditMedia: EditMedia[] = [];
 
   platformTags: Tag[] = [];
   selectedTags: Tag[] = []
@@ -101,13 +103,15 @@ export class ProjectEditComponent implements OnInit {
   addTags:Tag[] =[]
   removeTags:Tag[] =[]
   links: Link[] = [];
+  templateLinks: Link[] = [];
   templates!: Template[];
   templateNames: string[] = [];
   selectedTemplateName: string | undefined;
-  selectedTemplate: Template | null = null;
+  selectedTemplate: Template | undefined ;
   deleteLinkList: Link[] = [];
 
-  editMediaList: EditMedia[] = []
+  editMediaList: EditMedia[] = [];
+  editTemplateMediaList: EditMedia[] = [];
 
   tags: Tag[] | undefined;
   tagnames: string[] | undefined;
@@ -129,31 +133,31 @@ export class ProjectEditComponent implements OnInit {
     deserializer: msg => String(msg.data)
   })
 
-  projectsWebSocket: WebSocketSubject<any> = webSocket({
+  projectsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/projects",
     deserializer: msg => String(msg.data)
   })
-  collaboratorsProjectWebSocket: WebSocketSubject<any> = webSocket({
+  collaboratorsProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/collaborators/project",
     deserializer: msg => String(msg.data)
   })
-  collaboratorsWebSocket: WebSocketSubject<any> = webSocket({
+  collaboratorsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/collaborators",
     deserializer: msg => String(msg.data)
   })
-  tagsProjectWebSocket: WebSocketSubject<any> = webSocket({
+  tagsProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/tags/project",
     deserializer: msg => String(msg.data)
   })
-  tagsWebSocket: WebSocketSubject<any> = webSocket({
+  tagsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/tags",
     deserializer: msg => String(msg.data)
   })
-  linksProjectWebSocket: WebSocketSubject<any> = webSocket({
+  linksProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/link/project",
     deserializer: msg => String(msg.data)
   })
-  mediaProjectWebSocket: WebSocketSubject<any> = webSocket({
+  mediaProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/media/project",
     deserializer: msg => String(msg.data)
   })
@@ -249,7 +253,15 @@ export class ProjectEditComponent implements OnInit {
                 file:null,
                 delete:false
               }
-              this.editMediaList.push(editMedia)
+              if (this.selectedTemplate != undefined) {
+                if (this.selectedTemplate.templateAdditions.some(addition => addition.templateAdditionName === mediaObject.name)) {
+                  this.editTemplateMediaList.push(editMedia)
+                } else {
+                  this.editMediaList.push(editMedia)
+                }
+              } else {
+                this.editMediaList.push(editMedia)
+              }
             }
         }
           }
@@ -262,15 +274,24 @@ export class ProjectEditComponent implements OnInit {
         if(msg == "all" || msg == this.projectId) {
           if(this.projectId){
             const newLinks = await this.getLinksByProjectId(this.projectId)
-            this.links = newLinks
+            for (const linkObject of newLinks) {
+              if (this.selectedTemplate != undefined) {
+                if (this.selectedTemplate.templateAdditions.some(addition => addition.templateAdditionName === linkObject.name)) {
+                  this.templateLinks.push(linkObject)
+                } else {
+                  this.links.push(linkObject)
+                }
+              } else {
+                this.links.push(linkObject)
+              }
+            }
           }
         }
       }
      )
 
      this.wsCollaboratorsSubscription = this.collaboratorsWebSocket.subscribe(
-      async msg => {
-        const words = msg.split(" ")
+      async () => {
         const newCollaborators = await this.getAllCollaborators()
         this.collaborators = newCollaborators
       }
@@ -289,6 +310,7 @@ export class ProjectEditComponent implements OnInit {
      //as in project-add components. The autocomplete is done on dev, we do it after we merge this with dev
 
 
+
   }
 
   async initializeFields() {
@@ -302,8 +324,22 @@ export class ProjectEditComponent implements OnInit {
     this.currentUser = this.storageService.getUser()
 
     if (this.projectId) {
+      this.selectedTemplate = await firstValueFrom(this.projectService.getTemplateByProjectId(this.projectId));
+      if (this.selectedTemplate != undefined) {
+        this.selectedTemplateName = this.selectedTemplate.templateName
+      }
       this.linkService.getLinksByProjectId(this.projectId).subscribe((response: Link[]) => {
-        this.links = response;
+        for (const linkObject of response) {
+          if (this.selectedTemplate != undefined) {
+            if (this.selectedTemplate.templateAdditions.some(addition => addition.templateAdditionName === linkObject.name)) {
+              this.templateLinks.push(linkObject)
+            } else {
+              this.links.push(linkObject)
+            }
+          } else {
+            this.links.push(linkObject)
+          }
+        }
       });
       this.mediaService.getDocumentsByProjectId(this.projectId).subscribe((response: Media[]) => {
         for (const mediaObject of response) {
@@ -314,16 +350,23 @@ export class ProjectEditComponent implements OnInit {
               file:null,
               delete:false
             }
-            this.editMediaList.push(editMedia);
+            if (this.selectedTemplate != undefined) {
+              if (this.selectedTemplate.templateAdditions.some(addition => addition.templateAdditionName === mediaObject.name)) {
+                this.editTemplateMediaList.push(editMedia)
+              } else {
+                this.editMediaList.push(editMedia)
+              }
+            } else {
+              this.editMediaList.push(editMedia)
+            }
           }
         }
       });
+      
       this.projectService.getProjectById(this.projectId).subscribe((response: Project) => {
         this.project = response;
         this.title = this.project.title;
         this.description = this.project.description;
-        this.selectedTemplate = this.project.template;
-        this.selectedTemplateName = this.project.template?.templateName;
       });
       this.tagService.getTagsByProjectId(this.projectId).subscribe((response: Tag[]) => {
         this.tags = response;
@@ -362,7 +405,7 @@ export class ProjectEditComponent implements OnInit {
     return firstValueFrom(this.collaboratorService.getCollaboratorsByProjectId(id));
   }
 
-  filterCollaborators(event: any) {
+  filterCollaborators(event: unknown) {
     const query = (event as AutoCompleteCompleteEvent).query.toLowerCase();
     this.filteredCollaborators = this.collaborators
       .filter(collaborator => collaborator.name.toLowerCase().includes(query))
@@ -397,7 +440,7 @@ filterAccountsByName(event: any) {
   getNamesForTags(tags: Tag[]): string[] {
     return tags.map(x => x.name)
   }
-  filterTags(event: any) {
+  filterTags(event: unknown) {
     const query = (event as AutoCompleteCompleteEvent).query
     this.filteredTags = this.platformTags.filter(tag => tag.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
   }
@@ -424,6 +467,11 @@ filterAccountsByName(event: any) {
     ))
   }
 
+  isTitleDescriptionAndMediaValid(): boolean{
+    return this.title.length > 0 && this.description.length > 0
+    && (this.editMediaList.length > 0 || this.editTemplateMediaList.length > 0)
+  }
+
   async saveProject(): Promise<void> {
 
     if(this.projectId == null) {
@@ -436,22 +484,75 @@ filterAccountsByName(event: any) {
       return;
     }
 
+    if(!this.isTitleDescriptionAndMediaValid()) {
+      if(this.title.length == 0){
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Title can not be empty' });
+        return;
+      }
+      if(this.description.length == 0){
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Description can not be empty' });
+        return;
+      }
+      if(this.editMediaList.length == 0 && this.editTemplateMediaList.length == 0){
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not be empty' });
+        return
+      }
+      
+
+      return;
+    }
+
+    for (const editMed of this.editMediaList) {
+      if(editMed.media!.name.length < 1 || editMed.media?.path == '') {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not have an empty display name' });
+        return
+      }
+    }
+    for (const editTempMed of this.editTemplateMediaList) {
+      if(editTempMed.media!.name.length < 1 || editTempMed.media?.path == '') {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Template Media can not have an empty display name' });
+        return
+      }
+    }
+    for (const link of this.links) {
+      if(link.name.length < 1) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Links can not have an empty title' });
+        return
+      }
+      if(link.url.length < 1) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Links can not have an empty url' });
+        return
+      }
+    }
+
+    for (const link of this.templateLinks) {
+      if(link.name.length < 1) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Template links can not have an empty title' });
+        return
+      }
+      if(link.url.length < 1) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Template links can not have an empty url' });
+        return
+      }
+    }
+
     try {
       const thumbnail: MediaFileContent = {
         filePath: '',
         fileContent: '',
         fileName:''
       }
-
-      const foundTemplate = this.templates.find(x => x.templateName === this.selectedTemplateName);
-      this.selectedTemplate = foundTemplate !== undefined ? foundTemplate : null;
+      
+      let templateToBeAdded = null;
+      if (this.selectedTemplate != undefined) templateToBeAdded = this.selectedTemplate;
+    
 
       const prj: Project = {
         projectId: "",
         title: this.title,
         description: this.description,
         archived: false,
-        template: this.selectedTemplate,
+        template: templateToBeAdded,
         media: [],
         projectsToAccounts: [],
         projectsToCollaborators: [],
@@ -476,6 +577,13 @@ filterAccountsByName(event: any) {
 
       const createdProject = await firstValueFrom(this.projectService.editProject(this.projectId, prj));
 
+      if (this.selectedTemplate == undefined) {
+        firstValueFrom(this.projectService.removeTemplateFromProject(createdProject.projectId, "delete-template"))
+      } else {
+        firstValueFrom(this.projectService.updateProjectTemplate(createdProject.projectId, this.selectedTemplate))
+      }
+
+
       for (const collaborator of this.removeCollaborators) {
         await firstValueFrom(this.collaboratorService.deleteCollaboratorFromProject(this.projectId, collaborator))
       }
@@ -497,7 +605,7 @@ filterAccountsByName(event: any) {
       for (const tag of this.addTags) {
         await firstValueFrom(this.tagService.addTagToProject(tag,this.projectId));
       }
-
+      
 
       for (const link of this.links) {
         if(link.linkId == '') {
@@ -506,15 +614,27 @@ filterAccountsByName(event: any) {
           await firstValueFrom(this.linkService.editLinkOfProject(link))
         }
       }
+      this.links = []
+
+      for (const link of this.templateLinks) {
+        if(link.linkId == '') {
+          await firstValueFrom(this.linkService.addLinkToProject(link, createdProject.projectId))
+        } else {
+          await firstValueFrom(this.linkService.editLinkOfProject(link))
+        }
+      }
+      this.templateLinks = []
 
       for (const link of this.deleteLinkList) {
         await firstValueFrom(this.linkService.deleteLinkById(link.linkId));
       }
       this.deleteLinkList = []
+
+
       for (const editMedia of this.editMediaList) {
           if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
           {
-            await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as String)));
+            await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as string)));
           }
           else if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
           {
@@ -528,7 +648,27 @@ filterAccountsByName(event: any) {
           await firstValueFrom(this.mediaService.editMedia(editMedia.media));
         }
       }
-      this.editMediaList = [] 
+      this.editMediaList = []
+
+
+      for (const editMedia of this.editTemplateMediaList) {
+        if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
+        {
+          await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as string)));
+        }
+        else if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
+        {
+          const formData = new FormData();
+          formData.append('file', editMedia.file);
+          formData.append('name', editMedia.media.name);
+          await firstValueFrom(this.mediaService.addDocumentToProject(this.project.projectId, formData));
+        }
+        else if(editMedia.media != null && editMedia.media.mediaId!='') {
+          await firstValueFrom(this.mediaService.editMedia(editMedia.media));
+        }
+      }
+      this.editTemplateMediaList = []
+
       await this.router.navigate(['/project-detail/', this.projectId])
 
     } catch (error) {
@@ -542,8 +682,9 @@ filterAccountsByName(event: any) {
   }
 
   isAnyLinkFieldEmpty(): boolean {
-    return this.links.some(link => link.name == '' || link.url == '');
+    return this.links.some(link => link.name == '' || link.url == '') || this.templateLinks.some(link => link.name == '' || link.url == '');
   }
+
   addLink() {
     const link: Link = { linkId: '', name: '', url: '', requestLinkProjects: [] };
     this.links.push(link);
@@ -558,15 +699,29 @@ filterAccountsByName(event: any) {
      this.editMediaList[index].delete=true
    }
 
-  removeTemplate(): void {
-    this.selectedTemplateName = ''
-    this.selectedTemplate = null;}
+  clearTemplateFields() {
+    for (const link of this.templateLinks) {
+      if (!this.links.some(l => l.name == link.name))
+        this.links.push(link)
+    }
+    for (const editTempMed of this.editTemplateMediaList) {
+      if (!this.editMediaList.some(m => m.media?.name == editTempMed.media?.name)) {
+        if (editTempMed.media != null && editTempMed.media.mediaId!='') {
+          this.editMediaList.push(editTempMed);
+        }
+      }
+    }
+    this.selectedTemplateName = undefined;
+    this.selectedTemplate = undefined;
+    this.templateLinks = [];
+    this.editTemplateMediaList = [];
+  }
 
   downloadFile(media: MediaFileContent) {
    this.mediaService.downloadFile(media);
   }
 
-  downloadDocument(mediaId: string) {
+  async downloadDocument(mediaId: string) {
     let mediaFile: MediaFileContent = {
       fileName: "",
       filePath: "",
@@ -577,7 +732,7 @@ filterAccountsByName(event: any) {
         mediaFile = data;
         this.downloadFile(mediaFile);
       },
-      error: (err: any) => {
+      error: (err: unknown) => {
         console.error('Error fetching media files', err);
       }
     })
@@ -590,7 +745,7 @@ filterAccountsByName(event: any) {
       summary: 'Success',
       detail: 'Media added! The media will be uploaded when the edit will be saved!'
     });
-    let newMedia: Media = {
+    const newMedia: Media = {
       mediaId: '',
       name: file.name,
       path: file.name,
@@ -639,11 +794,72 @@ filterAccountsByName(event: any) {
     }
   }
 
+  changeTemplateMedia(event: FileUploadHandlerEvent, form: FileUpload, index: number) {
+    const file = event.files[0];
+    this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media changed successfully! The media will be saved when the save button is clicked!'});
+    const newMedia:Media = {
+      mediaId:'',
+      name: this.editTemplateMediaList[index].media!.name,
+      path:file.name,
+      project:this.project,
+      requestMediaProjects:[]
+    }
+    const newEditMedia:EditMedia={
+      media:newMedia,
+      mediaFileContent:null,
+      file:file,
+      delete:false
+    }
+    this.editTemplateMediaList[index] = newEditMedia
+    form.clear()
+  }
+
+  uploadEmptyTemplateMedia(mediaName: string) {
+    const file = null;
+    this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media changed successfully! The media will be saved when the save button is clicked!'});
+    const newMedia:Media = {
+      mediaId:'',
+      name: mediaName,
+      path: '',
+      project:this.project,
+      requestMediaProjects:[]
+    }
+    const newEditMedia:EditMedia={
+      media:newMedia,
+      mediaFileContent:null,
+      file:file,
+      delete:false
+    }
+    this.editTemplateMediaList.push(newEditMedia);
+  }
+
+  addTemplateLink(nameOfLink: string) {
+    const link: Link = { linkId: '', name: nameOfLink, url: '', requestLinkProjects: [] };
+    this.templateLinks.push(link);
+  }
+
+  onTemplateSelect(event: TemplateSelectEvent) {
+    this.clearTemplateFields()
+    this.selectedTemplateName = event.value;
+    this.selectedTemplate = this.templates.find(template => template.templateName === this.selectedTemplateName);
+    
+    if(this.selectedTemplate != undefined) {
+      this.description = this.selectedTemplate.standardDescription;
+      this.selectedTemplate.templateAdditions.forEach(addition => {
+        if (addition.media === true) {
+          this.uploadEmptyTemplateMedia(addition.templateAdditionName);
+        } else {
+          this.addTemplateLink(addition.templateAdditionName)
+        }
+      });
+    }
+  }
+
   showAddCollaboratorDialog() {
     this.addCollaboratorVisible = true;
   }
 
-  onCollaboratorSelect(event: any) {
+  onCollaboratorSelect(event: CollaboratorSelectEvent) {
     const selectedCollaborator = event.value;
     this.newCollaboratorName = selectedCollaborator.name;
     this.collaboratorNameInput.setValue(selectedCollaborator.name);
@@ -799,4 +1015,5 @@ filterAccountsByName(event: any) {
   showDeleteDialog(): void {
     this.deleteDialogVisible = true;
   }
+
 }

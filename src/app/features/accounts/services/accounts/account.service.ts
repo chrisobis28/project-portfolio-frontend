@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import {Observable} from "rxjs";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
-import { Project } from 'src/app/features/projects/models/project-models';
-import { AccountTransfer, ProjectTransfer, RoleInProject, AccountDisplay } from '../../models/accounts-models';
+import { AccountTransfer, ProjectTransfer, RoleInProject, AccountDisplay, Account } from '../../models/accounts-models';
 
 const API_URL = 'http://localhost:8080/account';
 
@@ -33,42 +32,42 @@ export class AccountService {
         password: password,
         role: role
     };
-    return this.httpClient.put<Observable<any>>(API_URL, body, httpOptions);
+    return this.httpClient.put<Observable<Account>>(API_URL, body, httpOptions);
   }
 
-  editRoleOfAccount(accountTransfer: AccountTransfer): Observable<any> {
+  editRoleOfAccount(accountTransfer: AccountTransfer): Observable<void> {
     const body = {
       username: accountTransfer.username,
       isPM: accountTransfer.pm,
       isAdmin: accountTransfer.admin
   };
-    return this.httpClient.put<Observable<any>>(API_URL + '/editRole', body, httpOptions);
+    return this.httpClient.put<void>(API_URL + '/editRole', body, httpOptions);
   }
 
-  getAccount(username: string): Observable<any> {
+  getAccount(username: string): Observable<Account> {
     const url = API_URL + `/public/${username}`;
-    return this.httpClient.get<Observable<any>>(url, httpOptions);
+    return this.httpClient.get<Account>(url, httpOptions);
   }
 
-  deleteAccount(username: string): Observable<any> {
+  deleteAccount(username: string): Observable<void> {
     const url = API_URL + `/${username}`;
-    return this.httpClient.delete<Observable<any>>(url, httpOptions);
+    return this.httpClient.delete<void>(url, httpOptions);
   }
 
-  addRoleOnProject(username: string, projectId: string, roleInProject: string): Observable<any> {
+  addRoleOnProject(username: string, projectId: string, roleInProject: string): Observable<void> {
     const url = API_URL + `/${username}/${projectId}`;
     const body = '"' + roleInProject + '"'
     return this.httpClient.post<Observable<any>>(url, body, httpOptions);
   }
 
-  deleteRoleOnProject(username: string, projectId: string): Observable<any> {
+  deleteRoleOnProject(username: string, projectId: string): Observable<void> {
     const url = API_URL + `/${username}/${projectId}`;
-    return this.httpClient.delete<Observable<any>>(url, httpOptionsGet);
+    return this.httpClient.delete<void>(url, httpOptionsGet);
   }
 
-  updateRoleOnProject(username: string, projectId: string, roleInProject: string): Observable<any> {
+  updateRoleOnProject(username: string, projectId: string, roleInProject: string): Observable<void> {
     const url = API_URL + `/${username}/${projectId}`;
-    return this.httpClient.put<Observable<any>>(url, '"' + roleInProject + '"', httpOptions);
+    return this.httpClient.put<void>(url, '"' + roleInProject + '"', httpOptions);
   }
 
   getRoleOnProject(username: string, projectId: string): Observable<string> {
@@ -76,8 +75,8 @@ export class AccountService {
     return this.httpClient.get<string>(url, httpOptionsGet);
   }
 
-  getAccounts(): Observable<any> {
-    return this.httpClient.get<Observable<any>>(API_URL, httpOptions);
+  getAccounts(): Observable<AccountTransfer[]> {
+    return this.httpClient.get<AccountTransfer[]>(API_URL, httpOptions);
   }
 
   getProjects(username: string): Observable<ProjectTransfer[]> {
