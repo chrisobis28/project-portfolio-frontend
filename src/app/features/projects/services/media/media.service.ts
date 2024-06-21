@@ -27,6 +27,10 @@ export class MediaService {
   editMedia(media:Media){
     return this.httpClient.put<Media>(this.API_URL,media);
   }
+  editMediaTemplate(mediaId:string,document:FormData){
+    console.log("cacat");
+    return this.httpClient.put<Media>(this.API_URL+mediaId,document);
+  }
   downloadFile(media: MediaFileContent) {
     const mimeType = 'application/octet-stream'
     const byteArray = new Uint8Array(atob(media.fileContent).split('').map(char => char.charCodeAt(0)));

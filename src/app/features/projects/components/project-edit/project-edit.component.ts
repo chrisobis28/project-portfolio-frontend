@@ -249,6 +249,7 @@ export class ProjectEditComponent implements OnInit {
         if(msg == "all" || msg == this.projectId) {
           if(this.projectId){
             this.editMediaList=[]
+            this.editTemplateMediaList=[]
           const newMedia = await this.getDocumentsByProjectId(this.projectId)
             for (const mediaObject of newMedia) {
             {
@@ -367,7 +368,7 @@ export class ProjectEditComponent implements OnInit {
           }
         }
       });
-      
+
       this.projectService.getProjectById(this.projectId).subscribe((response: Project) => {
         this.project = response;
         this.title = this.project.title;
@@ -424,10 +425,10 @@ export class ProjectEditComponent implements OnInit {
     const currentUser = this.currentUser.toLowerCase();
 
     this.filteredAccounts = this.allAccounts
-        .filter(account => 
+        .filter(account =>
             !selectedUsernames.includes(account.toLowerCase()) &&
             !existingUsernames.includes(account.toLowerCase()) &&
-            account.toLowerCase().startsWith(query) && 
+            account.toLowerCase().startsWith(query) &&
             account.toLowerCase() !== currentUser
         );
 }
@@ -493,7 +494,7 @@ export class ProjectEditComponent implements OnInit {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not be empty' });
         return
       }
-      
+
 
       return;
     }
@@ -538,10 +539,10 @@ export class ProjectEditComponent implements OnInit {
         fileContent: '',
         fileName:''
       }
-      
+
       let templateToBeAdded = null;
       if (this.selectedTemplate != undefined) templateToBeAdded = this.selectedTemplate;
-    
+
 
       const prj: Project = {
         projectId: "",
@@ -563,7 +564,7 @@ export class ProjectEditComponent implements OnInit {
 
       this.removeTags = this.initialTags.filter(tag => !this.selectedTags.includes(tag));
       this.addTags = this.selectedTags.filter(tag => !this.initialTags.includes(tag));
-    
+
       // this.removeTags = this.selectedTags.filter(x=>!this.selectedTagNames.includes(x.name));
       // this.removeTags = this.tags.filter(x=>!this.selectedTags.includes(x));
       // this.addTags = this.platformTags.filter(x=>this.selectedTagNames.includes(x.name) && !this.selectedTags.flatMap(x=>x.name).includes(x.name));
@@ -601,7 +602,7 @@ export class ProjectEditComponent implements OnInit {
       for (const tag of this.addTags) {
         await firstValueFrom(this.tagService.addTagToProject(tag,this.projectId));
       }
-      
+
 
       for (const link of this.links) {
         if(link.linkId == '') {
@@ -658,6 +659,11 @@ export class ProjectEditComponent implements OnInit {
           formData.append('file', editMedia.file);
           formData.append('name', editMedia.media.name);
           await firstValueFrom(this.mediaService.addDocumentToProject(this.project.projectId, formData));
+        }
+        else if(editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId!='') {
+          const formData = new FormData();
+          formData.append('file', editMedia.file);
+          await firstValueFrom(this.mediaService.editMediaTemplate(editMedia.media.mediaId,formData));
         }
         else if(editMedia.media != null && editMedia.media.mediaId!='') {
           await firstValueFrom(this.mediaService.editMedia(editMedia.media));
@@ -791,23 +797,28 @@ export class ProjectEditComponent implements OnInit {
   }
 
   changeTemplateMedia(event: FileUploadHandlerEvent, form: FileUpload, index: number) {
-    const file = event.files[0];
-    this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media changed successfully! The media will be saved when the save button is clicked!'});
-    const newMedia:Media = {
-      mediaId:'',
-      name: this.editTemplateMediaList[index].media!.name,
-      path:file.name,
-      project:this.project,
-      requestMediaProjects:[]
-    }
-    const newEditMedia:EditMedia={
-      media:newMedia,
-      mediaFileContent:null,
-      file:file,
-      delete:false
-    }
-    this.editTemplateMediaList[index] = newEditMedia
-    form.clear()
+      let newMediaId: string = this.editTemplateMediaList[index].media?.mediaId || "";
+      const file = event.files[0];
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Success',
+        detail: 'Media changed successfully! The media will be saved when the save button is clicked!'
+      });
+      const newMedia: Media = {
+        mediaId: newMediaId,
+        name: this.editTemplateMediaList[index].media!.name,
+        path: file.name,
+        project: this.project,
+        requestMediaProjects: []
+      }
+      const newEditMedia: EditMedia = {
+        media: newMedia,
+        mediaFileContent: null,
+        file: file,
+        delete: false
+      }
+      this.editTemplateMediaList[index] = newEditMedia
+      form.clear()
   }
 
   uploadEmptyTemplateMedia(mediaName: string) {
@@ -838,7 +849,7 @@ export class ProjectEditComponent implements OnInit {
     this.clearTemplateFields()
     this.selectedTemplateName = event.value;
     this.selectedTemplate = this.templates.find(template => template.templateName === this.selectedTemplateName);
-    
+
     if(this.selectedTemplate != undefined) {
       this.description = this.selectedTemplate.standardDescription;
       this.selectedTemplate.templateAdditions.forEach(addition => {
@@ -883,7 +894,7 @@ export class ProjectEditComponent implements OnInit {
       return;
     }
 
-    const isDuplicate = this.selectedCollaborators.some((collaborator, index) => 
+    const isDuplicate = this.selectedCollaborators.some((collaborator, index) =>
       collaborator.name.toLowerCase() === this.newCollaboratorName.toLowerCase() && index !== this.editIndexCollaborator
     );
 
@@ -962,7 +973,7 @@ export class ProjectEditComponent implements OnInit {
       return;
     }
 
-    const isDuplicate = this.selectedAccounts.some((account, index) => 
+    const isDuplicate = this.selectedAccounts.some((account, index) =>
       account.username.toLowerCase() === this.newAccountUsername.toLowerCase() && index !== this.editIndexAccount
     );
 
