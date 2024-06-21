@@ -137,12 +137,12 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
 
   getCollaborators(): string {
     return this.collaborators
-      .map(collaborator => `${collaborator.name} (<b>${collaborator.role}</b>)`)
+      .map(collaborator => `<a href="http://localhost:4200/${collaborator.name.replaceAll(" ","-")}">${collaborator.name} (<b>${collaborator.role}</b>)</a>`)
       .join(', ');
   }
 
 
-   async ngOnInit() {
+  async ngOnInit() {
 
     await this.initializeProject();
 
@@ -181,7 +181,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       }
      }
     );
-    
+
     this.wsLinksProjectSubscription = this.linksProjectWebSocket.subscribe(
      async msg => {
        if(msg == "all" || msg == this.projectId) {

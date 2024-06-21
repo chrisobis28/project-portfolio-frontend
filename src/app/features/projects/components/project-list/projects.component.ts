@@ -13,6 +13,7 @@ import { AuthenticationService } from 'src/app/features/accounts/services/authen
 import { Nullable } from 'primeng/ts-helpers';
 
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
+import {ActivatedRoute} from "@angular/router";
 @Component({
   selector: 'app-projects',
   templateUrl: './projects.component.html',
@@ -66,6 +67,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     private readonly collaboratorService: CollaboratorService,
     private tagService: TagService,
     private mediaService: MediaService,
+    private route: ActivatedRoute,
     private storageService: StorageService,
     private confirmationService: ConfirmationService,
     private authenticationService: AuthenticationService,
@@ -110,7 +112,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
         await this.initProjects()
       }
       }
-    )
+    );
 
     this.wsCollaboratorsProjectSubscription = this.collaboratorsProjectWebSocket.subscribe(
       async msg => {
@@ -154,7 +156,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
                   x.thumbnail = undefined
               })
       }
-    )
+    );
     }
   getColorCode(color:string):string{
     return this.tagService.getColorCode(color);
@@ -186,13 +188,16 @@ export class ProjectsComponent implements OnInit, OnDestroy {
       }
     }
 
-    async initProjects(): Promise<void> {
-      this.projectService.getAllProjects().subscribe((response: Project[]) => {
+    async initProjects() {
+      this.projectService.getAllProjects().subscribe(async (response: Project[]) => {
         this.data = response;
-        this.data.forEach(async x => x.collaboratorNames = await this.getCollaboratorsForId(x.projectId))
+        const promises = this.data.map(async x => {
+          x.collaboratorNames = await this.getCollaboratorsForId(x.projectId);
+          // Any additional logic related to x after await can go here
+        });
         this.data.forEach(async x => x.tagNames = await this.getTagNamesForId(x.projectId))
         this.data.forEach(async x => x.tags = await this.getTagsForId(x.projectId))
-        this.data.forEach(async x =>x.media = await this.getMediaForId(x.projectId))
+        this.data.forEach(async x => x.media = await this.getMediaForId(x.projectId))
         this.data.forEach(async (x) => {
           x.media = await this.getMediaForId(x.projectId);
           if (x.media && x.media.length > 0) {
@@ -200,6 +205,15 @@ export class ProjectsComponent implements OnInit, OnDestroy {
           }
         });
         this.filteredData = this.data
+        await Promise.all(promises);
+        this.route.params.subscribe(params => {
+          let colabPath: string = params['id'];
+          if(colabPath!=undefined) {
+            colabPath = colabPath.replace("-", " ");
+            this.projectCollaborator = colabPath;
+            this.onCollaboratorFilterChanges(colabPath);
+          }
+        });
       })
         this.tagNames = await this.getAllTagNames();
     }
@@ -257,10 +271,15 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     this.projectCollaborator = (event.target as HTMLInputElement).value
     this.filterProjects()
   }
+  onCollaboratorFilterChanges(colab :string): void {
+    this.projectCollaborator = colab
+    this.filterProjects()
+  }
 
   filterByCollaborator(dataToFilter: Project[]): Project[] {
     if(this.projectCollaborator == '')
       return dataToFilter
+    console.log(dataToFilter);
     return dataToFilter.filter(project =>
       project.collaboratorNames.some(collaborator =>
         collaborator.toLocaleLowerCase().includes(this.projectCollaborator.toLocaleLowerCase())
@@ -279,8 +298,9 @@ export class ProjectsComponent implements OnInit, OnDestroy {
   }
 
 
-  filterProjects(): void {
+  async filterProjects() {
     this.filteredData = this.filterByTitle(this.data)
+    console.log(this.filteredData)
     this.filteredData = this.filterByCollaborator(this.filteredData)
     this.filteredData = this.filterByTags(this.filteredData)
   }
