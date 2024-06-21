@@ -38,7 +38,15 @@ import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 import {AutoCompleteCompleteEvent, AutoCompleteModule} from "primeng/autocomplete";
 import {DataViewModule} from "primeng/dataview";
 import {DialogModule} from "primeng/dialog";
+import { AccountDisplay } from 'src/app/features/accounts/models/accounts-models';
+import { AccountService } from 'src/app/features/accounts/services/accounts/account.service';
+import { StorageService } from 'src/app/features/accounts/services/authentication/storage.service';
 import { ColorPickerModule } from 'primeng/colorpicker';
+
+export interface UsernameSelectEvent{
+  value: string;
+}
+
 @Component({
   selector: 'app-project-edit',
   templateUrl: './project-edit.component.html',
@@ -62,7 +70,9 @@ export class ProjectEditComponent implements OnInit {
   deleteDialogVisible = false;
   platformCollaborators: Collaborator[] = [];
   projectCollaborators: CollaboratorTransfer[] = []
-  editIndex: number | null = null;
+  editIndexCollaborator: number | null = null;
+  editIndexAccount: number | null = null;
+  currentUser: string = '';
   selectedCollaboratorNames: string[] = []
   filteredCollaborators: Collaborator[] = []
   removeCollaborators: string[] = []
@@ -78,6 +88,17 @@ export class ProjectEditComponent implements OnInit {
   ]);
   collaboratorRoleInput = new FormControl('', Validators.required);
 
+  addAccountVisible: boolean = false;
+  newAccountUsername: string = '';
+  newAccountName: string = '';
+  newAccountRole: string = 'CONTENT_CREATOR';
+  accountUsernameInput = new FormControl('', Validators.required);
+  filteredAccounts: string[] = []
+  allAccounts: string[] = []
+  currentAccounts: AccountDisplay[] = []
+  selectedAccounts: AccountDisplay[] = []
+  removeAccounts: string[] = []
+  roles: string[] = ['CONTENT_CREATOR', 'EDITOR', 'PM'];
   toBeDeletedTemplateEditMedia: EditMedia[] = [];
 
   platformTags: Tag[] = [];
@@ -110,6 +131,12 @@ export class ProjectEditComponent implements OnInit {
   wsTagsSubscription: Subscription = new Subscription()
   wsLinksProjectSubscription: Subscription = new Subscription()
   wsMediaProjectSubscription: Subscription = new Subscription()
+  wsAccountSubscription: Subscription = new Subscription()
+
+  wsAccountWebSocket: WebSocketSubject<string> = webSocket({
+    url: "ws://localhost:8080/topic/accounts",
+    deserializer: msg => String(msg.data)
+  })
 
   projectsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/projects",
@@ -144,6 +171,8 @@ export class ProjectEditComponent implements OnInit {
      private projectService: ProjectService, private messageService: MessageService,private mediaService: MediaService,
      private linkService: LinkService, private collaboratorService: CollaboratorService, private templateService: TemplateService,
      private tagService: TagService,
+     private accountService: AccountService,
+     private storageService: StorageService,
      private readonly router: Router
     ) {}
 
@@ -152,6 +181,8 @@ export class ProjectEditComponent implements OnInit {
       this.wsTagsSubscription.unsubscribe()
     if (this.wsCollaboratorsSubscription)
       this.wsCollaboratorsSubscription.unsubscribe()
+    if (this.wsAccountSubscription)
+      this.wsAccountSubscription.unsubscribe()
     if(this.wsTagsProjectSubscription)
       this.wsTagsProjectSubscription.unsubscribe()
     if(this.wsCollaboratorsProjectSubscription)
@@ -192,6 +223,12 @@ export class ProjectEditComponent implements OnInit {
         }
       }
      )
+
+     this.wsAccountSubscription = this.wsAccountWebSocket.subscribe(
+      async () => {
+        this.allAccounts = await firstValueFrom(this.accountService.getAllUsernames())
+      }
+    )
 
      this.wsTagsProjectSubscription = this.tagsProjectWebSocket.subscribe(
       async msg => {
@@ -286,8 +323,10 @@ export class ProjectEditComponent implements OnInit {
     this.templates = await this.getAllTemplates();
     this.templateNames = await this.getAllTemplateNames();
     this.platformTags = await this.getAllTags();
-    this.collaborators = await this.getAllCollaborators();
-    this.platformCollaborators = await this.getAllCollaborators();
+    this.collaborators = await this.getAllCollaborators()
+    this.platformCollaborators = await this.getAllCollaborators()
+    this.allAccounts = await firstValueFrom(this.accountService.getAllUsernames())
+    this.currentUser = this.storageService.getUser()
 
     if (this.projectId) {
       this.selectedTemplate = await firstValueFrom(this.projectService.getTemplateByProjectId(this.projectId));
@@ -346,6 +385,9 @@ export class ProjectEditComponent implements OnInit {
         this.selectedCollaboratorNames = this.projectCollaborators.map(x => x.name);
         this.selectedCollaborators = [...this.projectCollaborators];
       });
+      this.accountService.getAccountsInProject(this.projectId).subscribe((response: AccountDisplay[]) => {
+        this.currentAccounts = response.filter(account => account.username !== this.currentUser);
+      });
     } else {
       console.error('Project ID is null');
     }
@@ -374,6 +416,22 @@ export class ProjectEditComponent implements OnInit {
       .filter(collaborator => collaborator.name.toLowerCase().includes(query))
       .sort((a, b) => a.name.localeCompare(b.name));
   }
+
+  filterAccounts(event: unknown) {
+    const query = (event as AutoCompleteCompleteEvent).query.toLowerCase();
+    const selectedUsernames = this.selectedAccounts.map(account => account.username.toLowerCase());
+    const existingUsernames = this.currentAccounts.map(account => account.username.toLowerCase());
+    const currentUser = this.currentUser.toLowerCase();
+
+    this.filteredAccounts = this.allAccounts
+        .filter(account => 
+            !selectedUsernames.includes(account.toLowerCase()) &&
+            !existingUsernames.includes(account.toLowerCase()) &&
+            account.toLowerCase().startsWith(query) && 
+            account.toLowerCase() !== currentUser
+        );
+}
+
 
   getNamesForTags(tags: Tag[]): string[] {
     return tags.map(x => x.name)
@@ -528,7 +586,15 @@ export class ProjectEditComponent implements OnInit {
       for (const collaborator of this.selectedCollaborators) {
         await firstValueFrom(this.collaboratorService.createAndAddCollaboratorToProject(collaborator,this.projectId))
       }
-
+      for (const account of this.removeAccounts) {
+        await firstValueFrom(this.accountService.deleteRoleOnProject(account,this.projectId))
+      }
+      for (const account of this.selectedAccounts) {
+        await firstValueFrom(this.accountService.addRoleOnProject(account.username,this.projectId,account.roleInProject))
+      }
+      for (const account of this.currentAccounts) {
+        await firstValueFrom(this.accountService.updateRoleOnProject(account.username,this.projectId,account.roleInProject))
+      }
       for (const tag of this.removeTags) {
         await firstValueFrom(this.tagService.removeTagFromProject(tag,this.projectId))
       }
@@ -798,7 +864,7 @@ export class ProjectEditComponent implements OnInit {
   editCollaborator(collaborator: CollaboratorTransfer, index: number) {
     this.newCollaboratorName = collaborator.name;
     this.newCollaboratorRole = collaborator.role;
-    this.editIndex = index;
+    this.editIndexCollaborator = index;
     this.showAddCollaboratorDialog();
   }
 
@@ -817,16 +883,16 @@ export class ProjectEditComponent implements OnInit {
       return;
     }
 
-    const isDuplicate = this.selectedCollaborators.some((collaborator, index) =>
-      collaborator.name.toLowerCase() === this.newCollaboratorName.toLowerCase() && index !== this.editIndex
+    const isDuplicate = this.selectedCollaborators.some((collaborator, index) => 
+      collaborator.name.toLowerCase() === this.newCollaboratorName.toLowerCase() && index !== this.editIndexCollaborator
     );
 
     if (isDuplicate) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'A collaborator with the same name already exists' });
       return;
     }
-    if (this.editIndex !== null) {
-      const collaborator = this.selectedCollaborators[this.editIndex];
+    if (this.editIndexCollaborator !== null) {
+      const collaborator = this.selectedCollaborators[this.editIndexCollaborator];
       if (collaborator && collaborator.collaboratorId) {
         this.removeCollaborators.push(collaborator.collaboratorId);
       }
@@ -843,7 +909,7 @@ export class ProjectEditComponent implements OnInit {
 
     this.newCollaboratorName = '';
     this.newCollaboratorRole = '';
-    this.editIndex = null;
+    this.editIndexCollaborator = null;
     this.addCollaboratorVisible = false;
   }
 
@@ -853,7 +919,83 @@ export class ProjectEditComponent implements OnInit {
     this.newCollaboratorRole = '';
     this.collaboratorNameInput.reset();
     this.collaboratorRoleInput.reset();
-    this.editIndex = null;
+    this.editIndexCollaborator = null;
+  }
+
+  changeRole(account: AccountDisplay, newRole: string) {
+    if(account.roleInProject === newRole) {
+      return;
+    }
+    account.roleInProject = newRole;
+  }
+
+  removeCurrentAccount(account: AccountDisplay) {
+    if (confirm('Are you sure you want to remove ' + account.username + ' from the project?')) {
+      this.currentAccounts = this.currentAccounts.filter(acc => acc.username !== account.username);
+      this.removeAccounts.push(account.username);
+    }
+  }
+
+  onAccountSelect(event: UsernameSelectEvent) {
+    this.newAccountUsername = event.value;
+    this.accountUsernameInput.setValue(this.newAccountUsername);
+  }
+
+  showAddAccountDialog() {
+    this.addAccountVisible = true;
+  }
+
+  editAccount(account: AccountDisplay, index: number) {
+    this.newAccountUsername = account.username;
+    this.newAccountRole = account.roleInProject;
+    this.editIndexAccount = index;
+    this.showAddAccountDialog();
+  }
+
+  removeAccount(index: number) {
+    this.selectedAccounts.splice(index, 1);
+  }
+
+  async saveNewAccount() {
+    if (this.accountUsernameInput.invalid) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Invalid account username' });
+      return;
+    }
+
+    const isDuplicate = this.selectedAccounts.some((account, index) => 
+      account.username.toLowerCase() === this.newAccountUsername.toLowerCase() && index !== this.editIndexAccount
+    );
+
+    if (isDuplicate) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'An account with the same username already exists' });
+      return;
+    }
+
+    const newAccount: AccountDisplay = {
+      username: this.newAccountUsername,
+      name: '',
+      roleInProject: this.newAccountRole,
+    };
+
+    if (this.editIndexAccount !== null) {
+      this.selectedAccounts[this.editIndexAccount] = newAccount;
+      this.editIndexAccount = null;
+    } else {
+      this.selectedAccounts.push(newAccount);
+    }
+
+    this.addAccountVisible = false;
+    this.newAccountUsername = '';
+    this.newAccountRole = 'CONTENT_CREATOR'
+    this.accountUsernameInput.reset();
+  }
+
+  cancelAddAccount() {
+    this.addAccountVisible = false;
+    this.newAccountUsername = '';
+    this.newAccountRole = 'CONTENT_CREATOR'
+    this.accountUsernameInput.reset();
+    this.editIndexAccount = null;
   }
 
   isDarkColor(color: string): boolean {

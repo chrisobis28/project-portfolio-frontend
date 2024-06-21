@@ -30,3 +30,16 @@ export interface LoginUserRequest {
     username: Nullable<string>
     password: Nullable<string>
 }
+
+
+export enum RoleInProject {
+    PM = "PM",
+    EDITOR = "EDITOR",
+    CONTENT_CREATOR = "CONTENT_CREATOR"
+}
+
+export interface AccountDisplay {
+    username: string
+    name: string
+    roleInProject: string
+}
