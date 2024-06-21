@@ -638,25 +638,6 @@ export class ProjectEditComponent implements OnInit {
       }
       this.deleteLinkList = []
 
-      for (const editMedia of this.editTemplateMediaList) {
-        if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
-        {
-          console.log("not good1")
-          await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as string)));
-        }
-        else if(editMedia.delete == false && editMedia.media != null && editMedia.file != null && editMedia.media.mediaId == "")
-        {
-          console.log("good")
-          const formData = new FormData();
-          formData.append('file', editMedia.file);
-          formData.append('name', editMedia.media.name);
-          await firstValueFrom(this.mediaService.addDocumentToProject(this.project.projectId, formData));
-        }
-        else if(editMedia.media != null && editMedia.media.mediaId!='') {
-          console.log("not good2")
-          await firstValueFrom(this.mediaService.editMedia(editMedia.media));
-        }
-      }
 
       for (const editMedia of this.editMediaList) {
           if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
@@ -675,7 +656,7 @@ export class ProjectEditComponent implements OnInit {
           await firstValueFrom(this.mediaService.editMedia(editMedia.media));
         }
       }
-      
+
 
 
       for (const editMedia of this.editTemplateMediaList) {
