@@ -14,27 +14,54 @@
     <div class="col-10">
       <div class="introduction">
         <div class="grid">
-          <div class="col-1 center" style="align-items: center;">
-            <a href="http://localhost:4200">
-              <p-button icon="pi pi-arrow-left" [outlined]="true" severity="contrast" />
-            </a>
+
+          <div class="col-12 flex" style="display: flex; align-items: center;">
+            <div>
+              <a href="http://localhost:4200">
+                <p-button icon="pi pi-arrow-left" [outlined]="true" severity="contrast"></p-button>
+              </a>
+            </div>
+            <div>
+              <p-button [style]='{"margin-left":"10%"}' severity="success" (click)="showHelp = true" icon="pi pi-question"></p-button>
+            </div>
           </div>
-          <div class="col-9">
-            <h1 id="title" style="text-align: center;">Add a new project</h1>
-          </div>
-          <div class="col-3"></div>
-          <div class="col-12">
-            <p id="subtitle">Add your project with respect to the template*.</p>
+  
+          <div style="display: flex; justify-content: flex-end;">
+            <p-dialog [(visible)]="showHelp" [modal]="true" [style]="{ width: '40%' }" header="Helper Menu - Admin Roles">
+              <div class="dialog-content p-3">
+                <p class="dialog-info mb-4 ">Adding a new project entails filling a couple of input fields such that it gets saved and displayed properly. 
+                  You can start by choosing to select a <b>template</b> and have its suggestions and constraints (standard title, standard description, 
+                  number of collaborators, required links and medias) applied instantly. A suitable <b>title</b> and <b>description</b> are mandatory for a Project to be accepted. 
+                  <p class="dialog-info mb-4 "> After this, you can choose to customize its attributes by adding <b>tags</b> (existing on the platform or creating your own) 
+                    of different <b>colors</b> and <b>labels</b> that reflect the key concepts of the project (e.g. Machine Learning, Java, Household, Garden), 
+                    <b>collaborators</b> and their <b>role</b> in the development process (e.g. John Smith - Data Analyst, Mark Stein - Gardener), as well as 
+                    personally named <b>links</b> (e.g. Github, Youtube) and <b>medias</b> (e.g. .mp4, .png, .ppt) for future reference.</p>
+                <p class="dialog-info mb-4 ">Every change is editable and reversible and there are buttons to guide you through the entire process!</p>
+              </div>
+              <div class="dialog-actions flex justify-content-end">
+                <p-button (click)="showHelp = false" label="Understood" severity="success" class="p-button-outlined" />
+              </div>
+            </p-dialog>
           </div>
         </div>
       </div>
+      <div class="col-12">
+        <h1 id="title" style="text-align: center;"><i>Add a new project</i></h1>
+      </div>
       <div class="card flex justify-content-start flex-wrap">
         <p-floatLabel id="templatecomponent">
-          <p-dropdown [options]="templateNames" [(ngModel)]="selectedTemplate" [showClear]="true"
+          <p-dropdown 
+            [options]="templateNames"
+            [(ngModel)]="selectedTemplateName"
+            (onChange)="onTemplateSelect($event)"
+            [showClear]="true"
+            (onClear)="clearTemplateFields()"
             inputId="float-label" />
           <label>Select a Template</label>
         </p-floatLabel>
-        <p-button id="addtemplate" label="Add Template" />
+        <a href="http://localhost:4200/template">
+          <p-button id="addtemplate" label="Add Template" />
+        </a>
       </div>
       <div class="card flex justify-content-start">
         <p-floatLabel>
@@ -58,30 +85,33 @@
             <p-floatLabel style="width: 100%;">
               <p-autoComplete
                 [(ngModel)]="selectedTags"
-                [suggestions]="getNamesForTags(filteredTags)"
+                [suggestions]="filteredTags"
                 (completeMethod)="filterTags($event)"
                 [multiple]="true"
-                [forceSelection]="true">
+                field="name"
+                [panelStyle]="{'width': 'auto', 'min-width': '200px', 'max-width': '100%'}">
+
+                <ng-template let-tag pTemplate="tagTemplate">
+                  <div class="tag-item" [style.background]="tag.color" [style.color]="isDarkColor(tag.color) ? 'white' : 'black'">
+                    <span>{{ tag.name }}</span>
+                  </div>
+                </ng-template>
               </p-autoComplete>
               <label>Tags</label>
             </p-floatLabel>
           </div>
         </div>
         <div class="lg:col-3 col-12 flex justify-content-center align-items-center">
-          <p-button (click)="showAddTagDialog()" icon="pi pi-tags" label="Add platform tag" severity="secondary"></p-button>
-          <p-dialog [(visible)]="addTagVisible" [modal]="true" [style]="{ width: '30rem' }" header="Add Platform Tag">
+          <p-button (click)="showAddTagDialog()" icon="pi pi-tags" label="Add platform tag"></p-button>
+          <p-dialog [(visible)]="addTagVisible" [modal]="true" [style]="{ width: '30rem', height: '25rem'}" header="Add Platform Tag">
             <div class="dialog-content p-3">
               <p class="dialog-info mb-4 ">You are about to add a new tag to the platform. To add a tag to a project please proceed to the previous step.</p>
-              <div class="flex flex-column justify-content-center align-items-center gap-4 mb-4">
+              <div class="flex justify-content-center align-items-center gap-4 mb-4">
+                <p-colorPicker [(ngModel)]="newTagColor"/>
                 <p-floatLabel>
                   <input pInputText id="newTagNameInput" [(ngModel)]="newTagName" [ngClass]="{'error': !newTagName}"
                          [formControl]="tagNameInput" style="width: 100%; max-width: 20rem;" />
                   <label for="newTagNameInput">Tag Name</label>
-                </p-floatLabel>
-                <p-floatLabel>
-                  <input pInputText id="newTagColorInput" [(ngModel)]="newTagColor" [ngClass]="{'error': !newTagColor}"
-                         [formControl]="tagColorInput" style="width: 100%; max-width: 20rem;" />
-                  <label for="newTagColorInput">Tag Color</label>
                 </p-floatLabel>
               </div>
             </div>
@@ -93,26 +123,176 @@
         </div>
       </div>
       </div>
-      <div class="card">
-        <div class="grid align-items-center">
-          <div class="lg:col-9 col-12">
-            <div class="p-fluid">
-        <p-floatLabel>
-
-          <p-autoComplete [(ngModel)]="selectedCollaborators"
-            [suggestions]="getNamesForCollaborators(filteredCollaborators)"
-            (completeMethod)="filterCollaborators($event)" [multiple]="true" [forceSelection]="true">
-          </p-autoComplete>
-
-          <label>Collaborators</label>
-        </p-floatLabel>
-            </div>
+      <div class="grid align-items-center">
+  <!-- <div class="lg:col-12 col-12">
+    <div class="p-fluid">
+      <p-floatLabel style="width: 100%;">
+        <p-autoComplete
+          [(ngModel)]="selectedCollaborators"
+          [suggestions]="filteredCollaborators"
+          (completeMethod)="filterCollaborators($event)"
+          [multiple]="true"
+          [forceSelection]="true"
+          [field]="'name'">
+        </p-autoComplete>
+        <label>Collaborators</label>
+      </p-floatLabel>
+    </div>
+  </div> -->
+  <h3>Collaborators</h3>
+    <div class="lg:col-12 col-12">
+      <div class="p-fluid">
+        <div class="grid">
+          <div *ngIf="selectedCollaborators.length > 0" class="col-4"><strong>Name</strong></div>
+          <div *ngIf="selectedCollaborators.length > 0" class="col-4"><strong>Role</strong></div>
+          <div class="col-2"></div>
+          <div class="col-2"></div>
+        </div>
+        <div class="grid" *ngFor="let collaborator of selectedCollaborators; let i = index">
+          <div class="col-4" style="font-size:large; margin-top: 12px;">{{ collaborator.name }}</div>
+          <div class="col-4" style="font-size:large; margin-top: 12px;">{{ collaborator.role }}</div>
+          <div class="col-2" style="padding: 5px">
+            <p-button icon="pi pi-pencil" label="Edit" class="p-button-warning" [style]="{'min-width': '120px'}" severity="info" (click)="editCollaborator(collaborator, i)"></p-button>
           </div>
-          <div class="lg:col-3 col-12 flex justify-content-center align-items-center">
-            <p-button (click)="showAddTagDialog()" icon="pi pi-user-plus" label="Add platform collaborator" severity="secondary"></p-button>
+          <div class="col-2" style="padding: 5px">
+            <p-button icon="pi pi-trash" label="Delete" class="p-button-danger" [style]="{'min-width': '120px'}" severity="danger" (click)="showDeleteDialog()"></p-button>
+            <p-dialog [(visible)]="deleteDialogVisible" [modal]="true" [style]="{ width: '25rem' }" header="Delete Collaborator">
+              <span class="p-text-secondary block mb-5">You are about to delete <b><i>{{collaborator.name}}</i></b> from the project. Please be careful as this action cannot be undone. Please confirm your action.</span>
+              <div class="flex justify-content-end gap-2">
+                <p-button (click)="deleteDialogVisible = false" label="Cancel" severity="secondary"/>
+                <p-button (click)="removeCollaborator(i); deleteDialogVisible = false" icon="pi pi-trash" label="Confirm"
+                          severity="danger"/>
+              </div>
+            </p-dialog>
           </div>
         </div>
       </div>
+      <div class="flex justify-content-center align-items-center mb-3" style="padding: 10px">
+        <p-button (click)="showAddCollaboratorDialog()" icon="pi pi-user-plus" label="Add Collaborator"
+        [style]="{'padding': '12px'}"></p-button>
+      </div>
+    </div>
+
+    <p-dialog [(visible)]="addCollaboratorVisible" [modal]="true" [style]="{ width: '35%', 'min-width': '300px' }" header="Collaborator"
+          class="flex justify-content-center align-items-center" >
+      <div class="dialog-content p-3">
+        <div class="dialog-info mb-4">
+          You are about to add a new collaborator to the project. To add a collaborator, please fill in the name and role fields.
+        </div>
+        <div class="flex flex-column justify-content-center align-items-center gap-4 mb-4" style="height: 50%">
+          <div class="input-container">
+            <p-autoComplete 
+              [(ngModel)]="newCollaboratorName" 
+              [suggestions]="filteredCollaborators" 
+              (completeMethod)="filterCollaborators($event)" 
+              (onSelect)="onCollaboratorSelect($event)" 
+              field="name" 
+              [formControl]="collaboratorNameInput" 
+              [forceSelection]="false"
+              placeholder="Collaborator Name"
+              class="full-width"
+              emptyMessage="Press Tab to confirm!">
+            </p-autoComplete>
+          </div>
+          <div class="input-container">
+            <p-floatLabel>
+              <input pInputText id="newCollaboratorRoleInput" [(ngModel)]="newCollaboratorRole" [formControl]="collaboratorRoleInput" />
+              <label for="newCollaboratorRoleInput">Collaborator Role</label>
+            </p-floatLabel>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-actions flex justify-content-center gap-2">
+        <p-button (click)="cancelAddCollaborator()" label="Cancel" severity="danger" class="p-button-outlined" />
+        <p-button (click)="saveNewCollaborator()" label="Confirm" severity="success" />
+      </div>
+    </p-dialog>
+
+    <!-- Existing Accounts Section -->
+<h3>Accounts</h3>
+<div class="lg:col-12 col-12">
+  <div class="p-fluid">
+    <div class="grid">
+      <div *ngIf="selectedAccounts.length > 0" class="col-4"><strong>Username</strong></div>
+      <div *ngIf="selectedAccounts.length > 0" class="col-4"><strong>Role</strong></div>
+      <div class="col-2"></div>
+      <div class="col-2"></div>
+    </div>
+    <div class="grid" *ngFor="let account of selectedAccounts; let i = index">
+      <div class="col-4" style="font-size:large; margin-top: 12px;">{{ account.username }}</div>
+      <div class="col-4" style="font-size:large; margin-top: 12px;">{{ account.roleInProject }}</div>
+      <div class="col-2" style="padding: 5px">
+        <p-button icon="pi pi-pencil" label="Edit" class="p-button-warning" [style]="{'min-width': '120px'}" severity="info" (click)="editAccount(account, i)"></p-button>
+      </div>
+      <div class="col-2" style="padding: 5px">
+        <p-button icon="pi pi-trash" label="Delete" class="p-button-danger" [style]="{'min-width': '120px'}" severity="danger" (click)="removeAccount(i)"></p-button>
+      </div>
+    </div>
+  </div>
+  <div class="flex justify-content-center align-items-center mb-3" style="padding: 10px">
+    <p-button (click)="showAddAccountDialog()" icon="pi pi-user-plus" label="Add Account"
+      [style]="{'padding': '12px'}"></p-button>
+  </div>
+</div>
+
+<!-- Add Account Dialog -->
+<p-dialog [(visible)]="addAccountVisible" [modal]="true" [style]="{ width: '35%', 'min-width': '300px' }" header="Account"
+    class="flex justify-content-center align-items-center">
+    <div class="dialog-content p-3">
+        <div class="dialog-info mb-4">
+            You are about to add a new account to the project. To add an account, please fill in the username field and select a role.
+        </div>
+        <div class="flex flex-column justify-content-center align-items-center gap-4 mb-4" style="height: 50%">
+            <div class="input-container full-width">
+                <p-autoComplete 
+                    [(ngModel)]="newAccountUsername" 
+                    [suggestions]="filteredAccounts" 
+                    (completeMethod)="filterAccounts($event)" 
+                    (onSelect)="onAccountSelect($event)" 
+                    [formControl]="accountUsernameInput" 
+                    dropdown="true" 
+                    [forceSelection]="true" 
+                    placeholder="Account Username"
+                    class="full-width">
+                </p-autoComplete>
+            </div>
+            <div class="input-container full-width">
+                <p-dropdown 
+                    [(ngModel)]="newAccountRole" 
+                    [options]="roles" 
+                    optionLabel="label" 
+                    optionValue="value" 
+                    placeholder="Select Role" 
+                    class="full-width">
+                </p-dropdown>
+            </div>
+        </div>
+    </div>
+    <div class="dialog-actions flex justify-content-center gap-2">
+        <p-button (click)="cancelAddAccount()" label="Cancel" severity="danger" class="p-button-outlined" />
+        <p-button (click)="saveNewAccount()" label="Confirm" severity="success" />
+    </div>
+</p-dialog>
+
+<style>
+  .full-width {
+    width: 100%;
+  }
+  .p-autocomplete .p-autocomplete-panel, 
+  .p-dropdown .p-dropdown-panel {
+    width: 100% !important;
+  }
+  .p-autocomplete input, 
+  .p-dropdown input {
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+</style>
+
+
+    
+  </div>
+
 
         <div class="linkUpload">
           <div class=" grid flex">
@@ -120,6 +300,33 @@
             <div class="col-10"></div>
           </div>
           <div class="card">
+            <p-dataView #dv [value]="templateLinks">
+              <ng-template let-links pTemplate="list">
+                <div *ngFor="let link of templateLinks;let i = index" class="col-12" class="col-12">
+                  <div class="grid row-gap-2">
+                    <div class="col-12 md:col-6 lg:col-5">
+                      <p-floatLabel>
+                        <input [(ngModel)]="link.name" [ngClass]="{'error': !link.name}" pInputText
+                               style="width: 85%;" [disabled]="true"/>
+                        <label >Link display name</label>
+                      </p-floatLabel>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                      <p-floatLabel>
+                        <input [(ngModel)]="link.url" [ngClass]="{'error': !link.url}" pInputText
+                               style="width: 85%;"/>
+                        <label>Link address(URL)</label>
+                      </p-floatLabel>
+                    </div>
+                    <div class="flex justify-content-center col-12 md:col-6 lg:col-3">
+                      <p-button [disabled]="true" icon="pi pi-trash" label="Delete" severity="danger">
+                      </p-button>
+                    </div>
+                  </div>
+                </div>
+
+              </ng-template>
+            </p-dataView>
             <p-dataView #dv [value]="links">
               <ng-template let-links pTemplate="list">
                 <div *ngFor="let link of links;let i = index" class="col-12" class="col-12">
@@ -155,12 +362,48 @@
 
         <div class="mediaUpload">
           <div class=" grid flex">
-            <div class="col-2">
+            <div class="col-8 align-items-center gap-5">
               <h3>Media</h3>
+              <p style="color: gray;"> Keep in mind that the first .PNG or .JPEG uploaded will be the thumbnail!</p>
             </div>
             <div class="col-10"></div>
           </div>
           <div class="card">
+            <p-dataView #dv [value]="templateMedia">
+              <ng-template let-templateMediaFiles pTemplate="list">
+                <div *ngFor="let media of templateMediaFiles; let i = index" class="col-12" class="col-12">
+                  <div class="grid">
+                    <div class="col-12 md:col-6 lg:col-3 ">
+                      <h4>{{ media.path }}</h4>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-3 ">
+                      <p-floatLabel>
+                        <input [(ngModel)]="media.name" [ngClass]="{'error': media.name == ''}" pInputText style="width: 100%;" [disabled]="true"/>
+                        <label>Media display name</label>
+                      </p-floatLabel>
+                    </div>
+                    <div class="col-6 md:col-6 lg:col-3 flex justify-content-center">
+                      <p-button (onClick)="downloadTemplateDocument(i)" icon="pi pi-download" label="Download"/>
+                    </div>
+                    <div class="col-6 md:col-6 lg:col-3 flex justify-content-center">
+                      <p-fileUpload
+                        #form
+                        (uploadHandler)="changeTemplateMedia($event, form, i)"
+                        [auto]="true"
+                        [multiple]="true"
+                        chooseIcon="pi pi-sync"
+                        chooseLabel="Change"
+                        customUpload="true"
+                        maxFileSize="1000000"
+                        mode="basic"
+                        name="demo[]">
+                        <ng-template pTemplate="empty"></ng-template>
+                      </p-fileUpload>
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+            </p-dataView>
             <p-dataView #dv [value]="media">
               <ng-template let-mediaFiles pTemplate="list">
                 <div *ngFor="let media of mediaFiles; let i = index" class="col-12" class="col-12">
@@ -170,7 +413,7 @@
                     </div>
                     <div class="col-12 md:col-6 lg:col-3 ">
                       <p-floatLabel>
-                        <input [(ngModel)]="media.name" [ngClass]="{'error': !media.name}" pInputText style="width: 100%;"/>
+                        <input [(ngModel)]="media.name" [ngClass]="{'error': media.name == ''}" pInputText style="width: 100%;"/>
                         <label>Media display name</label>
                       </p-floatLabel>
                     </div>
@@ -185,6 +428,7 @@
 
               </ng-template>
             </p-dataView>
+            
           </div>
           <div class="flex justify-content-center">
             <p-fileUpload

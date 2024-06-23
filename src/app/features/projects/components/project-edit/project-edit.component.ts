@@ -7,6 +7,7 @@ import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ChipsModule } from 'primeng/chips';
 import {
   Collaborator,
+  CollaboratorTransfer,
   EditMedia,
   Link,
   Media,
@@ -14,6 +15,8 @@ import {
   Project,
   Tag,
   Template,
+  CollaboratorSelectEvent,
+  TemplateSelectEvent,
   Request
 } from '../../models/project-models';
 import { TableModule } from 'primeng/table';
@@ -22,17 +25,16 @@ import { RatingModule } from 'primeng/rating';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProjectService } from '../../services/project/project.service';
-import {FileUpload, FileUploadEvent, FileUploadHandlerEvent, FileUploadModule} from 'primeng/fileupload';
+import {FileUpload, FileUploadHandlerEvent, FileUploadModule} from 'primeng/fileupload';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import{ MediaService} from "../../services/media/media.service";
 import { DropdownModule } from 'primeng/dropdown';
-import { Subscription, firstValueFrom, map } from 'rxjs';
+import { Subscription, firstValueFrom, map} from 'rxjs';
 import { LinkService } from '../../services/link/link.service';
 import { CollaboratorService } from '../../services/collaborator/collaborator.service';
 import { TemplateService } from '../../services/template/template.service';
 import { TagService } from '../../services/tag/tag.service';
-import { Serializer } from '@angular/compiler';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 import { AccountService } from 'src/app/features/accounts/services/accounts/account.service';
 import { StorageService } from 'src/app/features/accounts/services/authentication/storage.service';
@@ -41,6 +43,13 @@ import { RequestService } from '../../services/request/request.service';
 import {AutoCompleteCompleteEvent, AutoCompleteModule} from "primeng/autocomplete";
 import {DataViewModule} from "primeng/dataview";
 import {DialogModule} from "primeng/dialog";
+import { AccountDisplay } from 'src/app/features/accounts/models/accounts-models';
+import { ColorPickerModule } from 'primeng/colorpicker';
+
+export interface UsernameSelectEvent{
+  value: string;
+}
+
 @Component({
   selector: 'app-project-edit',
   templateUrl: './project-edit.component.html',
@@ -49,7 +58,7 @@ import {DialogModule} from "primeng/dialog";
   imports: [FormsModule, InputTextModule, FloatLabelModule,
     InputTextareaModule, ChipsModule, TableModule, TagModule,
     RatingModule, ButtonModule, CommonModule, FileUploadModule,
-    DropdownModule, ToastModule, RouterLink, AutoCompleteModule, DataViewModule, DialogModule, ReactiveFormsModule],
+    DropdownModule, ToastModule, RouterLink, AutoCompleteModule, DataViewModule, DialogModule, ReactiveFormsModule, ColorPickerModule],
   providers: [ProjectService, MessageService]
 })
 
@@ -61,12 +70,39 @@ export class ProjectEditComponent implements OnInit {
   newTagName: string = "";
   newTagColor: string = "";
   addTagVisible: boolean = false;
+  deleteDialogVisible = false;
   platformCollaborators: Collaborator[] = [];
-  selectedCollaborators: Collaborator[] = []
+  projectCollaborators: CollaboratorTransfer[] = []
+  editIndexCollaborator: number | null = null;
+  editIndexAccount: number | null = null;
+  currentUser: string = '';
   selectedCollaboratorNames: string[] = []
   filteredCollaborators: Collaborator[] = []
-  addCollaborators: Collaborator[] = []
-  removeCollaborators: Collaborator[] = []
+  removeCollaborators: string[] = []
+  selectedCollaborators: CollaboratorTransfer[] = [];
+  initialTags: Tag[] = [];
+
+  addCollaboratorVisible: boolean = false;
+  newCollaboratorName: string = '';
+  newCollaboratorRole: string = '';
+  collaboratorNameInput = new FormControl('', [
+    Validators.required,
+    Validators.pattern('^[a-zA-Z ]{1,50}$')
+  ]);
+  collaboratorRoleInput = new FormControl('', Validators.required);
+
+  addAccountVisible: boolean = false;
+  newAccountUsername: string = '';
+  newAccountName: string = '';
+  newAccountRole: string = 'CONTENT_CREATOR';
+  accountUsernameInput = new FormControl('', Validators.required);
+  filteredAccounts: string[] = []
+  allAccounts: string[] = []
+  currentAccounts: AccountDisplay[] = []
+  selectedAccounts: AccountDisplay[] = []
+  removeAccounts: string[] = []
+  roles: string[] = ['CONTENT_CREATOR', 'EDITOR', 'PM'];
+  toBeDeletedTemplateEditMedia: EditMedia[] = [];
 
   platformTags: Tag[] = [];
   selectedTags: Tag[] = []
@@ -75,18 +111,20 @@ export class ProjectEditComponent implements OnInit {
   addTags:Tag[] =[]
   removeTags:Tag[] =[]
   links: Link[] = [];
+  templateLinks: Link[] = [];
   templates!: Template[];
   templateNames: string[] = [];
   selectedTemplateName: string | undefined;
-  selectedTemplate: Template | null = null;
+  selectedTemplate: Template | undefined ;
   deleteLinkList: Link[] = [];
 
-  editMediaList: EditMedia[] = []
+  editMediaList: EditMedia[] = [];
+  editTemplateMediaList: EditMedia[] = [];
 
   tags: Tag[] | undefined;
-  colaborators: Collaborator[] | undefined;
   tagnames: string[] | undefined;
   collaboratornames: string[] | undefined;
+  collaborators: Collaborator[] = [];
   tagColorInput = new FormControl('', [Validators.required]);
   tagNameInput = new FormControl('', [Validators.required]);
 
@@ -101,32 +139,38 @@ export class ProjectEditComponent implements OnInit {
   wsTagsSubscription: Subscription = new Subscription()
   wsLinksProjectSubscription: Subscription = new Subscription()
   wsMediaProjectSubscription: Subscription = new Subscription()
+  wsAccountSubscription: Subscription = new Subscription()
 
-  projectsWebSocket: WebSocketSubject<any> = webSocket({
+  wsAccountWebSocket: WebSocketSubject<string> = webSocket({
+    url: "ws://localhost:8080/topic/accounts",
+    deserializer: msg => String(msg.data)
+  })
+
+  projectsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/projects",
     deserializer: msg => String(msg.data)
   })
-  collaboratorsProjectWebSocket: WebSocketSubject<any> = webSocket({
+  collaboratorsProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/collaborators/project",
     deserializer: msg => String(msg.data)
   })
-  collaboratorsWebSocket: WebSocketSubject<any> = webSocket({
+  collaboratorsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/collaborators",
     deserializer: msg => String(msg.data)
   })
-  tagsProjectWebSocket: WebSocketSubject<any> = webSocket({
+  tagsProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/tags/project",
     deserializer: msg => String(msg.data)
   })
-  tagsWebSocket: WebSocketSubject<any> = webSocket({
+  tagsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/tags",
     deserializer: msg => String(msg.data)
   })
-  linksProjectWebSocket: WebSocketSubject<any> = webSocket({
+  linksProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/link/project",
     deserializer: msg => String(msg.data)
   })
-  mediaProjectWebSocket: WebSocketSubject<any> = webSocket({
+  mediaProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/media/project",
     deserializer: msg => String(msg.data)
   })
@@ -145,6 +189,19 @@ export class ProjectEditComponent implements OnInit {
     private requestService: RequestService,
     private readonly router: Router
     ) {}
+
+  ngOnDestroy(): void {
+    if (this.wsTagsSubscription)
+      this.wsTagsSubscription.unsubscribe()
+    if (this.wsCollaboratorsSubscription)
+      this.wsCollaboratorsSubscription.unsubscribe()
+    if (this.wsAccountSubscription)
+      this.wsAccountSubscription.unsubscribe()
+    if(this.wsTagsProjectSubscription)
+      this.wsTagsProjectSubscription.unsubscribe()
+    if(this.wsCollaboratorsProjectSubscription)
+      this.wsCollaboratorsProjectSubscription.unsubscribe()
+  }
 
   async ngOnInit() {
     await this.initializeFields()
@@ -175,12 +232,17 @@ export class ProjectEditComponent implements OnInit {
         if(msg == "all" || msg == this.projectId) {
           if(this.projectId){
             const newCollaborators = await this.getCollaboratorsByProjectId(this.projectId)
-            this.colaborators = newCollaborators
             this.collaboratornames = newCollaborators.map(x => x.name)
           }
         }
       }
      )
+
+     this.wsAccountSubscription = this.wsAccountWebSocket.subscribe(
+      async () => {
+        this.allAccounts = await firstValueFrom(this.accountService.getAllUsernames())
+      }
+    )
 
      this.wsTagsProjectSubscription = this.tagsProjectWebSocket.subscribe(
       async msg => {
@@ -189,6 +251,8 @@ export class ProjectEditComponent implements OnInit {
             const newTags  = await this.getTagsByProjectId(this.projectId)
             this.tags = newTags
             this.tagnames = newTags.map(x => x.name);
+            this.selectedTags = newTags;
+            this.selectedTagNames = newTags.map(x => x.name);
           }
         }
       }
@@ -198,7 +262,9 @@ export class ProjectEditComponent implements OnInit {
       async msg => {
         if(msg == "all" || msg == this.projectId) {
           if(this.projectId){
-          const newMedia = await this.getDocumentsByProjectId(this.projectId)
+            this.editMediaList=[]
+            this.editTemplateMediaList=[]
+            const newMedia = await this.getDocumentsByProjectId(this.projectId)
             for (const mediaObject of newMedia) {
             {
               const editMedia:EditMedia = {
@@ -207,7 +273,15 @@ export class ProjectEditComponent implements OnInit {
                 file:null,
                 delete:false
               }
-              this.editMediaList.push(editMedia)
+              if (this.selectedTemplate != undefined) {
+                if (this.selectedTemplate.templateAdditions.some(addition => addition.templateAdditionName === mediaObject.name)) {
+                  this.editTemplateMediaList.push(editMedia)
+                } else {
+                  this.editMediaList.push(editMedia)
+                }
+              } else {
+                this.editMediaList.push(editMedia)
+              }
             }
         }
           }
@@ -219,16 +293,42 @@ export class ProjectEditComponent implements OnInit {
       async msg => {
         if(msg == "all" || msg == this.projectId) {
           if(this.projectId){
+            this.links=[]
+            this.templateLinks=[]
             const newLinks = await this.getLinksByProjectId(this.projectId)
-            this.links = newLinks
+            for (const linkObject of newLinks) {
+              if (this.selectedTemplate != undefined) {
+                if (this.selectedTemplate.templateAdditions.some(addition => addition.templateAdditionName === linkObject.name)) {
+                  this.templateLinks.push(linkObject)
+                } else {
+                  this.links.push(linkObject)
+                }
+              } else {
+                this.links.push(linkObject)
+              }
+            }
           }
         }
       }
      )
 
+     this.wsCollaboratorsSubscription = this.collaboratorsWebSocket.subscribe(
+      async () => {
+        const newCollaborators = await this.getAllCollaborators()
+        this.collaborators = newCollaborators
+      }
+    )
+
+    this.wsTagsSubscription = this.tagsWebSocket.subscribe(
+      async msg => {
+        if(msg == "tag added") {
+          this.platformTags = await this.getAllTags();
+        }
+      }
+    )
 
 
-     //should define here the collaborators and tags websocket such that it updates autocomplete
+     //should define here the collaborators websocket such that it updates autocomplete
      //as in project-add components. The autocomplete is done on dev, we do it after we merge this with dev
      
      
@@ -268,16 +368,37 @@ export class ProjectEditComponent implements OnInit {
 
   async initializeFields() {
     this.projectId = this.route.snapshot.paramMap.get('id');
-    this.templates = await this.getAllTemplates()
-    this.templateNames = await this.getAllTemplateNames()
+    this.templates = await this.getAllTemplates();
+    this.templateNames = await this.getAllTemplateNames();
     this.platformTags = await this.getAllTags();
+    this.collaborators = await this.getAllCollaborators()
     this.platformCollaborators = await this.getAllCollaborators()
+    this.allAccounts = await firstValueFrom(this.accountService.getAllUsernames())
+    this.currentUser = this.storageService.getUser()
 
     if (this.projectId) {
+      this.selectedTemplate = await firstValueFrom(this.projectService.getTemplateByProjectId(this.projectId));
+      if (this.selectedTemplate != undefined) {
+        this.selectedTemplateName = this.selectedTemplate.templateName
+      }
+      this.templateLinks = [];
+      this.links = [];
       this.linkService.getLinksByProjectId(this.projectId).subscribe((response: Link[]) => {
-        this.links = response
+        for (const linkObject of response) {
+          if (this.selectedTemplate != undefined) {
+            if (this.selectedTemplate.templateAdditions.some(addition => addition.templateAdditionName === linkObject.name)) {
+              this.templateLinks.push(linkObject)
+            } else {
+              this.links.push(linkObject)
+            }
+          } else {
+            this.links.push(linkObject)
+          }
+        }
       });
       this.mediaService.getDocumentsByProjectId(this.projectId).subscribe((response: Media[]) => {
+        this.editMediaList = [];
+        this.editTemplateMediaList = [];
         for (const mediaObject of response) {
           {
             const editMedia:EditMedia = {
@@ -286,24 +407,38 @@ export class ProjectEditComponent implements OnInit {
               file:null,
               delete:false
             }
-            this.editMediaList.push(editMedia)
+            if (this.selectedTemplate != undefined) {
+              if (this.selectedTemplate.templateAdditions.some(addition => addition.templateAdditionName === mediaObject.name)) {
+                this.editTemplateMediaList.push(editMedia)
+              } else {
+                this.editMediaList.push(editMedia)
+              }
+            } else {
+              this.editMediaList.push(editMedia)
+            }
           }
         }
       });
+
       this.projectService.getProjectById(this.projectId).subscribe((response: Project) => {
         this.project = response;
         this.title = this.project.title;
         this.description = this.project.description;
-        this.selectedTemplate = this.project.template;
-        this.selectedTemplateName = this.project.template?.templateName;
       });
       this.tagService.getTagsByProjectId(this.projectId).subscribe((response: Tag[]) => {
-        this.selectedTags = response;
-        this.selectedTagNames = this.selectedTags.map(x => x.name)
+        this.tags = response;
+        this.initialTags = response;
+        this.tagnames = this.tags.map(x => x.name);
+        this.selectedTags = this.tags;
+        this.selectedTagNames = this.tagnames;
       });
-      this.collaboratorService.getCollaboratorsByProjectId(this.projectId).subscribe((response: Collaborator[]) => {
-        this.selectedCollaborators = response
-        this.selectedCollaboratorNames = this.selectedCollaborators.map(x => x.name)
+      this.collaboratorService.getCollaboratorsByProjectId(this.projectId).subscribe((response: CollaboratorTransfer[]) => {
+        this.projectCollaborators = response;
+        this.selectedCollaboratorNames = this.projectCollaborators.map(x => x.name);
+        this.selectedCollaborators = [...this.projectCollaborators];
+      });
+      this.accountService.getAccountsInProject(this.projectId).subscribe((response: AccountDisplay[]) => {
+        this.currentAccounts = response.filter(account => account.username !== this.currentUser);
       });
     } else {
       console.error('Project ID is null');
@@ -313,27 +448,47 @@ export class ProjectEditComponent implements OnInit {
     return firstValueFrom(this.tagService.getAllTags());
   }
   getAllCollaborators(): Promise<Collaborator[]> {
-    return firstValueFrom(this.collaboratorService.getAllCollaborators())
+    return firstValueFrom(this.collaboratorService.getAllCollaborators());
   }
 
   async getProjectById(id: string): Promise<Project> {
-    return firstValueFrom(this.projectService.getProjectById(id))
+    return firstValueFrom(this.projectService.getProjectById(id));
   }
   getNamesForCollaborators(collaborators: Collaborator[]): string[] {
-    return collaborators.map(x => x.name)
+    return collaborators.map(x => x.name);
   }
 
-  async getCollaboratorsByProjectId(id: string): Promise<Collaborator[]> {
-    return firstValueFrom(this.collaboratorService.getCollaboratorsByProjectId(id))
+  async getCollaboratorsByProjectId(id: string): Promise<CollaboratorTransfer[]> {
+    return firstValueFrom(this.collaboratorService.getCollaboratorsByProjectId(id));
   }
-  filterCollaborators(event: any) {
-    const query = (event as AutoCompleteCompleteEvent).query
-    this.filteredCollaborators = this.platformCollaborators.filter(collaborator => collaborator.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
+
+  filterCollaborators(event: unknown) {
+    const query = (event as AutoCompleteCompleteEvent).query.toLowerCase();
+    this.filteredCollaborators = this.collaborators
+      .filter(collaborator => collaborator.name.toLowerCase().includes(query))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
+
+  filterAccounts(event: unknown) {
+    const query = (event as AutoCompleteCompleteEvent).query.toLowerCase();
+    const selectedUsernames = this.selectedAccounts.map(account => account.username.toLowerCase());
+    const existingUsernames = this.currentAccounts.map(account => account.username.toLowerCase());
+    const currentUser = this.currentUser.toLowerCase();
+
+    this.filteredAccounts = this.allAccounts
+        .filter(account =>
+            !selectedUsernames.includes(account.toLowerCase()) &&
+            !existingUsernames.includes(account.toLowerCase()) &&
+            account.toLowerCase().startsWith(query) &&
+            account.toLowerCase() !== currentUser
+        );
+}
+
+
   getNamesForTags(tags: Tag[]): string[] {
     return tags.map(x => x.name)
   }
-  filterTags(event: any) {
+  filterTags(event: unknown) {
     const query = (event as AutoCompleteCompleteEvent).query
     this.filteredTags = this.platformTags.filter(tag => tag.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
   }
@@ -360,7 +515,18 @@ export class ProjectEditComponent implements OnInit {
     ))
   }
 
+  isTitleDescriptionAndMediaValid(): boolean{
+    return this.title.length > 0 && this.description.length > 0
+    && (this.editMediaList.length > 0 || this.editTemplateMediaList.length > 0)
+  }
+
   async saveProject(): Promise<void> {
+
+    console.log(this.links);
+    console.log(this.templateLinks)
+    console.log(this.deleteLinkList)
+    console.log(this.editMediaList)
+    console.log(this.editTemplateMediaList)
 
     if(this.projectId == null) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Project id is null, cannot be saved' });
@@ -372,6 +538,57 @@ export class ProjectEditComponent implements OnInit {
       return;
     }
 
+    if(!this.isTitleDescriptionAndMediaValid()) {
+      if(this.title.length == 0){
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Title can not be empty' });
+        return;
+      }
+      if(this.description.length == 0){
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Description can not be empty' });
+        return;
+      }
+      if(this.editMediaList.length == 0 && this.editTemplateMediaList.length == 0){
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not be empty' });
+        return
+      }
+
+      return;
+    }
+
+    for (const editMed of this.editMediaList) {
+      if(editMed.media!.name.length < 1 || editMed.media?.path == '') {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Media can not have an empty display name' });
+        return
+      }
+    }
+    for (const editTempMed of this.editTemplateMediaList) {
+      if(editTempMed.media!.name.length < 1 || editTempMed.media?.path == '') {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Template Media can not have an empty display name' });
+        return
+      }
+    }
+    for (const link of this.links) {
+      if(link.name.length < 1) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Links can not have an empty title' });
+        return
+      }
+      if(link.url.length < 1) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Links can not have an empty url' });
+        return
+      }
+    }
+
+    for (const link of this.templateLinks) {
+      if(link.name.length < 1) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Template links can not have an empty title' });
+        return
+      }
+      if(link.url.length < 1) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Template links can not have an empty url' });
+        return
+      }
+    }
+
     try {
       const thumbnail: MediaFileContent = {
         filePath: '',
@@ -379,15 +596,16 @@ export class ProjectEditComponent implements OnInit {
         fileName:''
       }
 
-      const foundTemplate = this.templates.find(x => x.templateName === this.selectedTemplateName);
-      this.selectedTemplate = foundTemplate !== undefined ? foundTemplate : null;
+      let templateToBeAdded = null;
+      if (this.selectedTemplate != undefined) templateToBeAdded = this.selectedTemplate;
+
 
       const prj: Project = {
         projectId: "",
         title: this.title,
         description: this.description,
         archived: false,
-        template: this.selectedTemplate,
+        template: templateToBeAdded,
         media: [],
         projectsToAccounts: [],
         projectsToCollaborators: [],
@@ -400,20 +618,43 @@ export class ProjectEditComponent implements OnInit {
         thumbnail: thumbnail
       };
 
-      this.removeCollaborators = this.selectedCollaborators.filter(x=>!this.selectedCollaboratorNames.includes(x.name));
-      this.addCollaborators = this.platformCollaborators.filter(x=>this.selectedCollaboratorNames.includes(x.name) && !this.selectedCollaborators.flatMap(x=>x.name).includes(x.name));
-      this.removeTags = this.selectedTags.filter(x=>!this.selectedTagNames.includes(x.name));
-      this.addTags = this.platformTags.filter(x=>this.selectedTagNames.includes(x.name) && !this.selectedTags.flatMap(x=>x.name).includes(x.name));
+      // this.removeCollaborators = this.selectedCollaborators.filter(x=>!this.selectedCollaboratorNames.includes(x.name));
+      // this.addCollaborators = this.platformCollaborators.filter(x=>this.selectedCollaboratorNames.includes(x.name) && !this.selectedCollaborators.flatMap(x=>x.name).includes(x.name));
+      this.removeTags = this.initialTags.filter(tag => !this.selectedTags.includes(tag));
+      this.addTags = this.selectedTags.filter(tag => !this.initialTags.includes(tag));
+
+      // this.removeTags = this.selectedTags.filter(x=>!this.selectedTagNames.includes(x.name));
+      // this.removeTags = this.tags.filter(x=>!this.selectedTags.includes(x));
+      // this.addTags = this.platformTags.filter(x=>this.selectedTagNames.includes(x.name) && !this.selectedTags.flatMap(x=>x.name).includes(x.name));
+      // this.removeCollaborators = this.projectCollaborators.filter(x=>!this.selectedCollaboratorNames.includes(x.name)).map(x => x.collaboratorId);
+      // this.addCollaborators = this.platformCollaborators.filter(x=>this.selectedCollaboratorNames.includes(x.name) && !this.projectCollaborators.flatMap(x=>x.name).includes(x.name));
 
       if(this.role_on_project == "ADMIN" || this.role_on_project == "EDITOR" || this.role_on_project == "PM") {
 
       const createdProject = await firstValueFrom(this.projectService.editProject(this.projectId, prj));
 
-      for (const collaborator of this.removeCollaborators) {
-        await firstValueFrom(this.collaboratorService.deleteCollaboratorFromProject(collaborator,this.projectId))
+      console.log(this.editTemplateMediaList)
+      if (this.selectedTemplate == undefined) {
+        firstValueFrom(this.projectService.removeTemplateFromProject(createdProject.projectId, "delete-template"))
+      } else {
+        firstValueFrom(this.projectService.updateProjectTemplate(createdProject.projectId, this.selectedTemplate))
       }
-      for (const collaborator of this.addCollaborators) {
-        await firstValueFrom(this.collaboratorService.addCollaboratorToProject(collaborator,this.projectId))
+
+
+      for (const collaborator of this.removeCollaborators) {
+        await firstValueFrom(this.collaboratorService.deleteCollaboratorFromProject(this.projectId, collaborator))
+      }
+      for (const collaborator of this.selectedCollaborators) {
+        await firstValueFrom(this.collaboratorService.createAndAddCollaboratorToProject(collaborator,this.projectId))
+      }
+      for (const account of this.removeAccounts) {
+        await firstValueFrom(this.accountService.deleteRoleOnProject(account,this.projectId))
+      }
+      for (const account of this.selectedAccounts) {
+        await firstValueFrom(this.accountService.addRoleOnProject(account.username,this.projectId,account.roleInProject))
+      }
+      for (const account of this.currentAccounts) {
+        await firstValueFrom(this.accountService.updateRoleOnProject(account.username,this.projectId,account.roleInProject))
       }
       for (const tag of this.removeTags) {
         await firstValueFrom(this.tagService.removeTagFromProject(tag,this.projectId))
@@ -422,7 +663,6 @@ export class ProjectEditComponent implements OnInit {
         await firstValueFrom(this.tagService.addTagToProject(tag,this.projectId));
       }
 
-
       for (const link of this.links) {
         if(link.linkId == '') {
           await firstValueFrom(this.linkService.addLinkToProject(link, createdProject.projectId))
@@ -430,15 +670,27 @@ export class ProjectEditComponent implements OnInit {
           await firstValueFrom(this.linkService.editLinkOfProject(link))
         }
       }
+      this.links = []
+
+      for (const link of this.templateLinks) {
+        if(link.linkId == '') {
+          await firstValueFrom(this.linkService.addLinkToProject(link, createdProject.projectId))
+        } else {
+          await firstValueFrom(this.linkService.editLinkOfProject(link))
+        }
+      }
+      this.templateLinks = []
 
       for (const link of this.deleteLinkList) {
-        await firstValueFrom(this.linkService.deleteLinkById(link.linkId));
+        firstValueFrom(this.linkService.deleteLinkById(link.linkId));
       }
       this.deleteLinkList = []
+
+
       for (const editMedia of this.editMediaList) {
           if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
           {
-            await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as String)));
+            await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as string)));
           }
           else if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
           {
@@ -452,6 +704,31 @@ export class ProjectEditComponent implements OnInit {
           await firstValueFrom(this.mediaService.editMedia(editMedia.media));
         }
       }
+
+
+
+      for (const editMedia of this.editTemplateMediaList) {
+        if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
+        {
+          await firstValueFrom(this.mediaService.deleteMedia(this.projectId,editMedia.media.mediaId).pipe(map(x => x as string)));
+        }
+        else if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
+        {
+          const formData = new FormData();
+          formData.append('file', editMedia.file);
+          formData.append('name', editMedia.media.name);
+          await firstValueFrom(this.mediaService.addDocumentToProject(this.project.projectId, formData));
+        }
+        else if(editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId!='') {
+          const formData = new FormData();
+          formData.append('file', editMedia.file);
+          await firstValueFrom(this.mediaService.editMediaTemplate(editMedia.media.mediaId,formData));
+        }
+        else if(editMedia.media != null && editMedia.media.mediaId!='') {
+          await firstValueFrom(this.mediaService.editMedia(editMedia.media));
+        }
+      }
+      this.editTemplateMediaList = []
       this.editMediaList = []
       this.router.navigate(['/project-detail/', this.projectId]) }
 
@@ -552,11 +829,13 @@ export class ProjectEditComponent implements OnInit {
   }
 
   cancel(): void {
+    this.router.navigateByUrl("http://localhost:4200/project-detail/" + this.projectId);
   }
 
   isAnyLinkFieldEmpty(): boolean {
-    return this.links.some(link => link.name == '' || link.url == '');
+    return this.links.some(link => link.name == '' || link.url == '') || this.templateLinks.some(link => link.name == '' || link.url == '');
   }
+
   addLink() {
     const link: Link = { linkId: '', name: '', url: '', requestLinkProjects: [] };
     this.links.push(link);
@@ -571,15 +850,29 @@ export class ProjectEditComponent implements OnInit {
      this.editMediaList[index].delete=true
    }
 
-  removeTemplate(): void {
-    this.selectedTemplateName = ''
-    this.selectedTemplate = null;}
+  clearTemplateFields() {
+    for (const link of this.templateLinks) {
+      if (link.url != '')
+        this.links.push(link)
+    }
+    for (const editTempMed of this.editTemplateMediaList) {
+      if (!this.editMediaList.some(m => m.media!.name == editTempMed.media!.name)) {
+        if (editTempMed.media != null && editTempMed.media.mediaId!='') {
+          this.editMediaList.push(editTempMed);
+        }
+      }
+    }
+    this.selectedTemplateName = undefined;
+    this.selectedTemplate = undefined;
+    this.templateLinks = [];
+    this.editTemplateMediaList = [];
+  }
 
   downloadFile(media: MediaFileContent) {
    this.mediaService.downloadFile(media);
   }
 
-  downloadDocument(mediaId: string) {
+  async downloadDocument(mediaId: string) {
     let mediaFile: MediaFileContent = {
       fileName: "",
       filePath: "",
@@ -590,7 +883,7 @@ export class ProjectEditComponent implements OnInit {
         mediaFile = data;
         this.downloadFile(mediaFile);
       },
-      error: (err: any) => {
+      error: (err: unknown) => {
         console.error('Error fetching media files', err);
       }
     })
@@ -603,7 +896,7 @@ export class ProjectEditComponent implements OnInit {
       summary: 'Success',
       detail: 'Media added! The media will be uploaded when the edit will be saved!'
     });
-    let newMedia: Media = {
+    const newMedia: Media = {
       mediaId: '',
       name: file.name,
       path: file.name,
@@ -651,4 +944,233 @@ export class ProjectEditComponent implements OnInit {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: (error as Error).message });
     }
   }
+
+  changeTemplateMedia(event: FileUploadHandlerEvent, form: FileUpload, index: number) {
+      const newMediaId: string = this.editTemplateMediaList[index].media?.mediaId || "";
+      const file = event.files[0];
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Success',
+        detail: 'Media changed successfully! The media will be saved when the save button is clicked!'
+      });
+      const newMedia: Media = {
+        mediaId: newMediaId,
+        name: this.editTemplateMediaList[index].media!.name,
+        path: file.name,
+        project: this.project,
+        requestMediaProjects: []
+      }
+      const newEditMedia: EditMedia = {
+        media: newMedia,
+        mediaFileContent: null,
+        file: file,
+        delete: false
+      }
+      this.editTemplateMediaList[index] = newEditMedia
+      form.clear()
+  }
+
+  uploadEmptyTemplateMedia(mediaName: string) {
+    const file = null;
+    this.messageService.add({severity: 'info', summary: 'Success', detail: 'Media changed successfully! The media will be saved when the save button is clicked!'});
+    const newMedia:Media = {
+      mediaId:'',
+      name: mediaName,
+      path: '',
+      project:this.project,
+      requestMediaProjects:[]
+    }
+    const newEditMedia:EditMedia={
+      media:newMedia,
+      mediaFileContent:null,
+      file:file,
+      delete:false
+    }
+    this.editTemplateMediaList.push(newEditMedia);
+  }
+
+  addTemplateLink(nameOfLink: string) {
+    const foundLink = this.links.find(link => link.name === nameOfLink)
+    if (foundLink != undefined) {
+      const index = this.links.findIndex(l => l == foundLink);
+      this.links.splice(index, 1);
+      this.templateLinks.push(foundLink);
+    } else {
+      const link: Link = { linkId: '', name: nameOfLink, url: '', requestLinkProjects: [] };
+      this.templateLinks.push(link);
+    }
+  }
+
+  onTemplateSelect(event: TemplateSelectEvent) {
+    this.clearTemplateFields()
+    this.selectedTemplateName = event.value;
+    this.selectedTemplate = this.templates.find(template => template.templateName === this.selectedTemplateName);
+
+    if(this.selectedTemplate != undefined) {
+      this.description = this.selectedTemplate.standardDescription;
+      this.selectedTemplate.templateAdditions.forEach(addition => {
+        if (addition.media === true) {
+          this.uploadEmptyTemplateMedia(addition.templateAdditionName);
+        } else {
+          this.addTemplateLink(addition.templateAdditionName)
+        }
+      });
+    }
+  }
+
+  showAddCollaboratorDialog() {
+    this.addCollaboratorVisible = true;
+  }
+
+  onCollaboratorSelect(event: CollaboratorSelectEvent) {
+    const selectedCollaborator = event.value;
+    this.newCollaboratorName = selectedCollaborator.name;
+    this.collaboratorNameInput.setValue(selectedCollaborator.name);
+  }
+
+  editCollaborator(collaborator: CollaboratorTransfer, index: number) {
+    this.newCollaboratorName = collaborator.name;
+    this.newCollaboratorRole = collaborator.role;
+    this.editIndexCollaborator = index;
+    this.showAddCollaboratorDialog();
+  }
+
+  removeCollaborator(index: number) {
+    const collaborator = this.selectedCollaborators[index];
+    if (collaborator.collaboratorId) {
+      this.removeCollaborators.push(collaborator.collaboratorId);
+      collaborator.collaboratorId = '';
+    }
+    this.selectedCollaborators.splice(index, 1);
+  }
+
+  saveNewCollaborator() {
+    if (this.collaboratorNameInput.invalid || this.collaboratorRoleInput.invalid) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Invalid collaborator name or role' });
+      return;
+    }
+
+    const isDuplicate = this.selectedCollaborators.some((collaborator, index) =>
+      collaborator.name.toLowerCase() === this.newCollaboratorName.toLowerCase() && index !== this.editIndexCollaborator
+    );
+
+    if (isDuplicate) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'A collaborator with the same name already exists' });
+      return;
+    }
+    if (this.editIndexCollaborator !== null) {
+      const collaborator = this.selectedCollaborators[this.editIndexCollaborator];
+      if (collaborator && collaborator.collaboratorId) {
+        this.removeCollaborators.push(collaborator.collaboratorId);
+      }
+      collaborator.name = this.newCollaboratorName;
+      collaborator.role = this.newCollaboratorRole;
+    } else {
+      const newCollaborator: CollaboratorTransfer = {
+        collaboratorId: '',
+        name: this.newCollaboratorName,
+        role: this.newCollaboratorRole
+      };
+      this.selectedCollaborators.push(newCollaborator);
+    }
+
+    this.newCollaboratorName = '';
+    this.newCollaboratorRole = '';
+    this.editIndexCollaborator = null;
+    this.addCollaboratorVisible = false;
+  }
+
+  cancelAddCollaborator() {
+    this.addCollaboratorVisible = false;
+    this.newCollaboratorName = '';
+    this.newCollaboratorRole = '';
+    this.collaboratorNameInput.reset();
+    this.collaboratorRoleInput.reset();
+    this.editIndexCollaborator = null;
+  }
+
+  changeRole(account: AccountDisplay, newRole: string) {
+    if(account.roleInProject === newRole) {
+      return;
+    }
+    account.roleInProject = newRole;
+  }
+
+  removeCurrentAccount(account: AccountDisplay) {
+    if (confirm('Are you sure you want to remove ' + account.username + ' from the project?')) {
+      this.currentAccounts = this.currentAccounts.filter(acc => acc.username !== account.username);
+      this.removeAccounts.push(account.username);
+    }
+  }
+
+  onAccountSelect(event: UsernameSelectEvent) {
+    this.newAccountUsername = event.value;
+    this.accountUsernameInput.setValue(this.newAccountUsername);
+  }
+
+  showAddAccountDialog() {
+    this.addAccountVisible = true;
+  }
+
+  editAccount(account: AccountDisplay, index: number) {
+    this.newAccountUsername = account.username;
+    this.newAccountRole = account.roleInProject;
+    this.editIndexAccount = index;
+    this.showAddAccountDialog();
+  }
+
+  removeAccount(index: number) {
+    this.selectedAccounts.splice(index, 1);
+  }
+
+  async saveNewAccount() {
+    if (this.accountUsernameInput.invalid) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Invalid account username' });
+      return;
+    }
+
+    const isDuplicate = this.selectedAccounts.some((account, index) =>
+      account.username.toLowerCase() === this.newAccountUsername.toLowerCase() && index !== this.editIndexAccount
+    );
+
+    if (isDuplicate) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'An account with the same username already exists' });
+      return;
+    }
+
+    const newAccount: AccountDisplay = {
+      username: this.newAccountUsername,
+      name: '',
+      roleInProject: this.newAccountRole,
+    };
+
+    if (this.editIndexAccount !== null) {
+      this.selectedAccounts[this.editIndexAccount] = newAccount;
+      this.editIndexAccount = null;
+    } else {
+      this.selectedAccounts.push(newAccount);
+    }
+
+    this.addAccountVisible = false;
+    this.newAccountUsername = '';
+    this.newAccountRole = 'CONTENT_CREATOR'
+    this.accountUsernameInput.reset();
+  }
+
+  cancelAddAccount() {
+    this.addAccountVisible = false;
+    this.newAccountUsername = '';
+    this.newAccountRole = 'CONTENT_CREATOR'
+    this.accountUsernameInput.reset();
+    this.editIndexAccount = null;
+  }
+
+  isDarkColor(color: string): boolean {
+    return this.tagService.isDarkColor(color);
+  }
+
+  showDeleteDialog(): void {
+    this.deleteDialogVisible = true;
+  }
+
 }

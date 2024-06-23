@@ -24,6 +24,7 @@ export interface Media {
     project: Project
     requestMediaProjects: RequestMediaProject[]
 }
+
 export interface EditMedia {
   media:Media|null
   mediaFileContent:MediaFileContent|null
@@ -78,6 +79,13 @@ export interface Collaborator {
     projectsToCollaborators: ProjectsToCollaborators[]
     requestCollaboratorsProjects: RequestCollaboratorsProjects[]
 }
+
+export interface CollaboratorTransfer {
+    collaboratorId: string;
+    name: string;
+    role: string;
+}
+
 
 export interface Request {
     requestId: string
@@ -134,8 +142,7 @@ export interface Tag {
 export interface Template {
     templateName: string
     standardDescription: string
-    standardBibtex: string
-    numberOfCollaborators: number
+    numberOfCollaborators: number | undefined
     projects: Project[]
     templateAdditions: TemplateAddition[]
 }
@@ -144,7 +151,7 @@ export interface TemplateAddition {
     templateAdditionId: string
     templateAdditionName: string
     media: boolean
-    template: Template
+    template: Template | null
 }
 
 export interface WebSocketStringMessage {
@@ -152,3 +159,10 @@ export interface WebSocketStringMessage {
 }
 
 
+export interface CollaboratorSelectEvent {
+    value: CollaboratorTransfer
+}
+
+export interface TemplateSelectEvent {
+    value: string
+}

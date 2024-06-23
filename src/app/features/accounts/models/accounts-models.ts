@@ -1,11 +1,23 @@
 import { Nullable } from "primeng/ts-helpers"
 
-export interface Account {
+export interface AccountTransfer {
+    username: string
+    admin: boolean
+    pm: boolean
+    projects: ProjectTransfer[]
+}
+
+export  interface Account {
     username: string
     name: string
     password: string
-    isAdministrator: boolean
-    isPM: boolean
+    role: string
+}
+
+export interface ProjectTransfer {
+    projectId: string
+    name: string
+    roleInProject: string
 }
 
 export interface RegisterUserRequest {
@@ -17,4 +29,17 @@ export interface RegisterUserRequest {
 export interface LoginUserRequest {
     username: Nullable<string>
     password: Nullable<string>
+}
+
+
+export enum RoleInProject {
+    PM = "PM",
+    EDITOR = "EDITOR",
+    CONTENT_CREATOR = "CONTENT_CREATOR"
+}
+
+export interface AccountDisplay {
+    username: string
+    name: string
+    roleInProject: string
 }

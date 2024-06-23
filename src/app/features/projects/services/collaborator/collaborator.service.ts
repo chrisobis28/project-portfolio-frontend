@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Collaborator, RequestCollaboratorsProjects } from '../../models/project-models';
+import { CollaboratorTransfer } from '../../models/project-models';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -13,8 +14,8 @@ export class CollaboratorService {
     private readonly httpClient: HttpClient
   ) { }
 
-  getCollaboratorsByProjectId(id: string): Observable<Collaborator[]> {
-    return this.httpClient.get<Collaborator[]>(this.API_URL + `public/${id}`);
+  getCollaboratorsByProjectId(id: string): Observable<CollaboratorTransfer[]> {
+    return this.httpClient.get<CollaboratorTransfer[]>(this.API_URL + `public/${id}`);
   }
 
   getAllCollaborators(): Observable<Collaborator[]> {
@@ -25,8 +26,12 @@ export class CollaboratorService {
     const body = "role1"
     return this.httpClient.post<Collaborator>(this.API_URL + `${projectId}` + "/" + `${collaborator.collaboratorId}`, body);
   }
-  deleteCollaboratorFromProject(collaborator: Collaborator, projectId: string): Observable<String> {
-    return this.httpClient.delete<String>(this.API_URL + `${projectId}` + "/" + `${collaborator.collaboratorId}`,{ responseType: 'text' as 'json'});
+  deleteCollaboratorFromProject(projectId: string, collaboratorId: string): Observable<string> {
+    return this.httpClient.delete<string>(this.API_URL + `${projectId}` + "/" + `${collaboratorId}`,{ responseType: 'text' as 'json'});
+  }
+
+  createAndAddCollaboratorToProject(collaborator: CollaboratorTransfer, projectId: string): Observable<CollaboratorTransfer> {
+    return this.httpClient.post<CollaboratorTransfer>(this.API_URL + `${projectId}`, collaborator);
   }
 
   addCollaboratorToRequest(requestId: string, collaboratorId: string, isRemove: boolean, projectId: string): Observable<Collaborator> {
