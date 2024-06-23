@@ -44,7 +44,7 @@ export class MediaService {
     URL.revokeObjectURL(fileUrl);
   }
   addAddedMediaToRequest(requestId: string, document:FormData, projectId: string) {
-    return this.httpClient.post<Media>(this.API_URL + "request/add/" + `${requestId}` + "/" + `${projectId}`, document)
+    return this.httpClient.put<Media>(this.API_URL + "public/request/add/" + `${requestId}` + "/" + `${projectId}`, document)
   }
   addRemovedMediaToRequest(requestId: string, mediaId: string, projectId: string) {
     return this.httpClient.post<Media>(this.API_URL + "request/remove/" + `${requestId}` + "/" + `${mediaId}` + "/" + `${projectId}`, null)

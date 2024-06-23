@@ -19,12 +19,12 @@ export class LinkService {
     return this.httpClient.post<Link>(this.API_URL+`${projectId}`, link)
   }
 
-  deleteLinkById(id: string): Observable<string> {
-    return this.httpClient.delete<string>(this.API_URL + `${id}`)
+  deleteLinkById(id: string, projectId: string): Observable<string> {
+    return this.httpClient.delete<string>(this.API_URL + `${id}` + "/" + `${projectId}`)
   }
 
-  editLinkOfProject(link: Link): Observable<Link> {
-    return this.httpClient.put<Link>(this.API_URL, link)
+  editLinkOfProject(link: Link, projectId: string): Observable<Link> {
+    return this.httpClient.put<Link>(this.API_URL + `${projectId}`, link)
   }
 
   addRemovedLinkToRequest(requestId: string, linkId: string, projectId: string): Observable<Link> {

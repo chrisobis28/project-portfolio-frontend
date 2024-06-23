@@ -204,6 +204,38 @@ export class ProjectEditComponent implements OnInit {
   }
 
   async ngOnInit() {
+
+    console.log("OnInitCalleed")
+
+    this.isLoggedIn = this.storageService.isLoggedIn();
+    this.projectId = this.route.snapshot.paramMap.get('id');
+     if(this.isLoggedIn) {
+
+       this.username = this.storageService.getUser();
+       try {
+         const role = await this.authenticationService.getRole(this.username).toPromise();
+         if(role && role != this.storageService.getRole()) {
+           this.storageService.saveRole(role);
+         }
+
+         if(this.storageService.getRole() === "ROLE_ADMIN") {
+           this.role_on_project = "ADMIN";
+           return;
+         }
+
+         console.log(this.projectId)
+         if(this.projectId) {
+          const newRole = await firstValueFrom(this.accountService.getRoleOnProject(this.username, this.projectId))
+          this.role_on_project = newRole
+          if(this.role_on_project == '')
+            console.log("not loaded")
+          console.log(this.role_on_project)
+        }
+       }
+       catch (error) {
+         console.error('Error fetching role, waiting took too long', error);
+       }
+     }
     await this.initializeFields()
 
     this.wsProjectsSubscription = this.projectsWebSocket.subscribe(
@@ -333,47 +365,18 @@ export class ProjectEditComponent implements OnInit {
      
      
     
-     this.isLoggedIn = this.storageService.isLoggedIn();
-     if(this.isLoggedIn) {
-
-       this.username = this.storageService.getUser();
-       try {
-         const role = await this.authenticationService.getRole(this.username).toPromise();
-         if(role && role != this.storageService.getRole()) {
-           this.storageService.saveRole(role);
-         }
-
-         if(this.storageService.getRole() === "ROLE_ADMIN") {
-           this.role_on_project = "ADMIN";
-           return;
-         }
-
-         if(this.projectId) { 
-          this.accountService.getRoleOnProject(this.username, this.projectId).subscribe({
-           next: (role: string) => {
-             this.role_on_project = role;
-           },
-           error: (err) => {
-             console.error('Error fetching the role of the user from the database', err);
-           },
-         });
-        }
-       }
-       catch (error) {
-         console.error('Error fetching role, waiting took too long', error);
-       }
-     }
 
   }
 
   async initializeFields() {
-    this.projectId = this.route.snapshot.paramMap.get('id');
+    
     this.templates = await this.getAllTemplates();
     this.templateNames = await this.getAllTemplateNames();
     this.platformTags = await this.getAllTags();
     this.collaborators = await this.getAllCollaborators()
     this.platformCollaborators = await this.getAllCollaborators()
-    this.allAccounts = await firstValueFrom(this.accountService.getAllUsernames())
+    if(this.role_on_project == "PM"){
+    this.allAccounts = await firstValueFrom(this.accountService.getAllUsernames())}
     this.currentUser = this.storageService.getUser()
 
     if (this.projectId) {
@@ -437,9 +440,10 @@ export class ProjectEditComponent implements OnInit {
         this.selectedCollaboratorNames = this.projectCollaborators.map(x => x.name);
         this.selectedCollaborators = [...this.projectCollaborators];
       });
+    if(this.role_on_project == "PM"){
       this.accountService.getAccountsInProject(this.projectId).subscribe((response: AccountDisplay[]) => {
         this.currentAccounts = response.filter(account => account.username !== this.currentUser);
-      });
+      });}
     } else {
       console.error('Project ID is null');
     }
@@ -521,12 +525,6 @@ export class ProjectEditComponent implements OnInit {
   }
 
   async saveProject(): Promise<void> {
-
-    console.log(this.links);
-    console.log(this.templateLinks)
-    console.log(this.deleteLinkList)
-    console.log(this.editMediaList)
-    console.log(this.editTemplateMediaList)
 
     if(this.projectId == null) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Project id is null, cannot be saved' });
@@ -629,6 +627,7 @@ export class ProjectEditComponent implements OnInit {
       // this.removeCollaborators = this.projectCollaborators.filter(x=>!this.selectedCollaboratorNames.includes(x.name)).map(x => x.collaboratorId);
       // this.addCollaborators = this.platformCollaborators.filter(x=>this.selectedCollaboratorNames.includes(x.name) && !this.projectCollaborators.flatMap(x=>x.name).includes(x.name));
 
+      
       if(this.role_on_project == "ADMIN" || this.role_on_project == "EDITOR" || this.role_on_project == "PM") {
 
       const createdProject = await firstValueFrom(this.projectService.editProject(this.projectId, prj));
@@ -641,6 +640,7 @@ export class ProjectEditComponent implements OnInit {
       }
 
 
+    
       for (const collaborator of this.removeCollaborators) {
         await firstValueFrom(this.collaboratorService.deleteCollaboratorFromProject(this.projectId, collaborator))
       }
@@ -667,7 +667,7 @@ export class ProjectEditComponent implements OnInit {
         if(link.linkId == '') {
           await firstValueFrom(this.linkService.addLinkToProject(link, createdProject.projectId))
         } else {
-          await firstValueFrom(this.linkService.editLinkOfProject(link))
+          await firstValueFrom(this.linkService.editLinkOfProject(link, this.projectId))
         }
       }
       this.links = []
@@ -676,13 +676,13 @@ export class ProjectEditComponent implements OnInit {
         if(link.linkId == '') {
           await firstValueFrom(this.linkService.addLinkToProject(link, createdProject.projectId))
         } else {
-          await firstValueFrom(this.linkService.editLinkOfProject(link))
+          await firstValueFrom(this.linkService.editLinkOfProject(link, this.projectId))
         }
       }
       this.templateLinks = []
 
       for (const link of this.deleteLinkList) {
-        firstValueFrom(this.linkService.deleteLinkById(link.linkId));
+        firstValueFrom(this.linkService.deleteLinkById(link.linkId, this.projectId));
       }
       this.deleteLinkList = []
 
@@ -730,9 +730,8 @@ export class ProjectEditComponent implements OnInit {
       }
       this.editTemplateMediaList = []
       this.editMediaList = []
-      this.router.navigate(['/project-detail/', this.projectId]) }
-
-      else {
+      this.router.navigate(['/project-detail/', this.projectId]) 
+    } else {
         const req: Request = {
           requestId: "", 
           newTitle: this.title,
@@ -776,37 +775,9 @@ export class ProjectEditComponent implements OnInit {
 
         
 
-        for (const editMedia of this.editMediaList) {
-          if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
-          {
-            await firstValueFrom(this.mediaService.addRemovedMediaToRequest(createdRequest.requestId,editMedia.media.mediaId, this.projectId));
-          }
-          else if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
-          {
-            const formData = new FormData();
-            formData.append('file', editMedia.file);
-            formData.append('name', editMedia.media.name);
-            await firstValueFrom(this.mediaService.addAddedMediaToRequest(createdRequest.requestId, formData, this.projectId));
-          }
-          else if(editMedia.media != null && editMedia.media.mediaId!='')
-        {
-          // await firstValueFrom(this.mediaService.addRemovedMediaToRequest(createdRequest.requestId, editMedia.media.mediaId));
-          // await firstValueFrom(this.mediaService.addAddedMediaToRequest(createdRequest.requestId, editMedia.media))
-        }
-      }
-      this.editMediaList = []
+        
 
-      console.log(this.addCollaborators)
-
-      for (const coll of this.addCollaborators) {
-        await firstValueFrom(this.collaboratorService.addCollaboratorToRequest(createdRequest.requestId, coll.collaboratorId, false, this.projectId))
-      }
-
-      console.log(this.removeCollaborators)
-
-      for (const coll of this.removeCollaborators) {
-        await firstValueFrom(this.collaboratorService.addCollaboratorToRequest(createdRequest.requestId, coll.collaboratorId, true, this.projectId))
-      }
+      console.log(this.selectedCollaborators)
 
       console.log(this.addTags)
 
@@ -819,6 +790,27 @@ export class ProjectEditComponent implements OnInit {
       for (const tag of this.removeTags) {
         await firstValueFrom(this.tagService.addTagToRequest(createdRequest.requestId, tag.tagId, true, this.projectId))
       }
+
+
+      for (const editMedia of this.editMediaList) {
+        if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
+        {
+          await firstValueFrom(this.mediaService.addRemovedMediaToRequest(createdRequest.requestId,editMedia.media.mediaId, this.projectId));
+        }
+        else if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
+        {
+          const formData = new FormData();
+          formData.append('file', editMedia.file);
+          formData.append('name', editMedia.media.name);
+          await firstValueFrom(this.mediaService.addAddedMediaToRequest(createdRequest.requestId, formData, this.projectId));
+        }
+        else if(editMedia.media != null && editMedia.media.mediaId!='')
+      {
+        // await firstValueFrom(this.mediaService.addRemovedMediaToRequest(createdRequest.requestId, editMedia.media.mediaId));
+        // await firstValueFrom(this.mediaService.addAddedMediaToRequest(createdRequest.requestId, editMedia.media))
+      }
+    }
+    this.editMediaList = []
       }
       
 
@@ -1171,6 +1163,10 @@ export class ProjectEditComponent implements OnInit {
 
   showDeleteDialog(): void {
     this.deleteDialogVisible = true;
+  }
+
+  isPM(): boolean {
+    return this.role_on_project == "PM"
   }
 
 }

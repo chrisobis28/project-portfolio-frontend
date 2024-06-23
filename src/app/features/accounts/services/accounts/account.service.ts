@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {Observable} from "rxjs";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
-import { Account, Project } from 'src/app/features/projects/models/project-models';
+import {  Project } from 'src/app/features/projects/models/project-models';
 import { AccountTransfer, ProjectTransfer, AccountDisplay, Account } from '../../models/accounts-models';
 
 const API_URL = 'http://localhost:8080/account';

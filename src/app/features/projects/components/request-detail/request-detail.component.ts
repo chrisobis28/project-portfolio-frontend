@@ -120,8 +120,8 @@ export class RequestDetailComponent implements OnInit, OnDestroy {
       console.log(this.project)
 
       const newCollaborators = await firstValueFrom(this.collaboratorService.getChangesCollaboratorsForRequest(this.requestId, this.projectId))
-      const oldCollaborators = await firstValueFrom (this.collaboratorService.getCollaboratorsByProjectId(this.projectId))
-      this.originalCollaborators = oldCollaborators
+      const oldCollaborators = (await firstValueFrom (this.collaboratorService.getCollaboratorsByProjectId(this.projectId)))
+      this.originalCollaborators = oldCollaborators.map(x => x as unknown as Collaborator)
       this.addedCollaborators = newCollaborators.filter( x => x.isRemove == false).map(x => x.collaborator)
       this.removedCollaborators = newCollaborators.filter( x => x.isRemove == true).map( x => x.collaborator)
       this.allCollaborators = this.originalCollaborators.concat(this.addedCollaborators)

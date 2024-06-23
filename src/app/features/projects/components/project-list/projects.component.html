@@ -67,36 +67,37 @@
           </div>
           <p-button [style]='{"margin-left":"10%"}' severity="success" (click)="showHelp = true"
             icon="pi pi-question"></p-button>
-        </div>
-      </div>
-      <p-button *ngIf="!isLoggedIn" [style]='{"margin-left":"0.3%"}' severity="success" (click)="showHelp = true"
-        icon="pi pi-question"></p-button>
-    </div>
 
-    <div style="display: flex; justify-content: flex-end;">
-      <p-dialog [(visible)]="showHelp" [modal]="true" [style]="{ width: '40rem' }"
-        header="Project Portfolio Management System">
-        <div class="dialog-content p-3">
-          <p class="dialog-info mb-4 ">Greetings and welcome to a <b>project portfolio</b>,
-            a space where <b>centralization</b> is key and the search and delivery of information
-            within already existing projects happens at the highest technological rates!</p>
-          <p class="dialog-info mb-4 ">The main page of the application welcomes you with a list
-            (or a grid depending on your chosen layout) of <b>projects</b> that
-            you can click (either thumbnail or title) in order to get a more detailed view of each one.
-            You can query our database of projects by <b>name</b>, <b>tags</b> and associated <b>collaborators</b>.</p>
-          <p class="dialog-info mb-4 ">Additionally, clicking on a <b>tag</b> is a shortcut to filtering the list by
-            that specific tag instance.
-            You might require additional <b>permissions</b> in order to access more of the application's features.</p>
-          <p *ngIf="!this.isLoggedIn" class="dialog-info mb-4 ">Log into an existing account or create one to gain
-            access to a <b>USER</b> role that can then be upgraded by an admin!</p>
-          <p *ngIf="this.isLoggedIn" class="dialog-info mb-4 ">You are already logged in, enjoy!</p>
         </div>
-        <div class="dialog-actions flex justify-content-end gap-2 p-3">
-          <p-button (click)="showHelp = false" label="Understood" severity="success" class="p-button-outlined" />
-        </div>
-      </p-dialog>
+        <p-button *ngIf="!isLoggedIn" [style]='{"margin-left":"0.3%"}' severity="success" (click)="showHelp = true"
+          icon="pi pi-question"></p-button>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end;">
+        <p-dialog [(visible)]="showHelp" [modal]="true" [style]="{ width: '40rem' }"
+          header="Project Portfolio Management System">
+          <div class="dialog-content p-3">
+            <p class="dialog-info mb-4 ">Greetings and welcome to a <b>project portfolio</b>,
+              a space where <b>centralization</b> is key and the search and delivery of information
+              within already existing projects happens at the highest technological rates!</p>
+            <p class="dialog-info mb-4 ">The main page of the application welcomes you with a list
+              (or a grid depending on your chosen layout) of <b>projects</b> that
+              you can click (either thumbnail or title) in order to get a more detailed view of each one.
+              You can query our database of projects by <b>name</b>, <b>tags</b> and associated <b>collaborators</b>.
+            </p>
+            <p class="dialog-info mb-4 ">Additionally, clicking on a <b>tag</b> is a shortcut to filtering the list by
+              that specific tag instance.
+              You might require additional <b>permissions</b> in order to access more of the application's features.</p>
+            <p *ngIf="!this.isLoggedIn" class="dialog-info mb-4 ">Log into an existing account or create one to gain
+              access to a <b>USER</b> role that can then be upgraded by an admin!</p>
+            <p *ngIf="this.isLoggedIn" class="dialog-info mb-4 ">You are already logged in, enjoy!</p>
+          </div>
+          <div class="dialog-actions flex justify-content-end gap-2 p-3">
+            <p-button (click)="showHelp = false" label="Understood" severity="success" class="p-button-outlined" />
+          </div>
+        </p-dialog>
+      </div>
     </div>
-  </div>
   </div>
 
 
@@ -111,7 +112,7 @@
       </a>
     </div>
   </div>
-  </div>
+
 
   <div class="grid">
     <div class="col-1"></div>
