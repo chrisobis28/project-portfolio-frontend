@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import {Observable, map} from "rxjs";
-import {MediaFileContent, Media, Link, RequestMediaProject, Request} from "../../models/project-models";
+import {Observable} from "rxjs";
+import {MediaFileContent, Media, RequestMediaProject} from "../../models/project-models";
 import {HttpClient} from "@angular/common/http";
 
 @Injectable({

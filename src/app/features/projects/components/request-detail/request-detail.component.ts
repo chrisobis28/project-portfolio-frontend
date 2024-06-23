@@ -15,7 +15,7 @@ import { ButtonModule } from 'primeng/button';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import {DataViewModule} from "primeng/dataview";
 import { InputTextModule } from 'primeng/inputtext';
-import {AutoCompleteCompleteEvent, AutoCompleteModule} from "primeng/autocomplete";
+import { AutoCompleteModule} from "primeng/autocomplete";
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { FormsModule } from '@angular/forms';
 import { ChipModule } from 'primeng/chip';
