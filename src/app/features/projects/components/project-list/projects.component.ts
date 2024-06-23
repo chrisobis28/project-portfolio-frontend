@@ -375,6 +375,6 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     }
 
     isPM(): boolean {
-      return this.role == "ROLE_PM"
+      return this.role == "ROLE_PM" || this.role == "ROLE_ADMIN"
     }
   }

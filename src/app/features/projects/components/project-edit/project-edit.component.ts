@@ -811,12 +811,18 @@ export class ProjectEditComponent implements OnInit {
       }
     }
     this.editMediaList = []
+    this.router.navigate(['/project-detail/', this.projectId])
       }
       
 
     } catch (error) {
+
+      if((error as Error).message.includes("409 OK")) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'You already have an open request for this project!' });
+      }
+      else {
       console.error('Error saving project,media or links', error);
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to save project or links' });
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to save project or links' });}
     }
   }
 
