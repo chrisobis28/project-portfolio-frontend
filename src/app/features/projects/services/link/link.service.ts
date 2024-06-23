@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs";
-import {Link, Request, RequestLinkProject} from "../../models/project-models";
-import { NONE_TYPE } from '@angular/compiler';
-
+import {Link, RequestLinkProject} from "../../models/project-models";
 @Injectable({
   providedIn: 'root'
 })

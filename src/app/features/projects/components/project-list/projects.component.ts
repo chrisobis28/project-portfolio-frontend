@@ -8,7 +8,7 @@ import { Subscription, firstValueFrom, map } from 'rxjs';
 import { TagService } from '../../services/tag/tag.service';
 import {MediaService} from "../../services/media/media.service";
 import { StorageService } from 'src/app/features/accounts/services/authentication/storage.service';
-import { ConfirmationService, MessageService, PrimeIcons } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { AuthenticationService } from 'src/app/features/accounts/services/authentication/authentication.service';
 import { Nullable } from 'primeng/ts-helpers';
 
