@@ -32,8 +32,10 @@
           </div>
           <div *ngIf="isLoggedIn">
 
-            <p-button icon="pi pi-user-edit" label="View your requests" (click)="showDialog()" rounded
-              severity="info"></p-button>
+            <div style="padding: 10px;">
+              <p-button *ngIf="isPM()" icon="pi pi-user-edit" label="View your requests" (click)="showDialog()"
+                severity="info"></p-button>
+            </div>
             <p-dialog header="Edit Requests" [modal]="true" [(visible)]="visible" [style]="{ width: '25rem' }">
               <p-dataView #dv [value]="requests" [rows]="5" [paginator]="true">
                 <ng-template pTemplate="list" let-requests>

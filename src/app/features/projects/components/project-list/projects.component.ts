@@ -373,4 +373,8 @@ export class ProjectsComponent implements OnInit, OnDestroy {
       if (names == null) return '';
       return names.join(', ');
     }
+
+    isPM(): boolean {
+      return this.role == "ROLE_PM"
+    }
   }
