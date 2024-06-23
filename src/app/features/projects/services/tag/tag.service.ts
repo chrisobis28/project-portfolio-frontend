@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Tag } from '../../models/project-models';
+import { RequestTagProject, Tag } from '../../models/project-models';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -65,4 +65,12 @@ export class TagService {
     return brightness < 128;
   }
 
+
+  addTagToRequest(requestId: string, tagId: string, isRemove: boolean, projectId: string): Observable<Tag> {
+    return this.httpClient.post<Tag>(this.API_URL + "request/" + `${requestId}` + "/" + `${tagId}` + "/" + `${projectId}`, isRemove)
+  }
+
+  getTagsChangedForRequest(requestId: string, projectId: string): Observable<RequestTagProject[]> {
+    return this.httpClient.get<RequestTagProject[]>(this.API_URL + "request/" + `${requestId}` + "/" + `${projectId}`)
+  }
 }

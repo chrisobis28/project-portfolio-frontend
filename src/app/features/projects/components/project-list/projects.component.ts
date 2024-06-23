@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import {MediaFileContent, Media, Project} from '../../models/project-models';
-import { Tag } from '../../models/project-models';
+import { Tag, Request} from '../../models/project-models';
 import { ProjectService } from '../../services/project/project.service';
 import { DataView } from 'primeng/dataview';
 import { CollaboratorService } from '../../services/collaborator/collaborator.service';
@@ -12,8 +12,11 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { AuthenticationService } from 'src/app/features/accounts/services/authentication/authentication.service';
 import { Nullable } from 'primeng/ts-helpers';
 
+
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 import {ActivatedRoute} from "@angular/router";
+import { AccountService } from 'src/app/features/accounts/services/accounts/account.service';
+import { RequestService } from '../../services/request/request.service';
 @Component({
   selector: 'app-projects',
   templateUrl: './projects.component.html',
@@ -32,6 +35,11 @@ export class ProjectsComponent implements OnInit, OnDestroy {
   username: string = '';
   role: Nullable<string> = '';
   showHelp: boolean = false;
+  visible: boolean = false;
+  projectsManagedByUser: Project[] = []
+  requests: Request[] = []
+
+ 
 
 
   wsProjectsSubscription: Subscription = new Subscription();
@@ -71,7 +79,9 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     private storageService: StorageService,
     private confirmationService: ConfirmationService,
     private authenticationService: AuthenticationService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private accountService: AccountService,
+    private requestService: RequestService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -113,6 +123,8 @@ export class ProjectsComponent implements OnInit, OnDestroy {
       }
       }
     );
+
+    
 
     this.wsCollaboratorsProjectSubscription = this.collaboratorsProjectWebSocket.subscribe(
       async msg => {
@@ -216,11 +228,25 @@ export class ProjectsComponent implements OnInit, OnDestroy {
         });
       })
         this.tagNames = await this.getAllTagNames();
+      const newProjects = await this.getManagedProjectsForUser(this.username)
+
+      this.projectsManagedByUser = newProjects
+      for (const proj of newProjects) {
+        const newRequests = await firstValueFrom (this.requestService.getRequestsForProject(proj.projectId))
+        console.log(newRequests)
+        this.requests = this.requests.concat(newRequests)
+    }
     }
 
 
+    showDialog() {
+      this.visible = true;
+  }
 
 
+  async getManagedProjectsForUser(username: string): Promise<Project[]> {
+    return firstValueFrom(this.accountService.getProjectsManagedByAccount(username))
+  }
 
   async getProjectForId(id: string): Promise<Project> {
     return firstValueFrom(this.projectService.getProjectById(id))
@@ -346,5 +372,9 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     parseWriting(names: string[]): string {
       if (names == null) return '';
       return names.join(', ');
+    }
+
+    isPM(): boolean {
+      return this.role == "ROLE_PM" || this.role == "ROLE_ADMIN"
     }
   }

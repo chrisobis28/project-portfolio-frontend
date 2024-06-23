@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Collaborator } from '../../models/project-models';
+import { Collaborator, RequestCollaboratorsProjects } from '../../models/project-models';
 import { CollaboratorTransfer } from '../../models/project-models';
 import { Observable } from 'rxjs';
 
@@ -32,6 +32,14 @@ export class CollaboratorService {
 
   createAndAddCollaboratorToProject(collaborator: CollaboratorTransfer, projectId: string): Observable<CollaboratorTransfer> {
     return this.httpClient.post<CollaboratorTransfer>(this.API_URL + `${projectId}`, collaborator);
+  }
+
+  addCollaboratorToRequest(requestId: string, collaboratorId: string, isRemove: boolean, projectId: string): Observable<Collaborator> {
+    return this.httpClient.post<Collaborator>(this.API_URL + "request/" + `${requestId}` + "/" + `${collaboratorId}` + "/" + `${projectId}`, isRemove)
+  }
+
+  getChangesCollaboratorsForRequest(requestId: string, projectId: string): Observable<RequestCollaboratorsProjects[]> {
+    return this.httpClient.get<RequestCollaboratorsProjects[]>(this.API_URL + "request/" + `${requestId}` + "/" + `${projectId}`)
   }
 
 }

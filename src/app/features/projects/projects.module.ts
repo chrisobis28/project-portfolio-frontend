@@ -24,7 +24,7 @@ import { DialogModule } from 'primeng/dialog';
 @NgModule({
     declarations: [
         ProjectsComponent,
-        ProjectCardComponent
+        ProjectCardComponent,
     ],
     exports: [
         ProjectsComponent,

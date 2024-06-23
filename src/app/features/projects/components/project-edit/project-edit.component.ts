@@ -16,7 +16,8 @@ import {
   Tag,
   Template,
   CollaboratorSelectEvent,
-  TemplateSelectEvent
+  TemplateSelectEvent,
+  Request
 } from '../../models/project-models';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -35,12 +36,14 @@ import { CollaboratorService } from '../../services/collaborator/collaborator.se
 import { TemplateService } from '../../services/template/template.service';
 import { TagService } from '../../services/tag/tag.service';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
+import { AccountService } from 'src/app/features/accounts/services/accounts/account.service';
+import { StorageService } from 'src/app/features/accounts/services/authentication/storage.service';
+import { AuthenticationService } from 'src/app/features/accounts/services/authentication/authentication.service';
+import { RequestService } from '../../services/request/request.service';
 import {AutoCompleteCompleteEvent, AutoCompleteModule} from "primeng/autocomplete";
 import {DataViewModule} from "primeng/dataview";
 import {DialogModule} from "primeng/dialog";
 import { AccountDisplay } from 'src/app/features/accounts/models/accounts-models';
-import { AccountService } from 'src/app/features/accounts/services/accounts/account.service';
-import { StorageService } from 'src/app/features/accounts/services/authentication/storage.service';
 import { ColorPickerModule } from 'primeng/colorpicker';
 
 export interface UsernameSelectEvent{
@@ -124,6 +127,11 @@ export class ProjectEditComponent implements OnInit {
   collaborators: Collaborator[] = [];
   tagColorInput = new FormControl('', [Validators.required]);
   tagNameInput = new FormControl('', [Validators.required]);
+
+  role_on_project: string = '';
+  username: string = '';
+  isLoggedIn: boolean = false;
+
   wsProjectsSubscription: Subscription = new Subscription()
   wsCollaboratorsProjectSubscription: Subscription = new Subscription()
   wsCollaboratorsSubscription: Subscription = new Subscription()
@@ -168,12 +176,18 @@ export class ProjectEditComponent implements OnInit {
   })
 
   constructor(private route: ActivatedRoute,
-     private projectService: ProjectService, private messageService: MessageService,private mediaService: MediaService,
-     private linkService: LinkService, private collaboratorService: CollaboratorService, private templateService: TemplateService,
-     private tagService: TagService,
-     private accountService: AccountService,
-     private storageService: StorageService,
-     private readonly router: Router
+    private projectService: ProjectService,
+    private messageService: MessageService,
+    private mediaService: MediaService,
+    private linkService: LinkService, 
+    private collaboratorService: CollaboratorService, 
+    private templateService: TemplateService,
+    private tagService: TagService, 
+    private accountService: AccountService, 
+    private storageService: StorageService,
+    private authenticationService: AuthenticationService,
+    private requestService: RequestService,
+    private readonly router: Router
     ) {}
 
   ngOnDestroy(): void {
@@ -190,6 +204,38 @@ export class ProjectEditComponent implements OnInit {
   }
 
   async ngOnInit() {
+
+    console.log("OnInitCalleed")
+
+    this.isLoggedIn = this.storageService.isLoggedIn();
+    this.projectId = this.route.snapshot.paramMap.get('id');
+     if(this.isLoggedIn) {
+
+       this.username = this.storageService.getUser();
+       try {
+         const role = await this.authenticationService.getRole(this.username).toPromise();
+         if(role && role != this.storageService.getRole()) {
+           this.storageService.saveRole(role);
+         }
+
+         if(this.storageService.getRole() === "ROLE_ADMIN") {
+           this.role_on_project = "ADMIN";
+           return;
+         }
+
+         console.log(this.projectId)
+         if(this.projectId) {
+          const newRole = await firstValueFrom(this.accountService.getRoleOnProject(this.username, this.projectId))
+          this.role_on_project = newRole
+          if(this.role_on_project == '')
+            console.log("not loaded")
+          console.log(this.role_on_project)
+        }
+       }
+       catch (error) {
+         console.error('Error fetching role, waiting took too long', error);
+       }
+     }
     await this.initializeFields()
 
     this.wsProjectsSubscription = this.projectsWebSocket.subscribe(
@@ -316,19 +362,21 @@ export class ProjectEditComponent implements OnInit {
 
      //should define here the collaborators websocket such that it updates autocomplete
      //as in project-add components. The autocomplete is done on dev, we do it after we merge this with dev
-
-
+     
+     
+    
 
   }
 
   async initializeFields() {
-    this.projectId = this.route.snapshot.paramMap.get('id');
+    
     this.templates = await this.getAllTemplates();
     this.templateNames = await this.getAllTemplateNames();
     this.platformTags = await this.getAllTags();
     this.collaborators = await this.getAllCollaborators()
     this.platformCollaborators = await this.getAllCollaborators()
-    this.allAccounts = await firstValueFrom(this.accountService.getAllUsernames())
+    if(this.role_on_project == "PM"){
+    this.allAccounts = await firstValueFrom(this.accountService.getAllUsernames())}
     this.currentUser = this.storageService.getUser()
 
     if (this.projectId) {
@@ -392,9 +440,10 @@ export class ProjectEditComponent implements OnInit {
         this.selectedCollaboratorNames = this.projectCollaborators.map(x => x.name);
         this.selectedCollaborators = [...this.projectCollaborators];
       });
+    if(this.role_on_project == "PM"){
       this.accountService.getAccountsInProject(this.projectId).subscribe((response: AccountDisplay[]) => {
         this.currentAccounts = response.filter(account => account.username !== this.currentUser);
-      });
+      });}
     } else {
       console.error('Project ID is null');
     }
@@ -476,12 +525,6 @@ export class ProjectEditComponent implements OnInit {
   }
 
   async saveProject(): Promise<void> {
-
-    console.log(this.links);
-    console.log(this.templateLinks)
-    console.log(this.deleteLinkList)
-    console.log(this.editMediaList)
-    console.log(this.editTemplateMediaList)
 
     if(this.projectId == null) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Project id is null, cannot be saved' });
@@ -573,15 +616,19 @@ export class ProjectEditComponent implements OnInit {
         thumbnail: thumbnail
       };
 
+      // this.removeCollaborators = this.selectedCollaborators.filter(x=>!this.selectedCollaboratorNames.includes(x.name));
+      // this.addCollaborators = this.platformCollaborators.filter(x=>this.selectedCollaboratorNames.includes(x.name) && !this.selectedCollaborators.flatMap(x=>x.name).includes(x.name));
       this.removeTags = this.initialTags.filter(tag => !this.selectedTags.includes(tag));
       this.addTags = this.selectedTags.filter(tag => !this.initialTags.includes(tag));
 
       // this.removeTags = this.selectedTags.filter(x=>!this.selectedTagNames.includes(x.name));
       // this.removeTags = this.tags.filter(x=>!this.selectedTags.includes(x));
       // this.addTags = this.platformTags.filter(x=>this.selectedTagNames.includes(x.name) && !this.selectedTags.flatMap(x=>x.name).includes(x.name));
-
       // this.removeCollaborators = this.projectCollaborators.filter(x=>!this.selectedCollaboratorNames.includes(x.name)).map(x => x.collaboratorId);
       // this.addCollaborators = this.platformCollaborators.filter(x=>this.selectedCollaboratorNames.includes(x.name) && !this.projectCollaborators.flatMap(x=>x.name).includes(x.name));
+
+      
+      if(this.role_on_project == "ADMIN" || this.role_on_project == "EDITOR" || this.role_on_project == "PM") {
 
       const createdProject = await firstValueFrom(this.projectService.editProject(this.projectId, prj));
 
@@ -593,6 +640,7 @@ export class ProjectEditComponent implements OnInit {
       }
 
 
+    
       for (const collaborator of this.removeCollaborators) {
         await firstValueFrom(this.collaboratorService.deleteCollaboratorFromProject(this.projectId, collaborator))
       }
@@ -619,7 +667,7 @@ export class ProjectEditComponent implements OnInit {
         if(link.linkId == '') {
           await firstValueFrom(this.linkService.addLinkToProject(link, createdProject.projectId))
         } else {
-          await firstValueFrom(this.linkService.editLinkOfProject(link))
+          await firstValueFrom(this.linkService.editLinkOfProject(link, this.projectId))
         }
       }
       this.links = []
@@ -628,13 +676,13 @@ export class ProjectEditComponent implements OnInit {
         if(link.linkId == '') {
           await firstValueFrom(this.linkService.addLinkToProject(link, createdProject.projectId))
         } else {
-          await firstValueFrom(this.linkService.editLinkOfProject(link))
+          await firstValueFrom(this.linkService.editLinkOfProject(link, this.projectId))
         }
       }
       this.templateLinks = []
 
       for (const link of this.deleteLinkList) {
-        firstValueFrom(this.linkService.deleteLinkById(link.linkId));
+        firstValueFrom(this.linkService.deleteLinkById(link.linkId, this.projectId));
       }
       this.deleteLinkList = []
 
@@ -682,12 +730,99 @@ export class ProjectEditComponent implements OnInit {
       }
       this.editTemplateMediaList = []
       this.editMediaList = []
+      this.router.navigate(['/project-detail/', this.projectId]) 
+    } else {
+        const req: Request = {
+          requestId: "", 
+          newTitle: this.title,
+          newDescription: this.description,
+          isCounterOffer: false,
+          project: this.project,
+          account: {
+            username: this.username,
+            name: "",
+            password: "",
+            role: "ROLE_USER",
+            projectsToAccounts: [],
+            requests: []
+          },
+          requestTagProjects: [],
+          requestMediaProjects: [],
+          requestLinkProjects: [],
+          requestCollaboratorsProjects: []
+        }
 
-      await this.router.navigate(['/project-detail/', this.projectId])
+        const createdRequest = await firstValueFrom(this.requestService.createRequest(req))
+
+        for(const link of this.links) {
+          if(link.linkId == '') {
+            const addedLink = await firstValueFrom(this.linkService.addAddedLinkToRequest(createdRequest.requestId, link, this.projectId))
+            console.log(addedLink) 
+          } else {
+            const removedLink = await firstValueFrom(this.linkService.addRemovedLinkToRequest(createdRequest.requestId, link.linkId, this.projectId))
+            console.log("removed: " + removedLink)
+            const addedLink = await firstValueFrom(this.linkService.addAddedLinkToRequest(createdRequest.requestId, link, this.projectId))
+            console.log("added: " + addedLink)
+          }
+        }
+
+        for(const link of this.deleteLinkList) {
+          const removedLink = await firstValueFrom(this.linkService.addRemovedLinkToRequest(createdRequest.requestId, link.linkId, this.projectId))
+          console.log("removed: " + removedLink)
+        }
+
+        this.deleteLinkList = []
+
+        
+
+        
+
+      console.log(this.selectedCollaborators)
+
+      console.log(this.addTags)
+
+      for(const tag of this.addTags) {
+        await firstValueFrom(this.tagService.addTagToRequest(createdRequest.requestId, tag.tagId, false, this.projectId))
+      }
+
+      console.log(this.removeTags)
+
+      for (const tag of this.removeTags) {
+        await firstValueFrom(this.tagService.addTagToRequest(createdRequest.requestId, tag.tagId, true, this.projectId))
+      }
+
+
+      for (const editMedia of this.editMediaList) {
+        if(editMedia.delete && editMedia.media != null && editMedia.media.mediaId!='')
+        {
+          await firstValueFrom(this.mediaService.addRemovedMediaToRequest(createdRequest.requestId,editMedia.media.mediaId, this.projectId));
+        }
+        else if(!editMedia.delete && editMedia.media != null && editMedia.file!=null && editMedia.media.mediaId=='')
+        {
+          const formData = new FormData();
+          formData.append('file', editMedia.file);
+          formData.append('name', editMedia.media.name);
+          await firstValueFrom(this.mediaService.addAddedMediaToRequest(createdRequest.requestId, formData, this.projectId));
+        }
+        else if(editMedia.media != null && editMedia.media.mediaId!='')
+      {
+        // await firstValueFrom(this.mediaService.addRemovedMediaToRequest(createdRequest.requestId, editMedia.media.mediaId));
+        // await firstValueFrom(this.mediaService.addAddedMediaToRequest(createdRequest.requestId, editMedia.media))
+      }
+    }
+    this.editMediaList = []
+    this.router.navigate(['/project-detail/', this.projectId])
+      }
+      
 
     } catch (error) {
+
+      if((error as Error).message.includes("409 OK")) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'You already have an open request for this project!' });
+      }
+      else {
       console.error('Error saving project,media or links', error);
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to save project or links' });
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to save project or links' });}
     }
   }
 
@@ -1034,6 +1169,10 @@ export class ProjectEditComponent implements OnInit {
 
   showDeleteDialog(): void {
     this.deleteDialogVisible = true;
+  }
+
+  isPM(): boolean {
+    return this.role_on_project == "PM"
   }
 
 }

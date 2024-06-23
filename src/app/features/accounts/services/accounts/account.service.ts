@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {Observable} from "rxjs";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
+import {  Project } from 'src/app/features/projects/models/project-models';
 import { AccountTransfer, ProjectTransfer, AccountDisplay, Account } from '../../models/accounts-models';
 
 const API_URL = 'http://localhost:8080/account';
@@ -97,6 +98,10 @@ export class AccountService {
   getAccountsInProject(projectId: string): Observable<AccountDisplay[]> {
     const url = API_URL + `/project/${projectId}`;
     return this.httpClient.get<AccountDisplay[]>(url, httpOptions);
+  }
+
+  getProjectsManagedByAccount(username: string): Observable<Project[]> {
+    return this.httpClient.get<Project[]>(API_URL + "/public/managed/" + `${username}`)
   }
 
 }
