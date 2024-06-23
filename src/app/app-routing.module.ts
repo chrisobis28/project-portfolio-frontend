@@ -9,12 +9,14 @@ import { LoginMenuComponent } from './features/accounts/components/login-menu/lo
 import { AuthGuard } from './core/auth.guard';
 import { RolesMenuComponent } from './features/accounts/components/roles-menu/roles-menu/roles-menu.component';
 import { ProjectTemplateComponent } from './features/projects/components/project-template/project-template.component';
+import { RequestDetailComponent } from './features/projects/components/request-detail/request-detail.component';
 
 const routes: Routes = [
   { path: '', component: ProjectsComponent },
   { path: 'add-project', component: ProjectAddComponent },
   { path: 'project-card', component: ProjectCardComponent},
   { path: 'project-detail/:id', component: ProjectDetailComponent },
+  { path: 'request-detail/:id/:idProject', component: RequestDetailComponent },
   { path: 'project/edit/:id', component: ProjectEditComponent },
   { path: 'template', component: ProjectTemplateComponent },
   { path: 'login', component: LoginMenuComponent, canActivate: [AuthGuard] },
