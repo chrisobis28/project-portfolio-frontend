@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import {Observable, map} from "rxjs";
-import {MediaFileContent, Media, Link} from "../../models/project-models";
+import {Observable} from "rxjs";
+import {MediaFileContent, Media} from "../../models/project-models";
 import {HttpClient} from "@angular/common/http";
 
 @Injectable({
@@ -27,12 +27,15 @@ export class MediaService {
   editMedia(media:Media){
     return this.httpClient.put<Media>(this.API_URL,media);
   }
+  editMediaTemplate(mediaId:string,document:FormData){
+    return this.httpClient.put<Media>(this.API_URL+mediaId,document);
+  }
   downloadFile(media: MediaFileContent) {
     const mimeType = 'application/octet-stream'
     const byteArray = new Uint8Array(atob(media.fileContent).split('').map(char => char.charCodeAt(0)));
     const file = new Blob([byteArray], {type: mimeType});
     const fileUrl = URL.createObjectURL(file);
-    let link = document.createElement("a");
+    const link = document.createElement("a");
     link.download = media.filePath;
     link.href = fileUrl;
     document.body.appendChild(link);

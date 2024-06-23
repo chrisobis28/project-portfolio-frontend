@@ -12,8 +12,8 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { AuthenticationService } from 'src/app/features/accounts/services/authentication/authentication.service';
 import { Nullable } from 'primeng/ts-helpers';
 
-import { WebsocketService } from '../../services/websocket/websocket.service';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
+import {ActivatedRoute} from "@angular/router";
 @Component({
   selector: 'app-projects',
   templateUrl: './projects.component.html',
@@ -25,12 +25,13 @@ export class ProjectsComponent implements OnInit, OnDestroy {
   filteredData: Project[] = [];
   layout: DataView["layout"] = "list";
   projectName: string = '';
-  projectCollaborator: string = ''
-  tagNames: string[] = []
-  selectedTagNames: string[] = []
+  projectCollaborator: string = '';
+  tagNames: string[] = [];
+  selectedTagNames: string[] = [];
   isLoggedIn: boolean = false;
   username: string = '';
   role: Nullable<string> = '';
+  showHelp: boolean = false;
 
 
   wsProjectsSubscription: Subscription = new Subscription();
@@ -40,23 +41,23 @@ export class ProjectsComponent implements OnInit, OnDestroy {
   wsMediaProjectSubscription: Subscription = new Subscription()
 
 
-  projectsWebSocket: WebSocketSubject<any> = webSocket({
+  projectsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/projects",
     deserializer: msg => String(msg.data)
   })
-  collaboratorsProjectWebSocket: WebSocketSubject<any> = webSocket({
+  collaboratorsProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/collaborators/project",
     deserializer: msg => String(msg.data)
   })
-  tagsWebSocket: WebSocketSubject<any> = webSocket({
+  tagsWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/tags",
     deserializer: msg => String(msg.data)
   })
-  tagsProjectWebSocket: WebSocketSubject<any> = webSocket({
+  tagsProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/tags/project",
     deserializer: msg => String(msg.data)
   })
-  mediaProjectWebSocket: WebSocketSubject<any> = webSocket({
+  mediaProjectWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/media/project",
     deserializer: msg => String(msg.data)
   })
@@ -66,6 +67,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     private readonly collaboratorService: CollaboratorService,
     private tagService: TagService,
     private mediaService: MediaService,
+    private route: ActivatedRoute,
     private storageService: StorageService,
     private confirmationService: ConfirmationService,
     private authenticationService: AuthenticationService,
@@ -110,7 +112,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
         await this.initProjects()
       }
       }
-    )
+    );
 
     this.wsCollaboratorsProjectSubscription = this.collaboratorsProjectWebSocket.subscribe(
       async msg => {
@@ -122,7 +124,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     )
 
     this.wsTagsSubscription = this.tagsWebSocket.subscribe(
-      async msg => {
+      async () => {
             console.log("refreshing entire tag list")
             this.tagNames = await this.getAllTagNames()
       }
@@ -154,7 +156,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
                   x.thumbnail = undefined
               })
       }
-    )
+    );
     }
   getColorCode(color:string):string{
     return this.tagService.getColorCode(color);
@@ -186,13 +188,16 @@ export class ProjectsComponent implements OnInit, OnDestroy {
       }
     }
 
-    async initProjects(): Promise<void> {
-      this.projectService.getAllProjects().subscribe((response: Project[]) => {
+    async initProjects() {
+      this.projectService.getAllProjects().subscribe(async (response: Project[]) => {
         this.data = response;
-        this.data.forEach(async x => x.collaboratorNames = await this.getCollaboratorsForId(x.projectId))
+        const promises = this.data.map(async x => {
+          x.collaboratorNames = await this.getCollaboratorsForId(x.projectId);
+          // Any additional logic related to x after await can go here
+        });
         this.data.forEach(async x => x.tagNames = await this.getTagNamesForId(x.projectId))
         this.data.forEach(async x => x.tags = await this.getTagsForId(x.projectId))
-        this.data.forEach(async x =>x.media = await this.getMediaForId(x.projectId))
+        this.data.forEach(async x => x.media = await this.getMediaForId(x.projectId))
         this.data.forEach(async (x) => {
           x.media = await this.getMediaForId(x.projectId);
           if (x.media && x.media.length > 0) {
@@ -200,6 +205,15 @@ export class ProjectsComponent implements OnInit, OnDestroy {
           }
         });
         this.filteredData = this.data
+        await Promise.all(promises);
+        this.route.params.subscribe(params => {
+          let colabPath: string = params['id'];
+          if(colabPath!=undefined) {
+            colabPath = colabPath.replace("-", " ");
+            this.projectCollaborator = colabPath;
+            this.onCollaboratorFilterChanges(colabPath);
+          }
+        });
       })
         this.tagNames = await this.getAllTagNames();
     }
@@ -257,10 +271,15 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     this.projectCollaborator = (event.target as HTMLInputElement).value
     this.filterProjects()
   }
+  onCollaboratorFilterChanges(colab :string): void {
+    this.projectCollaborator = colab
+    this.filterProjects()
+  }
 
   filterByCollaborator(dataToFilter: Project[]): Project[] {
     if(this.projectCollaborator == '')
       return dataToFilter
+    console.log(dataToFilter);
     return dataToFilter.filter(project =>
       project.collaboratorNames.some(collaborator =>
         collaborator.toLocaleLowerCase().includes(this.projectCollaborator.toLocaleLowerCase())
@@ -279,23 +298,26 @@ export class ProjectsComponent implements OnInit, OnDestroy {
   }
 
 
-  filterProjects(): void {
+  async filterProjects() {
     this.filteredData = this.filterByTitle(this.data)
+    console.log(this.filteredData)
     this.filteredData = this.filterByCollaborator(this.filteredData)
     this.filteredData = this.filterByTags(this.filteredData)
   }
 
-     getImageSrc(project:Project): string {
-       if(project.thumbnail == undefined)
-         return 'https://as2.ftcdn.net/v2/jpg/01/25/64/11/1000_F_125641180_KxdtmpD15Ar5h8jXXrE5vQLcusX8z809.jpg'
-      return `data:${project.thumbnail.filePath};base64,${project.thumbnail.fileContent}`;
-    }
+  getImageSrc(project:Project): string {
+    if(project.thumbnail == undefined)
+      return 'https://as2.ftcdn.net/v2/jpg/01/25/64/11/1000_F_125641180_KxdtmpD15Ar5h8jXXrE5vQLcusX8z809.jpg'
+    const type = project.thumbnail.filePath.substring(project.thumbnail.filePath.lastIndexOf('.') + 1);
+    return `data:image/${type};base64,${project.thumbnail.fileContent}`;
+  }
 
 
 
     logout() {
+      const username = this.storageService.getUser();
       this.confirmationService.confirm({
-        message: "Are you sure you want to log out of the account " + this.storageService.getUser() + "?",
+        message: "Are you sure you want to log out of the account " + username + "?",
         accept: () => {
           this.authenticationService.logout().subscribe({
             next: () => {
@@ -305,10 +327,24 @@ export class ProjectsComponent implements OnInit, OnDestroy {
               return;
             },
             error: err => {
-              this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not be logged out.' });
+              this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not be logged out: ' + err.message });
             }
           })
         }
       })
+    }
+
+    isDarkColor(color: string): boolean {
+      return this.tagService.isDarkColor(color);
+    }
+
+    filterTagsOnClick(tagName: string): void {
+      this.selectedTagNames.push(tagName);
+      this.onTagSelectedFilterChanged();
+    }
+
+    parseWriting(names: string[]): string {
+      if (names == null) return '';
+      return names.join(', ');
     }
   }

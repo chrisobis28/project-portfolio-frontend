@@ -20,7 +20,7 @@
 }
 
 #templatecomponent {
-    padding-bottom: 30px;
+    padding-right: 20px;
 }
 
 #saveButton {
@@ -36,30 +36,3 @@
         padding-bottom: 20px;
     }
 }
-
-.input-container {
-  max-width: 20rem;
-}
-
-.full-width {
-  width: 100%;
-}
-
-.tag-name {
-    font-size: 14px;
-    line-height: 20px;
-  }
-
-  .tag-item {
-    display: inline-block;
-    background-color: #ccc;
-    padding: 5px 10px;
-    border-radius: 20px;
-    margin: 5px;
-    white-space: nowrap;
-  }
-  
-  .tag-item span {
-    display: inline-block;
-    vertical-align: middle;
-  }

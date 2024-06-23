@@ -20,22 +20,52 @@
                     <p-button label="Login"></p-button>
                 </a>
             </div>
-            <div *ngIf="isLoggedIn" class="button-container">
-                <div class="container-logged-in">
-                    <h4><i>You are logged in as {{username}} ({{role?.substring(5)}}).</i></h4>
-                    <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
-                  <p-button (click)="logout()">Logout</p-button>
+
+            <div *ngIf="isLoggedIn" class="col-12" style=" text-align: right;">
+              <div *ngIf="isLoggedIn" class="button-container" style="display: flex; align-items: center; justify-content: flex-end;">
+                <div class="container-logged-in" style="display: flex; align-items: center; gap: 10px;">
+                  <i class="pi pi-user" style="color: #3b82f6"></i>
+                  <h4 style="margin: 0;"><i>{{username}} ({{role?.substring(5)}})</i></h4>
+                  <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
+                  <p-button  (click)="logout()">Logout</p-button>
                 </div>
+                <p-button [style]='{"margin-left":"10%"}' severity="success" (click)="showHelp = true" icon="pi pi-question"></p-button>
+              </div>
             </div>
+            <p-button *ngIf="!isLoggedIn" [style]='{"margin-left":"0.3%"}' severity="success" (click)="showHelp = true" icon="pi pi-question"></p-button>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end;">
+          <p-dialog [(visible)]="showHelp" [modal]="true" [style]="{ width: '40rem' }" header="Project Portfolio Management System">
+            <div class="dialog-content p-3">
+              <p class="dialog-info mb-4 ">Greetings and welcome to a <b>project portfolio</b>, 
+                a space where <b>centralization</b> is key and the search and delivery of information 
+                within already existing projects happens at the highest technological rates!</p>
+              <p class="dialog-info mb-4 ">The main page of the application welcomes you with a list 
+                (or a grid depending on your chosen layout) of <b>projects</b> that 
+                you can click (either thumbnail or title) in order to get a more detailed view of each one. 
+                You can query our database of projects by <b>name</b>, <b>tags</b> and associated <b>collaborators</b>.</p>
+              <p class="dialog-info mb-4 ">Additionally, clicking on a <b>tag</b> is a shortcut to filtering the list by that specific tag instance. 
+                You might require additional <b>permissions</b> in order to access more of the application's features.</p>
+              <p *ngIf="!this.isLoggedIn" class="dialog-info mb-4 ">Log into an existing account or create one to gain access to a <b>USER</b> role that can then be upgraded by an admin!</p>
+              <p *ngIf="this.isLoggedIn" class="dialog-info mb-4 ">You are already logged in, enjoy!</p>
+            </div>
+            <div class="dialog-actions flex justify-content-end gap-2 p-3">
+              <p-button (click)="showHelp = false" label="Understood" severity="success" class="p-button-outlined" />
+            </div>
+          </p-dialog>
         </div>
 
         <div class="col-1"></div>
 
         <div class="col-10 bottom-container">
-            <h1 class="left-bottom">Project portfolio management system</h1>
-            <div *ngIf="isLoggedIn && (role === 'ROLE_ADMIN' || role === 'ROLE_PM')" class="right-bottom" style="margin-right: 8px">
-                <a [routerLink]="['/add-project']">
-                    <p-button icon="pi pi-plus" label="Add" rounded severity="info"></p-button>
+            <h1 class="left-bottom">Project Portfolio Management System</h1>
+            <div *ngIf="isLoggedIn && (role === 'ROLE_ADMIN' || role === 'ROLE_PM')" class="right-bottom;" style="display: flex; flex-wrap: wrap; justify-content: space-between;">
+                <a *ngIf="role === 'ROLE_ADMIN'" [routerLink]="['/roles-menu']" style="margin: 3px;">
+                    <p-button icon="pi pi-user" label="Roles" rounded severity="info"></p-button>
+                </a>
+                <a [routerLink]="['/add-project']" style="margin: 3px">
+                  <p-button icon="pi pi-plus" label="Add" rounded severity="info"></p-button>
                 </a>
             </div>
         </div>
@@ -52,14 +82,9 @@
           <ng-template pTemplate="header">
 
 
-            <div class="grid">
+            <div class="grid justify-content-center">
 
-              <div class="card relative justify-content-center col-12 md:col-7 lg:col-3">
-                <p-multiSelect placeholder="Filter By Tag" styleClass="mb-2 md:mb-0 flex relative" [options]="tagNames"
-                  [showClear]="false" [(ngModel)]="selectedTagNames" (onChange)="onTagSelectedFilterChanged()" />
-              </div>
-
-              <div class="card relative justify-content-center col-12 md:col-5 lg:col-2">
+              <div class="card relative flex align-items-center justify-content-center col-12 md:col-5 lg:col-2">
                 <p-floatLabel styleClass="flex relative">
                   <input pInputText id="project-name" [(ngModel)]="projectName" (input)="onTitleFilterChange($event)"
                     class="responsive-input" />
@@ -67,7 +92,7 @@
                 </p-floatLabel>
               </div>
 
-              <div class="card relative justify-content-center col-12 md:col-5 lg:col-2">
+              <div class="card relative flex align-items-center justify-content-center col-12 md:col-5 lg:col-2">
                 <p-floatLabel styleClass="flex relative">
                   <input pInputText id="project-collaborator" [(ngModel)]="projectCollaborator"
                     (input)="onCollaboratorFilterChange($event)" class="responsive-input" />
@@ -76,8 +101,13 @@
               </div>
 
               <div class="card relative justify-content-center col-12 md:col-7 lg:col-3">
-                <p-dropdown placeholder="Filter By Year" styleClass="mb-2 md:mb-0 flex relative" />
+                <p-multiSelect placeholder="Filter By Tag" styleClass="mb-2 md:mb-0 flex relative" [options]="tagNames"
+                  [showClear]="false" [(ngModel)]="selectedTagNames" (onChange)="onTagSelectedFilterChanged()" />
               </div>
+
+              <!-- <div class="card relative justify-content-center col-12 md:col-7 lg:col-3">
+                <p-dropdown placeholder="Filter By Year" styleClass="mb-2 md:mb-0 flex relative" />
+              </div> -->
 
               <div class="card relative justify-content-center col-6 md:col-6 lg:col-1">
                 <p-dataViewLayoutOptions styleClass="flex relative" />
@@ -95,20 +125,22 @@
                 <div class="flex flex-column sm:flex-row sm:align-items-center p-4 gap-3"
                   [ngClass]="{ 'border-top-1 surface-border': !first }">
                   <div class="md:w-10rem relative">
-                    <img class="block xl:block mx-auto border-round w-full" [src]="getImageSrc(item)"
-                      [alt]="item.title" />
+                    <a href="http://localhost:4200/project-detail/{{item.projectId}}">
+                      <img class="block xl:block mx-auto border-round w-full" [src]="getImageSrc(item)"
+                        [alt]="item.title"/>
+                    </a>
                   </div>
                   <div class="flex flex-column md:flex-row justify-content-between md:align-items-center flex-1 gap-4">
                     <div class="flex flex-row md:flex-column justify-content-between align-items-start gap-2">
                       <div>
-                        <a href="http://localhost:4200/project-detail/{{item.projectId}}">
+                        <a href="http://localhost:4200/project-detail/{{item.projectId}}" style="text-decoration: none;">
                           <div class="text-lg font-medium text-900 mt-2">{{item.title}}</div>
                         </a>
                         <p>
 
 
                         </p>
-                        <span class="font-medium text-secondary text-sm">{{item.collaboratorNames}}</span>
+                        <span class="font-medium text-secondary text-sm">{{parseWriting(item.collaboratorNames)}}</span>
                         <p>
 
 
@@ -116,8 +148,8 @@
                         <span class="font-medium text-secondary text-sm">
                           <div class="card flex align-items-center gap-2 flex-wrap">
                             <ng-container *ngFor="let tag of item.tags">
-                              <p-chip [style]="{'background': getColorCode(tag.color)}" icon="pi pi-tags"
-                                label="{{tag.name}}" />
+                              <p-chip [style]="{'background': tag.color, 'color': isDarkColor(tag.color) ? 'white' : 'black'}" icon="pi pi-tags"
+                                label="{{tag.name}}" (click)="filterTagsOnClick(tag.name)"/>
                             </ng-container>
                           </div>
                         </span>
@@ -136,8 +168,10 @@
                 <div class="p-4 border-1 surface-border surface-card border-round flex flex-column">
                   <div class="surface-50 flex justify-content-center border-round p-3">
                     <div class="relative mx-auto">
+                      <a href="http://localhost:4200/project-detail/{{item.projectId}}">
                       <img class="border-round w-full" [src]=getImageSrc(item) [alt]="item.title"
                         style="max-width: 300px;" />
+                      </a>
                     </div>
                   </div>
                   <div class="pt-4">
@@ -158,8 +192,8 @@
                         <span class="font-medium text-secondary text-sm">
                           <div class="card flex align-items-center gap-2 flex-wrap">
                             <ng-container *ngFor="let tag of item.tags">
-                              <p-chip [style]="{'background': getColorCode(tag.color)}" icon="pi pi-tags"
-                                label="{{tag.name}}" />
+                              <p-chip [style]="{'background': tag.color, 'color': isDarkColor(tag.color) ? 'white' : 'black'}" icon="pi pi-tags"
+                                label="{{tag.name}}" (click)="filterTagsOnClick(tag.name)"/>
                             </ng-container>
                           </div>
                         </span>
