@@ -93,3 +93,23 @@
 .right-bottom {
   text-align: right;
 }
+
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.dialog-info {
+  width: 100%;
+  text-align: left;
+  margin-bottom: 1rem;
+  word-wrap: break-word; /* Ensure long words break to the next line */
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

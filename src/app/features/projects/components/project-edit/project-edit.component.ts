@@ -131,6 +131,7 @@ export class ProjectEditComponent implements OnInit {
   role_on_project: string = '';
   username: string = '';
   isLoggedIn: boolean = false;
+  roleDecided: boolean = false;
 
   wsProjectsSubscription: Subscription = new Subscription()
   wsCollaboratorsProjectSubscription: Subscription = new Subscription()
@@ -140,6 +141,7 @@ export class ProjectEditComponent implements OnInit {
   wsLinksProjectSubscription: Subscription = new Subscription()
   wsMediaProjectSubscription: Subscription = new Subscription()
   wsAccountSubscription: Subscription = new Subscription()
+
 
   wsAccountWebSocket: WebSocketSubject<string> = webSocket({
     url: "ws://localhost:8080/topic/accounts",
@@ -220,11 +222,11 @@ export class ProjectEditComponent implements OnInit {
 
          if(this.storageService.getRole() === "ROLE_ADMIN") {
            this.role_on_project = "ADMIN";
-           return;
+           this.roleDecided = true;
          }
 
          console.log(this.projectId)
-         if(this.projectId) {
+         if(this.projectId && !this.roleDecided) {
           const newRole = await firstValueFrom(this.accountService.getRoleOnProject(this.username, this.projectId))
           this.role_on_project = newRole
           if(this.role_on_project == '')
@@ -1172,7 +1174,7 @@ export class ProjectEditComponent implements OnInit {
   }
 
   isPM(): boolean {
-    return this.role_on_project == "PM"
+    return this.role_on_project == "PM" || this.role_on_project == "ADMIN"
   }
 
 }

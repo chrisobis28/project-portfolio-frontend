@@ -75,46 +75,53 @@
           icon="pi pi-question"></p-button>
       </div>
 
-      <div style="display: flex; justify-content: flex-end;">
+      <div class="card flex justify-content-start">
         <p-dialog [(visible)]="showHelp" [modal]="true" [style]="{ width: '40rem' }"
           header="Project Portfolio Management System">
-          <div class="dialog-content p-3">
-            <p class="dialog-info mb-4 ">Greetings and welcome to a <b>project portfolio</b>,
-              a space where <b>centralization</b> is key and the search and delivery of information
-              within already existing projects happens at the highest technological rates!</p>
-            <p class="dialog-info mb-4 ">The main page of the application welcomes you with a list
-              (or a grid depending on your chosen layout) of <b>projects</b> that
-              you can click (either thumbnail or title) in order to get a more detailed view of each one.
-              You can query our database of projects by <b>name</b>, <b>tags</b> and associated <b>collaborators</b>.
-            </p>
-            <p class="dialog-info mb-4 ">Additionally, clicking on a <b>tag</b> is a shortcut to filtering the list by
-              that specific tag instance.
-              You might require additional <b>permissions</b> in order to access more of the application's features.</p>
-            <p *ngIf="!this.isLoggedIn" class="dialog-info mb-4 ">Log into an existing account or create one to gain
-              access to a <b>USER</b> role that can then be upgraded by an admin!</p>
-            <p *ngIf="this.isLoggedIn" class="dialog-info mb-4 ">You are already logged in, enjoy!</p>
-          </div>
-          <div class="dialog-actions flex justify-content-end gap-2 p-3">
-            <p-button (click)="showHelp = false" label="Understood" severity="success" class="p-button-outlined" />
-          </div>
-        </p-dialog>
+    <div class="dialog-content p-3">
+        <p class="dialog-info mb-4">Greetings and welcome to a <b>project portfolio</b>,
+            a space where <b>centralization</b> is key and the search and delivery of information
+            within already existing projects happens at the highest technological rates!</p>
+        <p class="dialog-info mb-4">The main page of the application welcomes you with a list
+            (or a grid depending on your chosen layout) of <b>projects</b> that
+            you can click (either thumbnail or title) in order to get a more detailed view of each one.
+            You can query our database of projects by <b>name</b>, <b>tags</b>, and associated <b>collaborators</b>.
+        </p>
+        <p class="dialog-info mb-4">Additionally, clicking on a <b>tag</b> is a shortcut to filtering the list by
+            that specific tag instance.
+            You might require additional <b>permissions</b> in order to access more of the application's features.</p>
+        <p *ngIf="!isLoggedIn" class="dialog-info mb-4">Log into an existing account or create one to gain
+            access to a <b>USER</b> role that can then be upgraded by an admin!</p>
+        <p *ngIf="isLoggedIn" class="dialog-info mb-4">You are already logged in, enjoy!</p>
+    </div>
+    <div class="dialog-actions flex justify-content-end gap-2 p-3">
+        <p-button (click)="showHelp = false" label="Understood" severity="success" class="p-button-outlined" />
+    </div>
+</p-dialog>
+
       </div>
+
     </div>
   </div>
 
 
   <div class="col-1"></div>
 
-  <div class="col-10 bottom-container">
-    <h1 class="left-bottom">Project portfolio management system</h1>
-    <div *ngIf="isLoggedIn && (role === 'ROLE_ADMIN' || role === 'ROLE_PM')" class="right-bottom"
-      style="margin-right: 8px">
-      <a [routerLink]="['/add-project']">
+  <div class="grid">
+    <div class="col-4"></div>
+    <h1 class="left-bottom col-4">Project portfolio management system</h1>
+
+    <div *ngIf="isLoggedIn && (role === 'ROLE_ADMIN' || role === 'ROLE_PM')" class="right-bottom col-4"
+      style="display: flex; flex-wrap: wrap; justify-content: center;">
+      <a *ngIf="role === 'ROLE_ADMIN'" [routerLink]="['/roles-menu']" style="margin: 3px;">
+        <p-button icon="pi pi-user" label="Roles" rounded severity="info"></p-button>
+      </a>
+      <a [routerLink]="['/add-project']" style="margin: 3px">
         <p-button icon="pi pi-plus" label="Add" rounded severity="info"></p-button>
       </a>
     </div>
-  </div>
 
+  </div>
 
   <div class="grid">
     <div class="col-1"></div>
