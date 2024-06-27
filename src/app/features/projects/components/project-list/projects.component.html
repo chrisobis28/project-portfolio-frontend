@@ -107,17 +107,17 @@
 
   <div class="col-1"></div>
 
-  <div class="grid">
-    <div class="col-4"></div>
-    <h1 class="left-bottom col-4">Project portfolio management system</h1>
+  <div class="grid" style="display: flex; flex-wrap: wrap;">
+    <div class="col-1"></div>
+    <h1 class="left-bottom col-6">Project portfolio management system</h1>
 
-    <div *ngIf="isLoggedIn && (role === 'ROLE_ADMIN' || role === 'ROLE_PM')" class="right-bottom col-4"
-      style="display: flex; flex-wrap: wrap; justify-content: center;">
-      <a *ngIf="role === 'ROLE_ADMIN'" [routerLink]="['/roles-menu']" style="margin: 3px;">
+    <div *ngIf="isLoggedIn && (role === 'ROLE_ADMIN' || role === 'ROLE_PM')" class="right-bottom col-5"
+      style="display: flex; flex-wrap: wrap; justify-content:right; padding-right: 8.3333%; align-items: center;">
+      <a *ngIf="role === 'ROLE_ADMIN'" [routerLink]="['/roles-menu']" style="margin-right: 15px;">
         <p-button icon="pi pi-user" label="Roles" rounded severity="info"></p-button>
       </a>
-      <a [routerLink]="['/add-project']" style="margin: 3px">
-        <p-button icon="pi pi-plus" label="Add" rounded severity="info"></p-button>
+      <a [routerLink]="['/add-project']">
+        <p-button icon="pi pi-plus" label="Add Project" rounded severity="info"></p-button>
       </a>
     </div>
 

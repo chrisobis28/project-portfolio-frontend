@@ -107,6 +107,9 @@
       </div>
     </div> -->
       <h3 *ngIf="isPM()">Collaborators</h3>
+      <div *ngIf="selectedTemplate!=undefined">
+        <p style="color: gray;">The template selected requires {{ selectedTemplate.numberOfCollaborators }} collaborators. Please only deviate from the requirement if necessary!</p>
+      </div>
       <div *ngIf="isPM()" class="lg:col-12 col-12">
         <div class="p-fluid">
           <div class="grid">

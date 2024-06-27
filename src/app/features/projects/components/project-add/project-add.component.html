@@ -140,6 +140,9 @@
     </div>
   </div> -->
   <h3>Collaborators</h3>
+    <div *ngIf="currentTemplate!=undefined">
+      <p style="color: gray;">The template selected requires {{ currentTemplate.numberOfCollaborators }} collaborators. Please only deviate from the requirement if necessary!</p>
+    </div>
     <div class="lg:col-12 col-12">
       <div class="p-fluid">
         <div class="grid">
