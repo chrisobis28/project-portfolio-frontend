@@ -15,7 +15,7 @@
     <p-toast />
 
     <div class="col-12" style="text-align: right;">
-      <div *ngIf="!isLoggedIn" class="button-container">
+      <div *ngIf="!isLoggedIn" class="button-container ">
         <a [routerLink]="['/login']">
           <p-button label="Login"></p-button>
         </a>
@@ -34,7 +34,7 @@
 
             <div style="padding: 10px;">
               <p-button *ngIf="isPM()" icon="pi pi-user-edit" label="View your requests" (click)="showDialog()"
-                severity="info"></p-button>
+                ></p-button>
             </div>
             <p-dialog header="Edit Requests" [modal]="true" [(visible)]="visible" [style]="{ width: '25rem' }">
               <p-dataView #dv [value]="requests" [rows]="5" [paginator]="true">
@@ -109,15 +109,15 @@
 
   <div class="grid" style="display: flex; flex-wrap: wrap;">
     <div class="col-1"></div>
-    <h1 class="left-bottom col-6">Project portfolio management system</h1>
+    <h1 class="left-bottom col-11 lg:col-6 xl:col-6">Project portfolio management system</h1>
 
-    <div *ngIf="isLoggedIn && (role === 'ROLE_ADMIN' || role === 'ROLE_PM')" class="right-bottom col-5"
+    <div *ngIf="isLoggedIn && (role === 'ROLE_ADMIN' || role === 'ROLE_PM')" class="right-bottom col-12 lg:col-5 xl:col-5"
       style="display: flex; flex-wrap: wrap; justify-content:right; padding-right: 8.3333%; align-items: center;">
       <a *ngIf="role === 'ROLE_ADMIN'" [routerLink]="['/roles-menu']" style="margin-right: 15px;">
-        <p-button icon="pi pi-user" label="Roles" rounded severity="info"></p-button>
+        <p-button icon="pi pi-user" label="Roles" rounded ></p-button>
       </a>
       <a [routerLink]="['/add-project']">
-        <p-button icon="pi pi-plus" label="Add Project" rounded severity="info"></p-button>
+        <p-button icon="pi pi-plus" label="Add Project" rounded ></p-button>
       </a>
     </div>
 
@@ -166,7 +166,7 @@
               </div>
 
               <div class="card relative justify-content-center col-6 md:col-6 lg:col-1">
-                <p-button label="Search" rounded severity="info"></p-button>
+                <p-button label="Search" rounded ></p-button>
               </div>
             </div>
 

@@ -38,7 +38,7 @@
   <div class="col-12 md:12 lg:1 flex align-items-center justify-content-end gap-2">
     <a *ngIf="isLoggedIn && (role_on_project === 'ADMIN' || role_on_project === 'PM' || role_on_project === 'CONTENT_CREATOR' || role_on_project === 'EDITOR')"
        [routerLink]="['/project', 'edit', project.projectId]">
-      <p-button icon="pi pi-pencil" label="Edit" rounded severity="info"></p-button>
+      <p-button icon="pi pi-pencil" label="Edit" rounded></p-button>
     </a>
     <p-button (click)="showDeleteDialog()"
               *ngIf="isLoggedIn && (role_on_project === 'ADMIN' || role_on_project === 'PM')" [rounded]="true" icon="pi pi-trash" label="Delete"
