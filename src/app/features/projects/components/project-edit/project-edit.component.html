@@ -110,23 +110,27 @@
       <div *ngIf="selectedTemplate!=undefined">
         <p style="color: gray;">The template selected requires {{ selectedTemplate.numberOfCollaborators }} collaborators. Please only deviate from the requirement if necessary!</p>
       </div>
-      <div *ngIf="isPM()" class="lg:col-12 col-12">
+      <div *ngIf="isPM()" class="lg:col-12 md:col-12 sm:col-12">
         <div class="p-fluid">
           <div class="grid">
-            <div *ngIf="selectedCollaborators.length > 0" class="col-4"><strong>Name</strong></div>
-            <div *ngIf="selectedCollaborators.length > 0" class="col-4"><strong>Role</strong></div>
+            <div class="md:col-1"></div>
+            <div *ngIf="selectedCollaborators.length > 0" class="col-6 md:col-6 lg:col-3"><strong>Name</strong></div>
+            <div *ngIf="selectedCollaborators.length > 0" class="col-6 md:col-5 lg:col-4"><strong>Role</strong></div>
             <div class="col-2"></div>
             <div class="col-2"></div>
           </div>
           <div class="grid" *ngFor="let collaborator of selectedCollaborators; let i = index">
-            <div class="col-4" style="font-size:large; margin-top: 12px;">{{ collaborator.name }}</div>
-            <div class="col-4" style="font-size:large; margin-top: 12px;">{{ collaborator.role }}</div>
-            <div class="col-2" style="padding: 5px">
-              <p-button icon="pi pi-pencil" label="Edit" class="p-button-warning" [style]="{'min-width': '120px'}"
-                severity="info" (click)="editCollaborator(collaborator, i)"></p-button>
+            <div class="md:col-1"></div>
+            <div class="col-6 md:col-6 lg:col-3 xl:col-3" style="font-size:large; margin-top: 12px;">{{ collaborator.name }}</div>
+            <div class="col-6 md:col-5 lg:col-1 xl:col-1" style="font-size:large; margin-top: 12px;">{{ collaborator.role }}</div>
+            <div class="md:col-2"></div>
+            <div class="" style="padding: 5px">
+              <p-button icon="pi pi-pencil" label="Edit" class="p-button-warning" 
+                (click)="editCollaborator(collaborator, i)"></p-button>
             </div>
-            <div class="col-2" style="padding: 5px">
-              <p-button icon="pi pi-trash" label="Delete" class="p-button-danger" [style]="{'min-width': '120px'}"
+            <div class="col-2 md:col-4 lg:col-1 xl:col-2"></div>
+            <div class="" style="padding: 5px">
+              <p-button icon="pi pi-trash" label="Delete" class="p-button-danger" 
                 severity="danger" (click)="showDeleteDialog()"></p-button>
               <p-dialog [(visible)]="deleteDialogVisible" [modal]="true" [style]="{ width: '25rem' }"
                 header="Delete Collaborator">
