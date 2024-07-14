@@ -377,7 +377,7 @@ export class ProjectEditComponent implements OnInit {
     this.platformTags = await this.getAllTags();
     this.collaborators = await this.getAllCollaborators()
     this.platformCollaborators = await this.getAllCollaborators()
-    if(this.role_on_project == "PM"){
+    if(this.role_on_project == "PM" || this.role_on_project == "ADMIN"){
     this.allAccounts = await firstValueFrom(this.accountService.getAllUsernames())}
     this.currentUser = this.storageService.getUser()
 
@@ -442,7 +442,7 @@ export class ProjectEditComponent implements OnInit {
         this.selectedCollaboratorNames = this.projectCollaborators.map(x => x.name);
         this.selectedCollaborators = [...this.projectCollaborators];
       });
-    if(this.role_on_project == "PM"){
+    if(this.role_on_project == "PM" || this.role_on_project == "ADMIN"){
       this.accountService.getAccountsInProject(this.projectId).subscribe((response: AccountDisplay[]) => {
         this.currentAccounts = response.filter(account => account.username !== this.currentUser);
       });}
