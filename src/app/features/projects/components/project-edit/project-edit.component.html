@@ -187,14 +187,16 @@
       <div *ngIf="isPM()" class="lg:col-12 col-12">
         <div class="p-fluid">
           <div class="grid">
-            <div *ngIf="currentAccounts.length > 0" class="col-4"><strong>Username</strong></div>
+            <div class="col-1"></div>
+            <div *ngIf="currentAccounts.length > 0" class="col-3"><strong>Username</strong></div>
             <div *ngIf="currentAccounts.length > 0" class="col-4"><strong>Role</strong></div>
             <div class="col-2"></div>
             <div class="col-2"></div>
           </div>
           <div class="grid" *ngFor="let account of currentAccounts; let i = index">
-            <div class="col-4" style="font-size:large; margin-top: 12px;">{{ account.username }}</div>
-            <div class="col-4" style="font-size:large; margin-top: 12px;">
+            <div class="col-1"></div>
+            <div class="col-3" style="font-size:large; margin-top: 12px;">{{ account.username }}</div>
+            <div class="col-3" style="font-size:large; margin-top: 12px;">
               <p-dropdown [options]="roles" [(ngModel)]="account.roleInProject" placeholder="Select Role"
                 itemTemplate="item">
                 <ng-template let-item pTemplate="item">
@@ -203,7 +205,8 @@
               </p-dropdown>
 
             </div>
-            <div class="col-2" style="padding: 5px; display: flex; justify-content: center; align-items: center;">
+            <div class="col-2"></div>
+            <div class="col-2" style="margin-left: 55px; display: flex; justify-content: center; align-items: center;">
               <p-button icon="pi pi-trash" label="Delete" class="p-button-danger" [style]="{'min-width': '120px'}"
                 severity="danger" (click)="removeCurrentAccount(account)"></p-button>
             </div>
